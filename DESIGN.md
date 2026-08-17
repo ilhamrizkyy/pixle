@@ -128,8 +128,9 @@ Light/Dark preview toggle.)
 
 **Icon detail modal** — small centered panel (~1/4 screen). Large preview, name,
 category, tags, and actions: Copy SVG, Download SVG/PNG, Copy name. No color
-control here: the gallery's display settings are a preview, and what you copy is
-always the icon as authored. The modal says so whenever the two would differ.
+control here — the gallery already owns it. **What you see is what you copy:**
+every export carries the gallery's color, flip, rotation, and padding, so the
+clipboard matches the preview exactly.
 
 **Composer — toy anatomy**
 - *Frame*: blue gradient body, `--radius-toy`, top highlight + bottom lip.

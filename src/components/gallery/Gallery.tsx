@@ -4,6 +4,12 @@ import { useMemo, useState } from "react";
 import { Toast } from "@/components/Toast";
 import { galleryColorFromInput, recolorCells } from "@/engine/color";
 import { DEFAULT_ICON_SIZE } from "@/engine/constants";
+import {
+  IDENTITY_ORIENTATION,
+  applyOrientation,
+  isIdentityOrientation,
+  type Orientation,
+} from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
 import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
@@ -36,6 +42,8 @@ export function Gallery({ icons }: GalleryProps) {
    */
   const [colorText, setColorText] = useState<string | null>(null);
   const [size, setSize] = useState<number>(DEFAULT_ICON_SIZE);
+  const [orientation, setOrientation] =
+    useState<Orientation>(IDENTITY_ORIENTATION);
   const [selected, setSelected] = useState<IconDef | null>(null);
   const [toast, setToast] = useState("");
 
@@ -93,10 +101,13 @@ export function Gallery({ icons }: GalleryProps) {
   const displayCells = useMemo(() => {
     const map = new Map<string, IconDef["cells"]>();
     for (const icon of icons) {
-      map.set(icon.id, recolorCells(icon.cells, activeColor));
+      // Orientation first, then color: both are per-cell-independent, but
+      // fixing the order keeps the pipeline easy to reason about.
+      const oriented = applyOrientation(icon.cells, orientation);
+      map.set(icon.id, recolorCells(oriented, activeColor));
     }
     return map;
-  }, [icons, activeColor]);
+  }, [icons, activeColor, orientation]);
 
   return (
     <div className="flex flex-col items-start lg:flex-row">
@@ -108,6 +119,8 @@ export function Gallery({ icons }: GalleryProps) {
         color={activeColor}
         size={size}
         onSize={setSize}
+        orientation={orientation}
+        onOrientation={setOrientation}
         category={category}
         onCategory={setCategory}
         counts={counts}
@@ -149,6 +162,7 @@ export function Gallery({ icons }: GalleryProps) {
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
           galleryColor={activeColor}
+          reoriented={!isIdentityOrientation(orientation)}
           onClose={() => setSelected(null)}
           onNotify={setToast}
         />

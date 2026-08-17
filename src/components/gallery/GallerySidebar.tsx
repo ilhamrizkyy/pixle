@@ -2,8 +2,10 @@
 
 import { galleryColorFromInput } from "@/engine/color";
 import { DEFAULT_ICON_SIZE, ICON_SIZES } from "@/engine/constants";
+import { IDENTITY_ORIENTATION, type Orientation } from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
+import { TransformControls } from "./TransformControls";
 
 /**
  * Gallery sidebar: Search, Display (color / size / gridlines), Categories.
@@ -35,6 +37,8 @@ type GallerySidebarProps = {
   color: string;
   size: number;
   onSize: (value: number) => void;
+  orientation: Orientation;
+  onOrientation: (value: Orientation) => void;
   category: CategoryFilter;
   onCategory: (value: CategoryFilter) => void;
   counts: Record<Category, number>;
@@ -52,6 +56,8 @@ export function GallerySidebar({
   color,
   size,
   onSize,
+  orientation,
+  onOrientation,
   category,
   onCategory,
   counts,
@@ -91,6 +97,7 @@ export function GallerySidebar({
             onClick={() => {
               onColorText(null);
               onSize(DEFAULT_ICON_SIZE);
+              onOrientation(IDENTITY_ORIENTATION);
             }}
           />
         </SectionHead>
@@ -201,6 +208,11 @@ export function GallerySidebar({
           </div>
         </div>
 
+        {/* ---- Transform ------------------------------------------------ */}
+        <TransformControls
+          orientation={orientation}
+          onOrientation={onOrientation}
+        />
       </section>
 
       <section>

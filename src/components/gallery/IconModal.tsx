@@ -29,6 +29,8 @@ type IconModalProps = {
   displayCells: Cells;
   /** The color the gallery is showing, so a real mismatch can be disclosed. */
   galleryColor: string;
+  /** Whether a gallery flip/rotate is in effect. */
+  reoriented: boolean;
   onClose: () => void;
   onNotify: (message: string) => void;
 };
@@ -37,6 +39,7 @@ export function IconModal({
   icon,
   displayCells,
   galleryColor,
+  reoriented,
   onClose,
   onNotify,
 }: IconModalProps) {
@@ -50,7 +53,8 @@ export function IconModal({
    * disclose, so the note stays quiet instead of crying wolf on every open.
    */
   const baked = usedColors(icon.cells);
-  const mismatch = !(baked.length === 1 && baked[0] === galleryColor);
+  const recolored = !(baked.length === 1 && baked[0] === galleryColor);
+  const mismatch = recolored || reoriented;
 
   // Restore focus to whatever opened the dialog when it closes, so keyboard
   // users land back on the card they came from rather than at the page top.
@@ -201,7 +205,7 @@ export function IconModal({
             get. */}
         <p className="mt-1.5 text-caption text-text-faint">
           {mismatch
-            ? `Preview shows ${galleryColor}; this SVG carries the icon's own baked colors.`
+            ? "The preview reflects the gallery's display settings; this SVG carries the icon as authored."
             : "Colors are baked into the SVG."}
         </p>
       </div>

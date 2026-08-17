@@ -102,8 +102,13 @@ owner-only actions. Active nav item in `--accent`.
 **Gallery sidebar** — Search (+reset); Display (**Color** free-text hex field
 with a swatch that opens the OS picker, defaulting to the theme's black/white;
 **Size** slider on the 16–48 8-step scale, default **24**, with clickable tick
-labels that double as the readout); Categories (All + per-category counts that
-follow the active search).
+labels that double as the readout; **Transform** = Flip H / Flip V / Rotate,
+applied gallery-wide); Categories (All + per-category counts that follow the
+active search).
+
+Reference point for the gallery's control surface is **Nucleo's icon panel**,
+but applied to the whole gallery rather than one icon at a time. Stroke and
+Cap/Join are deliberately excluded — pixel cells have no strokes.
 
 **Icon card** — the icon alone, no permanent caption. The name appears on hover
 and on keyboard focus.

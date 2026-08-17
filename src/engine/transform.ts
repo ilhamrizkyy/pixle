@@ -41,3 +41,60 @@ export function flipVertical(cells: Cells): Cells {
 export function rotateClockwise(cells: Cells): Cells {
   return remap(cells, (row, col) => ({ row: GRID_SIZE - 1 - col, col: row }));
 }
+
+/* ============================================================================
+   Composed orientation.
+
+   The composer applies transforms destructively, one press at a time. The
+   gallery instead holds an orientation and derives the view from it, so
+   "rotate" is reversible there without an undo stack.
+   ========================================================================= */
+
+export type Orientation = {
+  flipH: boolean;
+  flipV: boolean;
+  /** Quarter turns clockwise. Any integer; normalized on apply. */
+  rotations: number;
+};
+
+export const IDENTITY_ORIENTATION: Orientation = {
+  flipH: false,
+  flipV: false,
+  rotations: 0,
+};
+
+export function isIdentityOrientation(orientation: Orientation): boolean {
+  return (
+    !orientation.flipH &&
+    !orientation.flipV &&
+    ((orientation.rotations % 4) + 4) % 4 === 0
+  );
+}
+
+/**
+ * Apply an orientation in a FIXED order — flips first, then rotation.
+ *
+ * The order is load-bearing: flip-then-rotate and rotate-then-flip give
+ * different results, so pinning it here keeps the preview predictable as
+ * controls are toggled in any sequence.
+ */
+export function applyOrientation(
+  cells: Cells,
+  orientation: Orientation,
+): Cells {
+  if (isIdentityOrientation(orientation)) return cells;
+
+  let next = cells;
+  if (orientation.flipH) next = flipHorizontal(next);
+  if (orientation.flipV) next = flipVertical(next);
+
+  const turns = ((orientation.rotations % 4) + 4) % 4;
+  for (let turn = 0; turn < turns; turn++) next = rotateClockwise(next);
+
+  return next;
+}
+
+/** Degrees for display, normalized to 0/90/180/270. */
+export function rotationDegrees(orientation: Orientation): number {
+  return (((orientation.rotations % 4) + 4) % 4) * 90;
+}

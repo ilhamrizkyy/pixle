@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconPreview } from "@/components/IconPreview";
-import { usedColors } from "@/engine/grid";
-import { iconToSvg, svgFileName } from "@/engine/svg";
+import { cellsToSvg, svgFileName } from "@/engine/svg";
 import type { Cells, IconDef } from "@/engine/types";
 import {
   cellsToPngBlob,
@@ -16,8 +15,10 @@ import {
  * Icon detail (DESIGN.md §6): a small centered panel with a large preview,
  * name, category, tags, and the four actions.
  *
- * There is no color control here, and there will not be one. Colors are baked
- * into the cells (CLAUDE.md rule 2), so there is nothing to recolor.
+ * WHAT YOU SEE IS WHAT YOU COPY. Every export is built from `displayCells` —
+ * the gallery's color, flip, rotation, and padding already applied — so the
+ * clipboard matches the preview. There is no color control here because the
+ * gallery already owns it.
  */
 
 const FOCUSABLE =
@@ -25,14 +26,10 @@ const FOCUSABLE =
 
 type IconModalProps = {
   icon: IconDef;
-  /** Recolored cells for the preview. */
+  /** Cells with the gallery's display settings already applied. */
   displayCells: Cells;
-  /** The color the gallery is showing, so a real mismatch can be disclosed. */
-  galleryColor: string;
-  /** Padding in cells, applied to the preview. */
+  /** Padding in cells, applied to the preview and to exports. */
   padding: number;
-  /** Whether any gallery flip/rotate/padding is in effect. */
-  transformed: boolean;
   onClose: () => void;
   onNotify: (message: string) => void;
 };
@@ -40,24 +37,13 @@ type IconModalProps = {
 export function IconModal({
   icon,
   displayCells,
-  galleryColor,
   padding,
-  transformed,
   onClose,
   onNotify,
 }: IconModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [copyLabel, setCopyLabel] = useState("Copy SVG");
-  const svg = iconToSvg(icon);
-
-  /**
-   * Only warn when the copy would actually differ from the preview. An icon
-   * whose single baked color already equals the gallery color has nothing to
-   * disclose, so the note stays quiet instead of crying wolf on every open.
-   */
-  const baked = usedColors(icon.cells);
-  const recolored = !(baked.length === 1 && baked[0] === galleryColor);
-  const mismatch = recolored || transformed;
+  const svg = cellsToSvg(displayCells, { title: icon.name, padding });
 
   // Restore focus to whatever opened the dialog when it closes, so keyboard
   // users land back on the card they came from rather than at the page top.
@@ -115,7 +101,7 @@ export function IconModal({
   };
 
   const handleDownloadPng = async () => {
-    const blob = await cellsToPngBlob(icon.cells);
+    const blob = await cellsToPngBlob(displayCells, { padding });
     if (blob === null) {
       onNotify("Could not render a PNG in this browser");
       return;
@@ -208,13 +194,8 @@ export function IconModal({
           onFocus={(event) => event.currentTarget.select()}
           className="mt-3.5 h-15 w-full resize-none rounded-sm border border-border bg-surface-2 p-2 font-data text-caption text-text-muted"
         />
-        {/* When the preview above and the markup below disagree, say so
-            plainly rather than letting someone paste a color they did not
-            get. */}
         <p className="mt-1.5 text-caption text-text-faint">
-          {mismatch
-            ? "The preview reflects the gallery's display settings; this SVG carries the icon as authored."
-            : "Colors are baked into the SVG."}
+          Colors are baked in — this SVG matches the preview exactly.
         </p>
       </div>
     </div>

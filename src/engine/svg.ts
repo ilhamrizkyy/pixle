@@ -11,7 +11,7 @@
  * produces.
  */
 
-import { CELL_UNITS, GRID_SIZE, VIEW_BOX } from "./constants";
+import { CELL_UNITS, GRID_SIZE, viewBoxWithPadding } from "./constants";
 import type { Cells, IconDef } from "./types";
 import { toIndex } from "./grid";
 
@@ -20,6 +20,8 @@ export type ToSvgOptions = {
   size?: number;
   /** `id` for a title element, improving a11y of inlined icons. */
   title?: string;
+  /** Empty space around the art, in cells. Grows the viewBox. */
+  padding?: number;
 };
 
 /**
@@ -77,14 +79,14 @@ function escapeXml(value: string): string {
  * identical wherever it lands (CLAUDE.md rule 2).
  */
 export function cellsToSvg(cells: Cells, options: ToSvgOptions = {}): string {
-  const { size, title } = options;
+  const { size, title, padding = 0 } = options;
   const dimensions =
     size === undefined ? "" : ` width="${size}" height="${size}"`;
   const titleEl =
     title === undefined ? "" : `<title>${escapeXml(title)}</title>`;
 
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEW_BOX}"${dimensions}` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBoxWithPadding(padding)}"${dimensions}` +
     ` fill="none" role="img">${titleEl}${buildRects(cells)}</svg>`
   );
 }

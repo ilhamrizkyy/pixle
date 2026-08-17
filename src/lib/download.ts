@@ -39,22 +39,26 @@ export function downloadSvg(filename: string, svg: string): void {
  */
 export function cellsToPngBlob(
   cells: Cells,
-  scale: number = PNG_SCALE,
+  { scale = PNG_SCALE, padding = 0 }: { scale?: number; padding?: number } = {},
 ): Promise<Blob | null> {
+  const cellPx = CELL_UNITS * scale;
+  const padPx = padding * cellPx;
+
   const canvas = document.createElement("canvas");
-  canvas.width = CANVAS_UNITS * scale;
-  canvas.height = CANVAS_UNITS * scale;
+  canvas.width = CANVAS_UNITS * scale + padPx * 2;
+  canvas.height = canvas.width;
 
   const ctx = canvas.getContext("2d");
   if (ctx === null) return Promise.resolve(null);
 
-  const cellPx = CELL_UNITS * scale;
+  // The canvas starts fully transparent and no background is ever painted,
+  // so padding reads as empty space rather than a colored border.
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
       const color = cells[toIndex(row, col)];
       if (color === null) continue;
       ctx.fillStyle = color;
-      ctx.fillRect(col * cellPx, row * cellPx, cellPx, cellPx);
+      ctx.fillRect(padPx + col * cellPx, padPx + row * cellPx, cellPx, cellPx);
     }
   }
 

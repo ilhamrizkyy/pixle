@@ -7,7 +7,6 @@ import { DEFAULT_ICON_SIZE } from "@/engine/constants";
 import {
   IDENTITY_ORIENTATION,
   applyOrientation,
-  isIdentityOrientation,
   type Orientation,
 } from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
@@ -165,9 +164,7 @@ export function Gallery({ icons }: GalleryProps) {
         <IconModal
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
-          galleryColor={activeColor}
           padding={padding}
-          transformed={!isIdentityOrientation(orientation) || padding > 0}
           onClose={() => setSelected(null)}
           onNotify={setToast}
         />

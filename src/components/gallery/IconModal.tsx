@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconPreview } from "@/components/IconPreview";
+import { usedColors } from "@/engine/grid";
 import { iconToSvg, svgFileName } from "@/engine/svg";
 import type { Cells, IconDef } from "@/engine/types";
 import {
@@ -24,11 +25,10 @@ const FOCUSABLE =
 
 type IconModalProps = {
   icon: IconDef;
-  /** Possibly tinted cells for the preview. */
+  /** Recolored cells for the preview. */
   displayCells: Cells;
-  /** Whether a gallery tint is active, so the mismatch can be disclosed. */
-  tinted: boolean;
-  showGrid: boolean;
+  /** The color the gallery is showing, so a real mismatch can be disclosed. */
+  galleryColor: string;
   onClose: () => void;
   onNotify: (message: string) => void;
 };
@@ -36,14 +36,21 @@ type IconModalProps = {
 export function IconModal({
   icon,
   displayCells,
-  tinted,
-  showGrid,
+  galleryColor,
   onClose,
   onNotify,
 }: IconModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [copyLabel, setCopyLabel] = useState("Copy SVG");
   const svg = iconToSvg(icon);
+
+  /**
+   * Only warn when the copy would actually differ from the preview. An icon
+   * whose single baked color already equals the gallery color has nothing to
+   * disclose, so the note stays quiet instead of crying wolf on every open.
+   */
+  const baked = usedColors(icon.cells);
+  const mismatch = !(baked.length === 1 && baked[0] === galleryColor);
 
   // Restore focus to whatever opened the dialog when it closes, so keyboard
   // users land back on the card they came from rather than at the page top.
@@ -147,12 +154,7 @@ export function IconModal({
         </div>
 
         <div className="my-4 flex items-center justify-center rounded-md bg-surface p-7">
-          <IconPreview
-            cells={displayCells}
-            size={104}
-            title={icon.name}
-            showGrid={showGrid}
-          />
+          <IconPreview cells={displayCells} size={104} title={icon.name} />
         </div>
 
         {icon.tags.length > 0 && (
@@ -194,12 +196,12 @@ export function IconModal({
           onFocus={(event) => event.currentTarget.select()}
           className="mt-3.5 h-15 w-full resize-none rounded-sm border border-border bg-surface-2 p-2 font-data text-caption text-text-muted"
         />
-        {/* With a gallery color on, the preview above and the markup below
-            disagree. Say so plainly rather than letting someone paste a color
-            they did not get. */}
+        {/* When the preview above and the markup below disagree, say so
+            plainly rather than letting someone paste a color they did not
+            get. */}
         <p className="mt-1.5 text-caption text-text-faint">
-          {tinted
-            ? "The gallery color is preview only — this SVG carries the icon's own baked colors."
+          {mismatch
+            ? `Preview shows ${galleryColor}; this SVG carries the icon's own baked colors.`
             : "Colors are baked into the SVG."}
         </p>
       </div>

@@ -5,10 +5,13 @@
  * Every icon is drawn inside the 9x9 safe area (rows/cols 1–9), leaving the
  * symmetric 1-cell margin. Names, ids, and tags are kebab-case.
  *
- * DRAWING NOTE: the gallery can flatten every cell to one color, so icons are
- * drawn as OUTLINES rather than as filled masses whose meaning depends on
- * internal color contrast. A filled envelope with a lighter interior reads as
- * a solid rectangle the moment one color is applied; an outlined one survives.
+ * SINGLE COLOR. The gallery always renders icons in one color, so every seed
+ * is authored in one color too — multi-color cell data would be unreachable,
+ * and would only surface as a surprise in an exported SVG.
+ *
+ * DRAWING NOTE: an icon must read as a silhouette. Draw OUTLINES, not filled
+ * masses whose meaning depends on internal contrast — a filled envelope with a
+ * lighter interior is a plain rectangle in one color; an outlined one survives.
  */
 
 import type { IconDef } from "@/engine/types";
@@ -67,14 +70,12 @@ export const icons: readonly IconDef[] = [
     category: "arcade",
     tags: ["heart", "life", "health", "love", "favorite"],
     createdAt: SEEDED_AT,
-    // Solid on purpose: a filled heart still reads as a heart when the gallery
-    // flattens it, and the glint demonstrates the multi-color model.
-    palette: { "#": "#dc2626", o: "#ffffff" },
+    palette: { "#": "#111111" },
     art: [
       "...........",
       "..##...##..",
-      ".#oo######.",
-      ".#o#######.",
+      ".#########.",
+      ".#########.",
       ".#########.",
       ".#########.",
       "..#######..",
@@ -135,18 +136,16 @@ export const icons: readonly IconDef[] = [
     category: "nature",
     tags: ["sun", "weather", "light", "day", "bright"],
     createdAt: SEEDED_AT,
-    // Rays and core read as separate shapes rather than relying on color to
-    // tell them apart, so the sun survives being flattened to one color.
-    palette: { "#": "#92400e", o: "#fef08a" },
+    palette: { "#": "#111111" },
     art: [
       "...........",
       ".....#.....",
       "..#.....#..",
-      "....ooo....",
-      "...ooooo...",
-      ".#.ooooo.#.",
-      "...ooooo...",
-      "....ooo....",
+      "....###....",
+      "...#####...",
+      ".#.#####.#.",
+      "...#####...",
+      "....###....",
       "..#.....#..",
       ".....#.....",
       "...........",

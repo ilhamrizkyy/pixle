@@ -26,15 +26,17 @@ niche. Licensed **MIT**.
    color applies only to the **next** cells drawn; existing cells keep theirs
    (no retroactive recolor). Exports carry baked colors. There is **no**
    currentColor.
-   - **Amended 2026-08-17 — gallery color.** The gallery may apply a
-     **display-only** color: one hex recolors **every filled cell of every
-     icon**, as Lucide's customizer does. It is strictly a preview — stored
-     `cells` are never modified, and Copy/Download always emit the icon's own
-     baked colors. The modal discloses the mismatch while a color is active,
-     and the color must never become a persisted property of an `IconDef`.
-   - **Drawing consequence:** because one color can flatten an icon, icons are
-     drawn as **outlines**, not as filled masses whose meaning depends on
-     internal color contrast. See @DESIGN.md §3.
+   - **Amended 2026-08-17 — gallery renders single-color.** The gallery
+     **always** displays icons in exactly one color: a hex field recolors every
+     filled cell of every icon, defaulting to #000000 in light / #ffffff in
+     dark. There is no multi-color display state. It stays **display only** —
+     stored `cells` are never modified, Copy/Download emit the icon's own baked
+     colors, the modal discloses any difference, and the gallery color must
+     never become a persisted property of an `IconDef`.
+   - **Authoring consequence:** seed icons are authored in a **single color**
+     and drawn as **outlines**, never as filled masses whose meaning depends on
+     internal color contrast. See @DESIGN.md §3. The composer still supports
+     per-cell color; the gallery simply does not render it.
 3. **Grid state is the source of truth**, not SVG. An icon *is* its 11×11 cell
    data; SVG/PNG are render targets generated from it.
 4. **Grid = 11x11 on viewBox "0 0 44 44"** (4 units per cell). Square pixels,

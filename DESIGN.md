@@ -51,16 +51,18 @@ full HSL picker (see @INTERACTION.md) and **baked** into the icon. No palette
 restriction (full freedom), so visual coherence relies on curation, not tokens.
 True black (#000) and true white (#fff) are reachable.
 
-**Gallery color (display only).** A single hex field recolors **every filled
-cell of every icon**, matching Lucide's customizer. Stored data and exports are
-untouched; the field is empty by default, so icons show their own colors until
-you type one.
+**Gallery renders single-color, always.** A hex field recolors **every filled
+cell of every icon**, matching Lucide's customizer. It defaults to **#000000 in
+light and #ffffff in dark** and follows the theme; clearing the field returns to
+that default. There is no state in which the gallery shows multi-color art.
+Stored data and exports are untouched by the control.
 
-**Authoring consequence — draw outlines, not filled masses.** Because one color
-can flatten an icon, an icon must be legible as a silhouette. A filled envelope
-with a lighter interior becomes a plain rectangle the moment a color is
-applied; an outlined envelope survives. Reserve multi-color for detail that is
-decorative (a heart's glint) rather than structural (an envelope's flap).
+**Authoring rule — one color, drawn as outlines.** Seed icons are authored in a
+single color, since multi-color cell data would be unreachable in the gallery
+and would only surface as a surprise in an exported SVG. An icon must be legible
+as a silhouette: draw outlines, not filled masses whose meaning depends on
+internal contrast. A filled envelope with a lighter interior is a plain
+rectangle in one color; an outlined envelope survives.
 
 ## 4. Typography
 
@@ -98,10 +100,10 @@ Line-height: 1.5 body, 1.2 headings/labels.
 owner-only actions. Active nav item in `--accent`.
 
 **Gallery sidebar** — Search (+reset); Display (**Color** free-text hex field
-with a swatch that opens the OS picker, empty = each icon's own colors;
+with a swatch that opens the OS picker, defaulting to the theme's black/white;
 **Size** slider on the 16–48 8-step scale with a value bubble and clickable
-tick labels; **Gridlines** toggle); Categories (All + per-category counts that
-follow the active search).
+tick labels); Categories (All + per-category counts that follow the active
+search).
 
 **Icon card** — the icon alone, no permanent caption. The name appears on hover
 and on keyboard focus.

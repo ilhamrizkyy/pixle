@@ -75,13 +75,13 @@
 - **Category filter**: All + fixed categories.
 - **Display**:
   - **Color** — a free-text hex field (3 or 6 digits; the swatch beside it
-    opens the OS picker) recolors **every** icon in the gallery. Empty = each
-    icon's own colors. Display only: never affects stored data or exports, and
-    the detail modal says so while a color is active.
+    opens the OS picker) recolors **every** icon in the gallery. Defaults to
+    #000000 in light and #ffffff in dark, and follows the theme; ✕ returns to
+    that default. Icons are **never** shown multi-color. Display only: never
+    affects stored data or exports, and the detail modal discloses the
+    difference whenever the copy would not match the preview.
   - **Size** (16/24/32/40/48) applies to every card; drag the slider or click
     a tick label.
-  - **Gridlines** — show/hide faint 11×11 cell lines on previews, echoing the
-    composer board.
 - **Card**: shows the icon only; the name appears on hover and on focus.
 - **Theme**: Light/Dark in the top nav, themeing the whole app. No System
   button — system is simply the default until a choice is made.

@@ -5,6 +5,7 @@ import { Toast } from "@/components/Toast";
 import { galleryColorFromInput, recolorCells } from "@/engine/color";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
+import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
 import { EmptyState } from "./EmptyState";
 import { GallerySidebar, type CategoryFilter } from "./GallerySidebar";
 import { IconCard } from "./IconCard";
@@ -24,11 +25,16 @@ type GalleryProps = { icons: readonly IconDef[] };
 export function Gallery({ icons }: GalleryProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
-  // The raw field text lives here, not in the sidebar, so Reset can clear it
-  // without two pieces of state needing an effect to stay in sync.
-  const [colorText, setColorText] = useState("");
+  /**
+   * The raw field text lives here, not in the sidebar, so Reset can clear it
+   * without two pieces of state needing an effect to stay in sync.
+   *
+   * null means "follow the theme", which is why the theme default is derived
+   * on every render rather than seeded into state — seeding it would freeze
+   * the color at whatever the theme was on mount.
+   */
+  const [colorText, setColorText] = useState<string | null>(null);
   const [size, setSize] = useState(32);
-  const [showGrid, setShowGrid] = useState(false);
   const [selected, setSelected] = useState<IconDef | null>(null);
   const [toast, setToast] = useState("");
 
@@ -70,10 +76,18 @@ export function Gallery({ icons }: GalleryProps) {
    * the original array untouched when there is no tint, so the no-tint path
    * costs nothing.
    */
-  const activeColor = useMemo(
-    () => galleryColorFromInput(colorText),
-    [colorText],
-  );
+  const theme = useResolvedTheme();
+  const themeColor = THEME_ICON_COLOR[theme];
+
+  /**
+   * Icons ALWAYS render in exactly one color. An unparsed or empty field falls
+   * back to the theme default rather than to per-icon colors, so there is no
+   * state in which the gallery shows multi-color art.
+   */
+  const activeColor =
+    colorText === null
+      ? themeColor
+      : (galleryColorFromInput(colorText) ?? themeColor);
 
   const displayCells = useMemo(() => {
     const map = new Map<string, IconDef["cells"]>();
@@ -93,8 +107,6 @@ export function Gallery({ icons }: GalleryProps) {
         color={activeColor}
         size={size}
         onSize={setSize}
-        showGrid={showGrid}
-        onShowGrid={setShowGrid}
         category={category}
         onCategory={setCategory}
         counts={counts}
@@ -122,7 +134,6 @@ export function Gallery({ icons }: GalleryProps) {
                   icon={icon}
                   cells={displayCells.get(icon.id) ?? icon.cells}
                   size={size}
-                  showGrid={showGrid}
                   selected={selected?.id === icon.id}
                   onSelect={setSelected}
                 />
@@ -136,8 +147,7 @@ export function Gallery({ icons }: GalleryProps) {
         <IconModal
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
-          tinted={activeColor !== null}
-          showGrid={showGrid}
+          galleryColor={activeColor}
           onClose={() => setSelected(null)}
           onNotify={setToast}
         />

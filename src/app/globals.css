@@ -29,8 +29,6 @@
   --color-success: #16a34a;
   --color-warning: #d97706;
 
-  /* Faint gridline inside icon previews, echoing the composer board. */
-  --color-grid-line: #00000021;
 
   /* --- Typography (DESIGN.md §4) ----------------------------------------- */
   /* Display/UI face. Departure Mono is the specified face but is not on
@@ -108,7 +106,6 @@
   --color-success: #4ade80;
   --color-warning: #fbbf24;
 
-  --color-grid-line: #ffffff26;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -129,7 +126,6 @@
     --color-success: #4ade80;
     --color-warning: #fbbf24;
 
-    --color-grid-line: #ffffff26;
   }
 }
 

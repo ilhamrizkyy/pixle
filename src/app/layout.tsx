@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Press_Start_2P } from "next/font/google";
 import { SiteNav } from "@/components/SiteNav";
-import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 // UI / display face. Stands in for Departure Mono until the files are supplied.

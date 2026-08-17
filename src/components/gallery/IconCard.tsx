@@ -18,7 +18,6 @@ type IconCardProps = {
   icon: IconDef;
   cells: Cells;
   size: number;
-  showGrid: boolean;
   selected: boolean;
   onSelect: (icon: IconDef) => void;
 };
@@ -27,7 +26,6 @@ export function IconCard({
   icon,
   cells,
   size,
-  showGrid,
   selected,
   onSelect,
 }: IconCardProps) {
@@ -42,7 +40,7 @@ export function IconCard({
         selected ? "border-accent ring-2 ring-accent" : "border-transparent"
       }`}
     >
-      <IconPreview cells={cells} size={size} showGrid={showGrid} />
+      <IconPreview cells={cells} size={size} />
 
       <span
         aria-hidden="true"

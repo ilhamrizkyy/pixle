@@ -1,5 +1,6 @@
 "use client";
 
+import { galleryColorFromInput } from "@/engine/color";
 import { ICON_SIZES } from "@/engine/constants";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
@@ -11,6 +12,10 @@ import type { Category } from "@/engine/types";
  * gallery, the way Lucide's customizer works. It never touches stored icons or
  * what gets copied and downloaded.
  *
+ * There is no "no color" state: icons always render in exactly one color,
+ * defaulting to black in light and white in dark. Clearing the field returns
+ * to that default rather than to per-icon colors.
+ *
  * Light/Dark moved out of here: theme is now a whole-app control in the nav.
  */
 
@@ -20,17 +25,16 @@ type GallerySidebarProps = {
   search: string;
   onSearch: (value: string) => void;
   /**
-   * Raw text of the hex field. Held by the parent (not local state) so the
-   * Reset button can clear it without an effect syncing two sources of truth.
+   * Raw text of the hex field, or null to follow the theme default. Held by
+   * the parent (not local state) so Reset can clear it without an effect
+   * syncing two sources of truth.
    */
-  colorText: string;
-  onColorText: (value: string) => void;
-  /** The parsed color, or null when the field is empty or incomplete. */
-  color: string | null;
+  colorText: string | null;
+  onColorText: (value: string | null) => void;
+  /** The color actually in effect. Never null — icons always have a color. */
+  color: string;
   size: number;
   onSize: (value: number) => void;
-  showGrid: boolean;
-  onShowGrid: (value: boolean) => void;
   category: CategoryFilter;
   onCategory: (value: CategoryFilter) => void;
   counts: Record<Category, number>;
@@ -48,8 +52,6 @@ export function GallerySidebar({
   color,
   size,
   onSize,
-  showGrid,
-  onShowGrid,
   category,
   onCategory,
   counts,
@@ -57,7 +59,15 @@ export function GallerySidebar({
 }: GallerySidebarProps) {
   // Position of the fill and the value bubble along the track.
   const progress = ((size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100;
-  const invalid = colorText.trim() !== "" && color === null;
+
+  // What the field shows: the typed text, or the theme default when untouched.
+  const fieldValue = (colorText ?? color).replace(/^#/, "");
+  // Parse rather than compare strings — "#FF0000" is valid but not equal to
+  // the normalized "#ff0000".
+  const invalid =
+    colorText !== null &&
+    colorText.trim() !== "" &&
+    galleryColorFromInput(colorText) === null;
 
   return (
     <aside className="flex w-full shrink-0 flex-col gap-8 border-b border-border px-6 py-7 lg:min-h-[calc(100vh-73px)] lg:w-66 lg:border-r lg:border-b-0">
@@ -79,9 +89,8 @@ export function GallerySidebar({
         <SectionHead title="Display">
           <ResetButton
             onClick={() => {
-              onColorText("");
+              onColorText(null);
               onSize(32);
-              onShowGrid(false);
             }}
           />
         </SectionHead>
@@ -103,19 +112,12 @@ export function GallerySidebar({
               picker while the text field stays the primary way in. */}
           <label
             className="size-5 shrink-0 cursor-pointer rounded-xs border border-border"
-            style={{
-              backgroundColor: color ?? undefined,
-              // No color set: show the multi-color state, not a blank chip.
-              backgroundImage:
-                color === null
-                  ? "linear-gradient(135deg,#dc2626 0 25%,#d97706 25% 50%,#16a34a 50% 75%,#2b5bff 75% 100%)"
-                  : undefined,
-            }}
+            style={{ backgroundColor: color }}
             title="Pick a color"
           >
             <input
               type="color"
-              value={color ?? "#111111"}
+              value={color}
               onChange={(event) => onColorText(event.target.value)}
               className="sr-only"
               aria-label="Pick a color"
@@ -131,17 +133,16 @@ export function GallerySidebar({
             inputMode="text"
             spellCheck={false}
             autoComplete="off"
-            value={colorText.replace(/^#/, "")}
+            value={fieldValue}
             onChange={(event) => onColorText(event.target.value)}
-            placeholder="original"
             aria-invalid={invalid}
-            className="w-full min-w-0 bg-transparent font-data text-ui text-text uppercase placeholder:normal-case placeholder:text-text-faint focus:outline-none"
+            className="w-full min-w-0 bg-transparent font-data text-ui text-text uppercase focus:outline-none"
           />
-          {colorText !== "" && (
+          {colorText !== null && (
             <button
               type="button"
-              onClick={() => onColorText("")}
-              aria-label="Clear color"
+              onClick={() => onColorText(null)}
+              aria-label="Reset to theme default"
               className="shrink-0 px-1 text-caption text-text-muted hover:text-text"
             >
               ✕
@@ -149,11 +150,11 @@ export function GallerySidebar({
           )}
         </div>
 
-        <p className="mt-1.5 text-caption text-text-faint">
-          {invalid
-            ? "Needs 3 or 6 hex digits."
-            : "Preview only — copies keep baked colors."}
-        </p>
+        {invalid && (
+          <p className="mt-1.5 text-caption text-danger">
+            Needs 3 or 6 hex digits.
+          </p>
+        )}
 
         {/* ---- Size ----------------------------------------------------- */}
         <div className="mt-6">
@@ -208,28 +209,6 @@ export function GallerySidebar({
           </div>
         </div>
 
-        {/* ---- Gridlines ------------------------------------------------ */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={showGrid}
-          onClick={() => onShowGrid(!showGrid)}
-          className="mt-5 flex w-full items-center justify-between rounded-sm border border-border bg-surface px-3 py-2 text-ui text-text hover:border-text-faint"
-        >
-          <span className="text-caption text-text-muted">Gridlines</span>
-          <span
-            aria-hidden="true"
-            className={`relative h-5 w-9 rounded-full transition-colors ${
-              showGrid ? "bg-accent" : "bg-border"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 size-4 rounded-full bg-bg transition-transform ${
-                showGrid ? "translate-x-4.5" : "translate-x-0.5"
-              }`}
-            />
-          </span>
-        </button>
       </section>
 
       <section>

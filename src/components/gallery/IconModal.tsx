@@ -29,8 +29,10 @@ type IconModalProps = {
   displayCells: Cells;
   /** The color the gallery is showing, so a real mismatch can be disclosed. */
   galleryColor: string;
-  /** Whether a gallery flip/rotate is in effect. */
-  reoriented: boolean;
+  /** Padding in cells, applied to the preview. */
+  padding: number;
+  /** Whether any gallery flip/rotate/padding is in effect. */
+  transformed: boolean;
   onClose: () => void;
   onNotify: (message: string) => void;
 };
@@ -39,7 +41,8 @@ export function IconModal({
   icon,
   displayCells,
   galleryColor,
-  reoriented,
+  padding,
+  transformed,
   onClose,
   onNotify,
 }: IconModalProps) {
@@ -54,7 +57,7 @@ export function IconModal({
    */
   const baked = usedColors(icon.cells);
   const recolored = !(baked.length === 1 && baked[0] === galleryColor);
-  const mismatch = recolored || reoriented;
+  const mismatch = recolored || transformed;
 
   // Restore focus to whatever opened the dialog when it closes, so keyboard
   // users land back on the card they came from rather than at the page top.
@@ -158,7 +161,12 @@ export function IconModal({
         </div>
 
         <div className="my-4 flex items-center justify-center rounded-md bg-surface p-7">
-          <IconPreview cells={displayCells} size={104} title={icon.name} />
+          <IconPreview
+            cells={displayCells}
+            size={104}
+            title={icon.name}
+            padding={padding}
+          />
         </div>
 
         {icon.tags.length > 0 && (

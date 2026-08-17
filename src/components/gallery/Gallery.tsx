@@ -42,6 +42,7 @@ export function Gallery({ icons }: GalleryProps) {
    */
   const [colorText, setColorText] = useState<string | null>(null);
   const [size, setSize] = useState<number>(DEFAULT_ICON_SIZE);
+  const [padding, setPadding] = useState(0);
   const [orientation, setOrientation] =
     useState<Orientation>(IDENTITY_ORIENTATION);
   const [selected, setSelected] = useState<IconDef | null>(null);
@@ -81,8 +82,8 @@ export function Gallery({ icons }: GalleryProps) {
 
   /**
    * Display cells, keyed by icon id. The registry records are never modified —
-   * this is a parallel map consulted only when drawing. `tintCells` returns
-   * the original array untouched when there is no tint, so the no-tint path
+   * this is a parallel map consulted only when drawing. Both transforms return
+   * the input array unchanged in their identity cases, so the default path
    * costs nothing.
    */
   const theme = useResolvedTheme();
@@ -119,6 +120,8 @@ export function Gallery({ icons }: GalleryProps) {
         color={activeColor}
         size={size}
         onSize={setSize}
+        padding={padding}
+        onPadding={setPadding}
         orientation={orientation}
         onOrientation={setOrientation}
         category={category}
@@ -148,6 +151,7 @@ export function Gallery({ icons }: GalleryProps) {
                   icon={icon}
                   cells={displayCells.get(icon.id) ?? icon.cells}
                   size={size}
+                  padding={padding}
                   selected={selected?.id === icon.id}
                   onSelect={setSelected}
                 />
@@ -162,7 +166,8 @@ export function Gallery({ icons }: GalleryProps) {
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
           galleryColor={activeColor}
-          reoriented={!isIdentityOrientation(orientation)}
+          padding={padding}
+          transformed={!isIdentityOrientation(orientation) || padding > 0}
           onClose={() => setSelected(null)}
           onNotify={setToast}
         />

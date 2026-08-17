@@ -7,7 +7,7 @@
  * tell (and does not care) whether it is drawing baked or gallery colors.
  */
 
-import { CELL_UNITS, GRID_SIZE, VIEW_BOX } from "@/engine/constants";
+import { CELL_UNITS, GRID_SIZE, viewBoxWithPadding } from "@/engine/constants";
 import { toIndex } from "@/engine/grid";
 import type { Cells } from "@/engine/types";
 
@@ -17,9 +17,16 @@ type IconPreviewProps = {
   size?: number;
   /** Accessible name. Omit for decorative use. */
   title?: string;
+  /** Empty space around the art, in cells. Grows the viewBox. */
+  padding?: number;
 };
 
-export function IconPreview({ cells, size = 32, title }: IconPreviewProps) {
+export function IconPreview({
+  cells,
+  size = 32,
+  title,
+  padding = 0,
+}: IconPreviewProps) {
   const rects = [];
 
   for (let row = 0; row < GRID_SIZE; row++) {
@@ -41,7 +48,7 @@ export function IconPreview({ cells, size = 32, title }: IconPreviewProps) {
 
   return (
     <svg
-      viewBox={VIEW_BOX}
+      viewBox={viewBoxWithPadding(padding)}
       width={size}
       height={size}
       role={title ? "img" : "presentation"}

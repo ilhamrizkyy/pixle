@@ -1,7 +1,11 @@
 "use client";
 
 import { galleryColorFromInput } from "@/engine/color";
-import { DEFAULT_ICON_SIZE, ICON_SIZES } from "@/engine/constants";
+import {
+  DEFAULT_ICON_SIZE,
+  ICON_SIZES,
+  PADDING_STEPS,
+} from "@/engine/constants";
 import { IDENTITY_ORIENTATION, type Orientation } from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
@@ -37,6 +41,9 @@ type GallerySidebarProps = {
   color: string;
   size: number;
   onSize: (value: number) => void;
+  /** Padding in cells. */
+  padding: number;
+  onPadding: (value: number) => void;
   orientation: Orientation;
   onOrientation: (value: Orientation) => void;
   category: CategoryFilter;
@@ -56,6 +63,8 @@ export function GallerySidebar({
   color,
   size,
   onSize,
+  padding,
+  onPadding,
   orientation,
   onOrientation,
   category,
@@ -97,6 +106,7 @@ export function GallerySidebar({
             onClick={() => {
               onColorText(null);
               onSize(DEFAULT_ICON_SIZE);
+              onPadding(0);
               onOrientation(IDENTITY_ORIENTATION);
             }}
           />
@@ -205,6 +215,33 @@ export function GallerySidebar({
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* ---- Padding -------------------------------------------------- */}
+        <div className="mt-5">
+          <div className="mb-1 flex items-baseline justify-between">
+            <span className="text-caption text-text-muted">Padding</span>
+            <span className="font-data text-caption text-text-faint">
+              {padding === 0 ? "none" : `${padding} cell`}
+            </span>
+          </div>
+          <div className="flex gap-1.5">
+            {PADDING_STEPS.map((step) => (
+              <button
+                key={step}
+                type="button"
+                onClick={() => onPadding(step)}
+                aria-pressed={padding === step}
+                className={`flex-1 rounded-sm border py-1.5 font-data text-caption transition-colors ${
+                  padding === step
+                    ? "border-accent bg-accent-subtle font-bold text-accent"
+                    : "border-border bg-surface text-text-muted hover:text-text"
+                }`}
+              >
+                {step}
+              </button>
+            ))}
           </div>
         </div>
 

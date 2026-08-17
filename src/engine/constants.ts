@@ -42,3 +42,22 @@ export type IconSize = (typeof ICON_SIZES)[number];
 
 /** The size the gallery opens at. */
 export const DEFAULT_ICON_SIZE: IconSize = 24;
+
+/**
+ * Padding is measured in CELLS and expands the viewBox outward, rather than
+ * scaling the art down inside a fixed viewBox.
+ *
+ * That choice matters for pixel art: scaling would move cell edges off the
+ * 4-unit grid and soften them. Growing the viewBox leaves every cell exactly
+ * where it was and merely adds empty space around it, so the art stays crisp
+ * and stays on-grid at any padding.
+ */
+export const PADDING_STEPS = [0, 1, 2, 3] as const;
+
+/** viewBox for a given padding in cells. Padding 0 returns the base viewBox. */
+export function viewBoxWithPadding(paddingCells: number): string {
+  const pad = Math.max(0, paddingCells) * CELL_UNITS;
+  if (pad === 0) return VIEW_BOX;
+  const extent = CANVAS_UNITS + pad * 2;
+  return `${-pad} ${-pad} ${extent} ${extent}`;
+}

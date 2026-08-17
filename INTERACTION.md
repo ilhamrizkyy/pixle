@@ -82,11 +82,16 @@
     difference whenever the copy would not match the preview.
   - **Size** (16/24/32/40/48) applies to every card; drag the slider or click
     a tick label. Default 24.
+  - **Padding** — 0–3 **cells** of empty space around the art, applied to
+    every icon. Grows the viewBox rather than scaling the art, so cells stay
+    on-grid and crisp at any padding.
   - **Transform** — Flip H / Flip V toggles and Rotate (+90° clockwise per
     press) apply to **every** icon at once. Display only, like Color. Reset
     returns to the unflipped, unrotated view.
   - **No Stroke or Cap/Join controls.** Pixel icons are filled cells with no
     strokes, so those Nucleo-style controls have nothing to act on.
+  - **No Bg control.** Backgrounds are **always transparent**, in the preview
+    and in both the SVG and PNG exports.
 - **Card**: shows the icon only; the name appears on hover and on focus.
 - **Theme**: Light/Dark in the top nav, themeing the whole app. No System
   button — system is simply the default until a choice is made.

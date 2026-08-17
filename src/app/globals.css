@@ -214,6 +214,50 @@
 }
 
 /* ============================================================================
+   Icon card name.
+
+   Keyed on HOVER CAPABILITY, not screen width. A touch device never fires
+   :hover, so a hover-only name is simply unreachable there — and that is true
+   of a large tablet as much as a phone, which is why a `lg:` breakpoint would
+   be the wrong test.
+
+   Default (no hover): the name sits under the icon, always visible.
+   Hover-capable: it becomes an overlay revealed on hover or keyboard focus,
+   costing no layout height.
+   ========================================================================= */
+
+.pixl-card-name {
+  margin-top: 0.5rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-data);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .pixl-card-name {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    margin-top: 0;
+    padding: 0.25rem 0.375rem;
+    text-align: center;
+    background: color-mix(in oklab, var(--color-text) 85%, transparent);
+    color: var(--color-bg);
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .group:hover .pixl-card-name,
+  .group:focus-visible .pixl-card-name {
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
    Refined range slider (gallery size control).
 
    Native range pseudo-elements cannot be reached from utility classes, so the

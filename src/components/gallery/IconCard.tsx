@@ -4,11 +4,15 @@ import { IconPreview } from "@/components/IconPreview";
 import type { Cells, IconDef } from "@/engine/types";
 
 /**
- * One icon in the grid: the icon alone, with its name revealed on hover.
+ * One icon in the grid.
  *
- * The name label is aria-hidden and the button carries the accessible name
- * instead — otherwise every card would announce its name twice. It reveals on
- * focus as well as hover, so keyboard users are not left guessing.
+ * On hover-capable devices the name is an overlay revealed on hover or focus.
+ * On touch devices, where :hover never fires, it sits permanently under the
+ * icon instead — see `.pixl-card-name`. Either way it is ONE element, so the
+ * name is never duplicated in the accessibility tree.
+ *
+ * The label is aria-hidden and the button carries the accessible name instead,
+ * so a card announces its name once rather than twice.
  *
  * Takes `cells` separately from `icon` because the gallery may hand it
  * RECOLORED cells for display while `icon` stays the untouched registry record.
@@ -38,16 +42,16 @@ export function IconCard({
       aria-haspopup="dialog"
       aria-label={icon.name}
       title={icon.name}
-      className={`group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-surface transition-[box-shadow,border-color,transform] duration-100 hover:-translate-y-0.5 hover:border-border hover:shadow-md ${
+      className={`group relative flex w-full flex-col items-center justify-center overflow-hidden rounded-md border bg-surface p-3 transition-[box-shadow,border-color,transform] duration-100 hover:-translate-y-0.5 hover:border-border hover:shadow-md ${
         selected ? "border-accent ring-2 ring-accent" : "border-transparent"
       }`}
     >
-      <IconPreview cells={cells} size={size} padding={padding} />
+      {/* Fixed height so cards keep their footprint as the size slider moves. */}
+      <span className="flex h-12 items-center">
+        <IconPreview cells={cells} size={size} padding={padding} />
+      </span>
 
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-text/85 px-1.5 py-1 text-center font-data text-caption text-bg opacity-0 transition-opacity duration-100 group-hover:opacity-100 group-focus-visible:opacity-100"
-      >
+      <span aria-hidden="true" className="pixl-card-name pointer-events-none">
         {icon.name}
       </span>
     </button>

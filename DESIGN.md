@@ -106,14 +106,18 @@ labels that double as the readout; **Padding** 0–3 cells; **Transform** = Flip
 H / Flip V / Rotate, applied gallery-wide); Categories (All + per-category counts that follow the
 active search).
 
+Below `lg` every control except Search collapses behind a **Filters** toggle.
+
 Reference point for the gallery's control surface is **Nucleo's icon panel**,
 but applied to the whole gallery rather than one icon at a time. Stroke and
 Cap/Join are deliberately excluded — pixel cells have no strokes — and there is
 no Bg control: icon backgrounds are **always transparent**.
 
-**Icon card** — `--surface` fill, `--radius-md`, hover lift + border. The icon
-alone, with **no permanent caption**: the name appears on hover and on keyboard
-focus. Selected → `--accent` ring.
+**Icon card** — `--surface` fill, `--radius-md`, hover lift + border. Selected
+→ `--accent` ring. The name is keyed to **hover capability**, not breakpoint:
+hover-capable devices get the icon alone with the name as an overlay on hover
+or focus; touch devices get the name permanently beneath the icon, since
+`:hover` never fires there.
 
 **Theme** — **Light / Dark**, two buttons in the top nav. There is no System
 button, but system is the default: until a choice is made no `data-theme` is

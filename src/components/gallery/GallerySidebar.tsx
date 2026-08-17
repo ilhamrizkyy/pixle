@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { galleryColorFromInput } from "@/engine/color";
 import {
   DEFAULT_ICON_SIZE,
@@ -72,7 +73,15 @@ export function GallerySidebar({
   counts,
   total,
 }: GallerySidebarProps) {
-  // Position of the fill and the value bubble along the track.
+  /**
+   * On narrow screens the controls collapse behind a Filters toggle, so the
+   * icons are not pushed below a screenful of chrome. On lg and up the panel
+   * is always shown: `lg:block` beats the conditional `hidden`, so this state
+   * is simply ignored there and needs no media query in JS.
+   */
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Position of the fill along the track.
   const progress = ((size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100;
 
   // What the field shows: the typed text, or the theme default when untouched.
@@ -85,7 +94,7 @@ export function GallerySidebar({
     galleryColorFromInput(colorText) === null;
 
   return (
-    <aside className="flex w-full shrink-0 flex-col gap-8 border-b border-border px-6 py-7 lg:min-h-[calc(100vh-73px)] lg:w-66 lg:border-r lg:border-b-0">
+    <aside className="flex w-full shrink-0 flex-col gap-6 border-b border-border px-6 py-6 lg:min-h-[calc(100vh-73px)] lg:w-66 lg:gap-8 lg:border-r lg:border-b-0 lg:py-7">
       <section>
         <SectionHead title="Search">
           {search && <ResetButton onClick={() => onSearch("")} />}
@@ -100,115 +109,168 @@ export function GallerySidebar({
         />
       </section>
 
-      <section>
-        <SectionHead title="Display">
-          <ResetButton
-            onClick={() => {
-              onColorText(null);
-              onSize(DEFAULT_ICON_SIZE);
-              onPadding(0);
-              onOrientation(IDENTITY_ORIENTATION);
-            }}
-          />
-        </SectionHead>
-
-        {/* ---- Color ---------------------------------------------------- */}
-        <label
-          htmlFor="icon-color"
-          className="mb-2 block text-caption text-text-muted"
-        >
-          Color
-        </label>
-
-        <div
-          className={`flex items-center gap-2 rounded-sm border bg-surface px-2 py-1.5 focus-within:border-accent ${
-            invalid ? "border-danger" : "border-border"
-          }`}
-        >
-          {/* The swatch is a native color input, so clicking it opens the OS
-              picker while the text field stays the primary way in. */}
-          <label
-            className="size-5 shrink-0 cursor-pointer rounded-xs border border-border"
-            style={{ backgroundColor: color }}
-            title="Pick a color"
-          >
-            <input
-              type="color"
-              value={color}
-              onChange={(event) => onColorText(event.target.value)}
-              className="sr-only"
-              aria-label="Pick a color"
-            />
-          </label>
-
-          {/* The # and the digits form one string, so they sit flush with no
-              gap between them — "#000000", not "# 000000". */}
-          <div className="flex min-w-0 flex-1 items-center font-data text-ui text-text">
-            <span aria-hidden="true">#</span>
-            <input
-              id="icon-color"
-              type="text"
-              inputMode="text"
-              spellCheck={false}
-              autoComplete="off"
-              value={fieldValue}
-              onChange={(event) => onColorText(event.target.value)}
-              aria-invalid={invalid}
-              className="w-full min-w-0 bg-transparent uppercase focus:outline-none"
-            />
-          </div>
-          {colorText !== null && (
-            <button
-              type="button"
-              onClick={() => onColorText(null)}
-              aria-label="Reset to theme default"
-              className="shrink-0 px-1 text-caption text-text-muted hover:text-text"
-            >
-              ✕
-            </button>
+      {/* Mobile-only entry point to the rest of the controls. */}
+      <button
+        type="button"
+        onClick={() => setFiltersOpen((open) => !open)}
+        aria-expanded={filtersOpen}
+        aria-controls="gallery-filters"
+        className="flex items-center justify-between rounded-sm border border-border bg-surface px-3 py-2.5 text-ui text-text lg:hidden"
+      >
+        <span>
+          Filters
+          {category !== "all" && (
+            <span className="ml-2 text-caption text-accent">1 active</span>
           )}
-        </div>
+        </span>
+        <span aria-hidden="true" className="text-caption text-text-muted">
+          {filtersOpen ? "▲" : "▼"}
+        </span>
+      </button>
 
-        {invalid && (
-          <p className="mt-1.5 text-caption text-danger">
-            Needs 3 or 6 hex digits.
-          </p>
-        )}
+      <div
+        id="gallery-filters"
+        className={`flex-col gap-6 lg:flex lg:gap-8 ${
+          filtersOpen ? "flex" : "hidden"
+        }`}
+      >
+        <section>
+          <SectionHead title="Display">
+            <ResetButton
+              onClick={() => {
+                onColorText(null);
+                onSize(DEFAULT_ICON_SIZE);
+                onPadding(0);
+                onOrientation(IDENTITY_ORIENTATION);
+              }}
+            />
+          </SectionHead>
 
-        {/* ---- Size ----------------------------------------------------- */}
-        <div className="mt-6">
+          {/* ---- Color ---------------------------------------------------- */}
           <label
-            htmlFor="icon-size"
-            className="mb-1 block text-caption text-text-muted"
+            htmlFor="icon-color"
+            className="mb-2 block text-caption text-text-muted"
           >
-            Size
+            Color
           </label>
 
-          {/* No value bubble: the tick labels below already show the current
-              size, and the active one is highlighted. */}
-          <div>
-            <input
-              id="icon-size"
-              type="range"
-              min={SIZE_MIN}
-              max={SIZE_MAX}
-              step={8}
-              value={size}
-              onChange={(event) => onSize(Number(event.target.value))}
-              className="pixl-range"
-              style={{ "--fill": `${progress}%` } as React.CSSProperties}
-            />
+          <div
+            className={`flex items-center gap-2 rounded-sm border bg-surface px-2 py-1.5 focus-within:border-accent ${
+              invalid ? "border-danger" : "border-border"
+            }`}
+          >
+            {/* The swatch is a native color input, so clicking it opens the OS
+              picker while the text field stays the primary way in. */}
+            <label
+              className="size-5 shrink-0 cursor-pointer rounded-xs border border-border"
+              style={{ backgroundColor: color }}
+              title="Pick a color"
+            >
+              <input
+                type="color"
+                value={color}
+                onChange={(event) => onColorText(event.target.value)}
+                className="sr-only"
+                aria-label="Pick a color"
+              />
+            </label>
 
-            <div className="mt-1 flex justify-between px-0.5">
-              {ICON_SIZES.map((step) => (
+            {/* The # and the digits form one string, so they sit flush with no
+              gap between them — "#000000", not "# 000000". */}
+            <div className="flex min-w-0 flex-1 items-center font-data text-ui text-text">
+              <span aria-hidden="true">#</span>
+              <input
+                id="icon-color"
+                type="text"
+                inputMode="text"
+                spellCheck={false}
+                autoComplete="off"
+                value={fieldValue}
+                onChange={(event) => onColorText(event.target.value)}
+                aria-invalid={invalid}
+                className="w-full min-w-0 bg-transparent uppercase focus:outline-none"
+              />
+            </div>
+            {colorText !== null && (
+              <button
+                type="button"
+                onClick={() => onColorText(null)}
+                aria-label="Reset to theme default"
+                className="shrink-0 px-1 text-caption text-text-muted hover:text-text"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {invalid && (
+            <p className="mt-1.5 text-caption text-danger">
+              Needs 3 or 6 hex digits.
+            </p>
+          )}
+
+          {/* ---- Size ----------------------------------------------------- */}
+          <div className="mt-6">
+            <label
+              htmlFor="icon-size"
+              className="mb-1 block text-caption text-text-muted"
+            >
+              Size
+            </label>
+
+            {/* No value bubble: the tick labels below already show the current
+              size, and the active one is highlighted. */}
+            <div>
+              <input
+                id="icon-size"
+                type="range"
+                min={SIZE_MIN}
+                max={SIZE_MAX}
+                step={8}
+                value={size}
+                onChange={(event) => onSize(Number(event.target.value))}
+                className="pixl-range"
+                style={{ "--fill": `${progress}%` } as React.CSSProperties}
+              />
+
+              <div className="mt-1 flex justify-between px-0.5">
+                {ICON_SIZES.map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => onSize(step)}
+                    className={`font-data text-caption transition-colors ${
+                      size === step
+                        ? "font-bold text-accent"
+                        : "text-text-faint hover:text-text-muted"
+                    }`}
+                  >
+                    {step}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ---- Padding -------------------------------------------------- */}
+          <div className="mt-5">
+            <div className="mb-1 flex items-baseline justify-between">
+              <span className="text-caption text-text-muted">Padding</span>
+              <span className="font-data text-caption text-text-faint">
+                {padding === 0 ? "none" : `${padding} cell`}
+              </span>
+            </div>
+            <div className="flex gap-1.5">
+              {PADDING_STEPS.map((step) => (
                 <button
                   key={step}
                   type="button"
-                  onClick={() => onSize(step)}
-                  className={`font-data text-caption transition-colors ${
-                    size === step
-                      ? "font-bold text-accent"
-                      : "text-text-faint hover:text-text-muted"
+                  onClick={() => onPadding(step)}
+                  aria-pressed={padding === step}
+                  className={`flex-1 rounded-sm border py-1.5 font-data text-caption transition-colors ${
+                    padding === step
+                      ? "border-accent bg-accent-subtle font-bold text-accent"
+                      : "border-border bg-surface text-text-muted hover:text-text"
                   }`}
                 >
                   {step}
@@ -216,65 +278,38 @@ export function GallerySidebar({
               ))}
             </div>
           </div>
-        </div>
 
-        {/* ---- Padding -------------------------------------------------- */}
-        <div className="mt-5">
-          <div className="mb-1 flex items-baseline justify-between">
-            <span className="text-caption text-text-muted">Padding</span>
-            <span className="font-data text-caption text-text-faint">
-              {padding === 0 ? "none" : `${padding} cell`}
-            </span>
-          </div>
-          <div className="flex gap-1.5">
-            {PADDING_STEPS.map((step) => (
-              <button
-                key={step}
-                type="button"
-                onClick={() => onPadding(step)}
-                aria-pressed={padding === step}
-                className={`flex-1 rounded-sm border py-1.5 font-data text-caption transition-colors ${
-                  padding === step
-                    ? "border-accent bg-accent-subtle font-bold text-accent"
-                    : "border-border bg-surface text-text-muted hover:text-text"
-                }`}
-              >
-                {step}
-              </button>
-            ))}
-          </div>
-        </div>
+          {/* ---- Transform ------------------------------------------------ */}
+          <TransformControls
+            orientation={orientation}
+            onOrientation={onOrientation}
+          />
+        </section>
 
-        {/* ---- Transform ------------------------------------------------ */}
-        <TransformControls
-          orientation={orientation}
-          onOrientation={onOrientation}
-        />
-      </section>
-
-      <section>
-        <SectionHead title="Categories" />
-        <ul className="flex flex-col gap-0.5 p-0 list-none">
-          <li>
-            <CategoryButton
-              label="All"
-              count={total}
-              active={category === "all"}
-              onClick={() => onCategory("all")}
-            />
-          </li>
-          {CATEGORIES.map((entry) => (
-            <li key={entry.id}>
+        <section>
+          <SectionHead title="Categories" />
+          <ul className="flex flex-col gap-0.5 p-0 list-none">
+            <li>
               <CategoryButton
-                label={entry.label}
-                count={counts[entry.id]}
-                active={category === entry.id}
-                onClick={() => onCategory(entry.id)}
+                label="All"
+                count={total}
+                active={category === "all"}
+                onClick={() => onCategory("all")}
               />
             </li>
-          ))}
-        </ul>
-      </section>
+            {CATEGORIES.map((entry) => (
+              <li key={entry.id}>
+                <CategoryButton
+                  label={entry.label}
+                  count={counts[entry.id]}
+                  active={category === entry.id}
+                  onClick={() => onCategory(entry.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
     </aside>
   );
 }
@@ -298,7 +333,11 @@ function SectionHead({
 
 function ResetButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="text-caption text-accent">
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-caption text-accent"
+    >
       Reset
     </button>
   );

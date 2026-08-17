@@ -77,9 +77,9 @@
   - **Color** — a free-text hex field (3 or 6 digits; the swatch beside it
     opens the OS picker) recolors **every** icon in the gallery. Defaults to
     #000000 in light and #ffffff in dark, and follows the theme; ✕ returns to
-    that default. Icons are **never** shown multi-color. Display only: never
-    affects stored data or exports, and the detail modal discloses the
-    difference whenever the copy would not match the preview.
+    that default. Icons are **never** shown multi-color.
+  - On narrow screens everything except Search collapses behind a **Filters**
+    toggle, so icons are not pushed below a screenful of controls.
   - **Size** (16/24/32/40/48) applies to every card; drag the slider or click
     a tick label. Default 24.
   - **Padding** — 0–3 **cells** of empty space around the art, applied to
@@ -92,10 +92,16 @@
     strokes, so those Nucleo-style controls have nothing to act on.
   - **No Bg control.** Backgrounds are **always transparent**, in the preview
     and in both the SVG and PNG exports.
-- **Card**: shows the icon only; the name appears on hover and on focus.
+- **Card**: on hover-capable devices the icon shows alone and the name appears
+  as an overlay on hover or keyboard focus. On touch devices — where `:hover`
+  never fires — the name sits permanently under the icon instead. Keyed on
+  hover capability, not screen width, so a large tablet behaves like a phone.
 - **Theme**: Light/Dark in the top nav, themeing the whole app. No System
   button — system is simply the default until a choice is made.
 - **Card click** → detail modal (copy SVG / download SVG+PNG / copy name).
+- **What you see is what you copy.** Every export is built from the displayed
+  cells, so the gallery's color, flip, rotation, and padding all travel with a
+  copied or downloaded icon. Stored `IconDef` data is still never modified.
 - Backdrop click or ✕ closes the modal; Escape should too.
 
 ## 7. Feedback & states

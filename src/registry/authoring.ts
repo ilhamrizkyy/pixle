@@ -64,6 +64,37 @@ export function cellsFromArt(art: ArtMap, palette: Palette): Cells {
   return cells;
 }
 
+/**
+ * Names, ids, and tags are all kebab-case: lowercase words joined by single
+ * hyphens. `arrow-right`, never `Arrow Right` or `arrowRight`.
+ *
+ * This is the name users see, search, and copy — matching how Lucide and
+ * Phosphor present icons, and making the displayed name identical to the
+ * string you would paste into code.
+ */
+export const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+export function isKebabCase(value: string): boolean {
+  return KEBAB_CASE.test(value);
+}
+
+/**
+ * Convert arbitrary text to kebab-case. Used when the composer saves, and to
+ * suggest a fix in validation errors.
+ *
+ * Splits camelCase before lowercasing, so "arrowRight" becomes "arrow-right"
+ * rather than "arrowright" — a suggestion that silently welds words together
+ * is worse than no suggestion.
+ */
+export function toKebabCase(value: string): string {
+  return value
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export type IconSource = {
   id: string;
   name: string;
@@ -80,6 +111,26 @@ export type IconSource = {
  * owner-only, so every icon is Ilham's and every icon is published.
  */
 export function defineIcon(source: IconSource): IconDef {
+  // Fail at module load rather than shipping an inconsistent registry.
+  for (const [label, value] of [
+    ["id", source.id],
+    ["name", source.name],
+  ] as const) {
+    if (!isKebabCase(value)) {
+      throw new Error(
+        `Icon ${label} must be kebab-case, received "${value}" (try "${toKebabCase(value)}")`,
+      );
+    }
+  }
+
+  for (const tag of source.tags) {
+    if (!isKebabCase(tag)) {
+      throw new Error(
+        `Icon "${source.id}" has a non-kebab-case tag "${tag}" (try "${toKebabCase(tag)}")`,
+      );
+    }
+  }
+
   return {
     id: source.id,
     name: source.name,

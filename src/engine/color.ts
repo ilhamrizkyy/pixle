@@ -109,58 +109,28 @@ export function hueName(hue: number): string {
 }
 
 /* ============================================================================
-   Gallery tint — DISPLAY ONLY.
+   Gallery color — DISPLAY ONLY.
 
-   A tint replaces each cell's hue and saturation while KEEPING that cell's own
-   lightness. That distinction is the whole point: flattening every cell to one
-   literal color would destroy any icon whose meaning lives in its internal
-   contrast (an envelope is a dark border around a light interior — one color
-   makes it a rectangle). Preserving lightness keeps the drawing readable while
-   unifying the palette across the gallery.
+   One color applies to every filled cell of every icon, the way Lucide's
+   customizer works. Structural detail carried by color contrast is lost by
+   design, so icons meant to survive this are drawn as OUTLINES rather than as
+   filled masses with internal color regions.
 
-   Consequence worth knowing: two colors that differ in HUE but not in
-   LIGHTNESS collapse into each other under a tint. That is a property of the
-   icon's own color choices, not a bug here.
+   Display only, always: the registry record is never modified, and Copy /
+   Download always emit the icon's own baked colors.
    ========================================================================= */
 
-/** A tint: a hue plus a saturation, both taken from a picked color. */
-export type Tint = { h: number; s: number };
-
-/** Derive a tint from a hex. Returns null for input that will not parse. */
-export function tintFromHex(hex: string): Tint | null {
-  const normalized = normalizeHex(hex);
-  if (normalized === null) return null;
-  const hsl = hexToHsl(normalized);
-  return { h: hsl.h, s: hsl.s };
-}
-
-/** Recolor one hex to the tint's hue/saturation, keeping its lightness. */
-export function tintHex(hex: string, tint: Tint): string {
-  const hsl = hexToHsl(hex);
-  return hslToHex({ h: tint.h, s: tint.s, l: hsl.l });
+/** Normalize a gallery color, or null when the input is not a usable hex. */
+export function galleryColorFromInput(input: string): string | null {
+  return normalizeHex(input);
 }
 
 /**
- * Recolor cells for display. Returns a NEW array — the icon in the registry is
- * never touched, and neither is anything that gets exported.
+ * Recolor cells for display: every filled cell becomes `color`, empty cells
+ * stay empty. Returns the ORIGINAL array when there is no color, so the
+ * untinted path allocates nothing.
  */
-export function tintCells(cells: Cells, tint: Tint | null): Cells {
-  if (tint === null) return cells;
-  return cells.map((cell) => (cell === null ? null : tintHex(cell, tint)));
+export function recolorCells(cells: Cells, color: string | null): Cells {
+  if (color === null) return cells;
+  return cells.map((cell) => (cell === null ? null : color));
 }
-
-/**
- * Swatches for the gallery tint control. "Original" (no tint) is represented
- * by null at the UI layer rather than by a color here.
- */
-export const TINT_PRESETS: readonly string[] = [
-  "#111111",
-  "#71717a",
-  "#dc2626",
-  "#d97706",
-  "#16a34a",
-  "#0d9488",
-  "#2b5bff",
-  "#7c3aed",
-  "#ec4899",
-] as const;

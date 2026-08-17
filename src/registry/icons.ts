@@ -3,7 +3,12 @@
  * and the multi-color model from day one.
  *
  * Every icon is drawn inside the 9x9 safe area (rows/cols 1–9), leaving the
- * symmetric 1-cell margin. Colors are baked literals per cell.
+ * symmetric 1-cell margin. Names, ids, and tags are kebab-case.
+ *
+ * DRAWING NOTE: the gallery can flatten every cell to one color, so icons are
+ * drawn as OUTLINES rather than as filled masses whose meaning depends on
+ * internal color contrast. A filled envelope with a lighter interior reads as
+ * a solid rectangle the moment one color is applied; an outlined one survives.
  */
 
 import type { IconDef } from "@/engine/types";
@@ -14,7 +19,7 @@ const SEEDED_AT = "2026-08-17T00:00:00.000Z";
 export const icons: readonly IconDef[] = [
   defineIcon({
     id: "arrow-right",
-    name: "Arrow Right",
+    name: "arrow-right",
     category: "interface",
     tags: ["arrow", "right", "next", "forward", "direction"],
     createdAt: SEEDED_AT,
@@ -36,7 +41,7 @@ export const icons: readonly IconDef[] = [
 
   defineIcon({
     id: "play",
-    name: "Play",
+    name: "play",
     category: "media",
     tags: ["play", "start", "media", "video", "triangle"],
     createdAt: SEEDED_AT,
@@ -58,11 +63,12 @@ export const icons: readonly IconDef[] = [
 
   defineIcon({
     id: "heart",
-    name: "Heart",
+    name: "heart",
     category: "arcade",
     tags: ["heart", "life", "health", "love", "favorite"],
     createdAt: SEEDED_AT,
-    // Two colors: the red body and the classic 8-bit glint.
+    // Solid on purpose: a filled heart still reads as a heart when the gallery
+    // flattens it, and the glint demonstrates the multi-color model.
     palette: { "#": "#dc2626", o: "#ffffff" },
     art: [
       "...........",
@@ -81,21 +87,21 @@ export const icons: readonly IconDef[] = [
 
   defineIcon({
     id: "floppy-disk",
-    name: "Floppy Disk",
+    name: "floppy-disk",
     category: "system",
     tags: ["floppy", "disk", "save", "storage", "file"],
     createdAt: SEEDED_AT,
-    palette: { "#": "#3f3f46", o: "#fafafa" },
+    palette: { "#": "#111111" },
     art: [
       "...........",
       ".#########.",
-      ".###ooo###.",
-      ".###ooo###.",
-      ".#########.",
-      ".#########.",
-      ".#ooooooo#.",
-      ".#ooooooo#.",
-      ".#ooooooo#.",
+      ".#..###..#.",
+      ".#..#.#..#.",
+      ".#..###..#.",
+      ".#.......#.",
+      ".#.#####.#.",
+      ".#.#...#.#.",
+      ".#.#####.#.",
       ".#########.",
       "...........",
     ],
@@ -103,20 +109,20 @@ export const icons: readonly IconDef[] = [
 
   defineIcon({
     id: "mail",
-    name: "Mail",
+    name: "mail",
     category: "communication",
     tags: ["mail", "email", "envelope", "message", "inbox"],
     createdAt: SEEDED_AT,
-    palette: { "#": "#111111", o: "#e8edff" },
+    palette: { "#": "#111111" },
     art: [
       "...........",
       "...........",
       ".#########.",
-      ".##ooooo##.",
-      ".#o#ooo#o#.",
-      ".#oo###oo#.",
-      ".#ooooooo#.",
-      ".#ooooooo#.",
+      ".##.....##.",
+      ".#.##.##.#.",
+      ".#..###..#.",
+      ".#.......#.",
+      ".#.......#.",
       ".#########.",
       "...........",
       "...........",
@@ -125,13 +131,12 @@ export const icons: readonly IconDef[] = [
 
   defineIcon({
     id: "sun",
-    name: "Sun",
+    name: "sun",
     category: "nature",
     tags: ["sun", "weather", "light", "day", "bright"],
     createdAt: SEEDED_AT,
-    // Rays and core are separated by ~45% lightness, not just by hue. Two
-    // colors that differ only in hue collapse into one under a gallery tint,
-    // which is what the original #d97706/#eab308 pair did (3.8% apart).
+    // Rays and core read as separate shapes rather than relying on color to
+    // tell them apart, so the sun survives being flattened to one color.
     palette: { "#": "#92400e", o: "#fef08a" },
     art: [
       "...........",

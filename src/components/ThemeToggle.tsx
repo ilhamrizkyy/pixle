@@ -3,29 +3,33 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Whole-app theme control: Light / Dark / System.
+ * Theme control: two buttons, Light and Dark.
  *
- * "System" is a real third state, not a synonym for light. It removes
- * data-theme entirely so the CSS media query takes over, which means the app
- * keeps following the OS as it changes rather than freezing at whatever it was
- * on first load.
+ * There is no "System" button, but system IS the default. Until you pick, no
+ * data-theme attribute is set and the CSS media query decides — so a first
+ * visit already matches the OS, and the app keeps following it as it changes.
+ * Picking a side writes an explicit preference that then wins.
  *
- * The stored preference is an external store, so it is read through
- * useSyncExternalStore rather than an effect. That keeps server and client
- * renders consistent and avoids a setState-in-effect cascade.
+ * The buttons highlight the RESOLVED theme, so on a first visit with a dark OS
+ * the Dark button reads as active even though nothing is stored yet.
+ *
+ * The preference is external state, so it is read through useSyncExternalStore
+ * rather than an effect.
  */
 
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark";
 
 export const THEME_STORAGE_KEY = "pixle-theme";
 
 /** Fired on same-tab changes; the storage event only covers other tabs. */
 const THEME_EVENT = "pixle-theme-change";
 
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
 /**
  * Runs before first paint to stop a flash of the wrong theme. Inlined into
  * <head>, so it must stay dependency-free and defensive: a browser with
- * storage blocked should render light, not throw.
+ * storage blocked should fall back to the media query, not throw.
  */
 export const THEME_INIT_SCRIPT = `
 try {
@@ -39,45 +43,43 @@ try {
 const OPTIONS: { value: Theme; label: string; icon: string }[] = [
   { value: "light", label: "Light", icon: "☀" },
   { value: "dark", label: "Dark", icon: "☾" },
-  { value: "system", label: "System", icon: "⌗" },
 ];
 
 function subscribe(onChange: () => void): () => void {
+  const media = window.matchMedia(DARK_QUERY);
   window.addEventListener(THEME_EVENT, onChange);
   window.addEventListener("storage", onChange);
+  media.addEventListener("change", onChange);
   return () => {
     window.removeEventListener(THEME_EVENT, onChange);
     window.removeEventListener("storage", onChange);
+    media.removeEventListener("change", onChange);
   };
 }
 
+/** The resolved theme: an explicit choice if there is one, else the OS. */
 function getSnapshot(): Theme {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch {
-    // Storage unavailable — fall through to system.
+    // Storage unavailable — fall through to the media query.
   }
-  return "system";
+  return window.matchMedia(DARK_QUERY).matches ? "dark" : "light";
 }
 
-/** The server cannot know the preference; system is the honest default. */
+/** The server cannot know the OS preference; light is the safe assumption. */
 function getServerSnapshot(): Theme {
-  return "system";
+  return "light";
 }
 
 function setTheme(theme: Theme): void {
-  const root = document.documentElement;
-  if (theme === "system") root.removeAttribute("data-theme");
-  else root.setAttribute("data-theme", theme);
-
+  document.documentElement.setAttribute("data-theme", theme);
   try {
-    if (theme === "system") localStorage.removeItem(THEME_STORAGE_KEY);
-    else localStorage.setItem(THEME_STORAGE_KEY, theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
     // The preference simply will not persist.
   }
-
   window.dispatchEvent(new Event(THEME_EVENT));
 }
 

@@ -194,12 +194,12 @@ export function IconModal({
           onFocus={(event) => event.currentTarget.select()}
           className="mt-3.5 h-15 w-full resize-none rounded-sm border border-border bg-surface-2 p-2 font-data text-caption text-text-muted"
         />
-        {/* When a tint is on, the preview above and the markup below disagree.
-            Say so plainly rather than letting someone paste a color they did
-            not get. */}
+        {/* With a gallery color on, the preview above and the markup below
+            disagree. Say so plainly rather than letting someone paste a color
+            they did not get. */}
         <p className="mt-1.5 text-caption text-text-faint">
           {tinted
-            ? "The gallery tint is preview only — this SVG carries the icon's own baked colors."
+            ? "The gallery color is preview only — this SVG carries the icon's own baked colors."
             : "Colors are baked into the SVG."}
         </p>
       </div>

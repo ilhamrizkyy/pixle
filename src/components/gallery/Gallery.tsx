@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Toast } from "@/components/Toast";
-import { tintCells, tintFromHex } from "@/engine/color";
+import { galleryColorFromInput, recolorCells } from "@/engine/color";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
 import { EmptyState } from "./EmptyState";
@@ -24,7 +24,9 @@ type GalleryProps = { icons: readonly IconDef[] };
 export function Gallery({ icons }: GalleryProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
-  const [tint, setTint] = useState<string | null>(null);
+  // The raw field text lives here, not in the sidebar, so Reset can clear it
+  // without two pieces of state needing an effect to stay in sync.
+  const [colorText, setColorText] = useState("");
   const [size, setSize] = useState(32);
   const [showGrid, setShowGrid] = useState(false);
   const [selected, setSelected] = useState<IconDef | null>(null);
@@ -68,26 +70,27 @@ export function Gallery({ icons }: GalleryProps) {
    * the original array untouched when there is no tint, so the no-tint path
    * costs nothing.
    */
-  const activeTint = useMemo(
-    () => (tint === null ? null : tintFromHex(tint)),
-    [tint],
+  const activeColor = useMemo(
+    () => galleryColorFromInput(colorText),
+    [colorText],
   );
 
   const displayCells = useMemo(() => {
     const map = new Map<string, IconDef["cells"]>();
     for (const icon of icons) {
-      map.set(icon.id, tintCells(icon.cells, activeTint));
+      map.set(icon.id, recolorCells(icon.cells, activeColor));
     }
     return map;
-  }, [icons, activeTint]);
+  }, [icons, activeColor]);
 
   return (
     <div className="flex flex-col items-start lg:flex-row">
       <GallerySidebar
         search={search}
         onSearch={setSearch}
-        tint={tint}
-        onTint={setTint}
+        colorText={colorText}
+        onColorText={setColorText}
+        color={activeColor}
         size={size}
         onSize={setSize}
         showGrid={showGrid}
@@ -133,7 +136,7 @@ export function Gallery({ icons }: GalleryProps) {
         <IconModal
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
-          tinted={activeTint !== null}
+          tinted={activeColor !== null}
           showGrid={showGrid}
           onClose={() => setSelected(null)}
           onNotify={setToast}

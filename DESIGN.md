@@ -51,17 +51,16 @@ full HSL picker (see @INTERACTION.md) and **baked** into the icon. No palette
 restriction (full freedom), so visual coherence relies on curation, not tokens.
 True black (#000) and true white (#fff) are reachable.
 
-**Gallery tint (display only).** The gallery offers a color control that
-re-hues previews so the set reads as one palette. It replaces each cell's hue
-and saturation but **preserves that cell's lightness** — never a flat
-single-color fill, which would erase any icon whose meaning lives in internal
-contrast (an envelope is a dark border around a light interior; one color makes
-it a rectangle). Stored data and exports are untouched.
+**Gallery color (display only).** A single hex field recolors **every filled
+cell of every icon**, matching Lucide's customizer. Stored data and exports are
+untouched; the field is empty by default, so icons show their own colors until
+you type one.
 
-**Authoring consequence:** two colors inside one icon that differ in hue but
-not in lightness will collapse into each other under a tint. Separate an icon's
-colors by **lightness**, not hue alone — aim for ~20%+ L between adjacent
-regions.
+**Authoring consequence — draw outlines, not filled masses.** Because one color
+can flatten an icon, an icon must be legible as a silhouette. A filled envelope
+with a lighter interior becomes a plain rectangle the moment a color is
+applied; an outlined envelope survives. Reserve multi-color for detail that is
+decorative (a heart's glint) rather than structural (an envelope's flap).
 
 ## 4. Typography
 
@@ -98,14 +97,21 @@ Line-height: 1.5 body, 1.2 headings/labels.
 **Top nav** — logo left; Icons / Guide / Resources / Contribute; then the
 owner-only actions. Active nav item in `--accent`.
 
-**Gallery sidebar** — Search (+reset); Display (**Color** tint swatches +
-custom picker with an "Original" option; **Size** slider on the 16–48 8-step
-scale with a value bubble and clickable tick labels; **Gridlines** toggle);
-Categories (All + per-category counts that follow the active search).
+**Gallery sidebar** — Search (+reset); Display (**Color** free-text hex field
+with a swatch that opens the OS picker, empty = each icon's own colors;
+**Size** slider on the 16–48 8-step scale with a value bubble and clickable
+tick labels; **Gridlines** toggle); Categories (All + per-category counts that
+follow the active search).
 
-**Theme** — Light / Dark / System applies to the **whole app**, controlled from
-the top nav. Dark mode is a redefinition of the shell tokens, not a parallel
-stylesheet. (Superseded the earlier gallery-only Light/Dark preview toggle.)
+**Icon card** — the icon alone, no permanent caption. The name appears on hover
+and on keyboard focus.
+
+**Theme** — **Light / Dark**, two buttons in the top nav. There is no System
+button, but system is the default: until a choice is made no `data-theme` is
+set and the media query decides, so a first visit already matches the OS. The
+buttons highlight the *resolved* theme. Dark mode is a redefinition of the
+shell tokens, not a parallel stylesheet. (Superseded the earlier gallery-only
+Light/Dark preview toggle.)
 
 **Icon card** — `--surface` fill, `--radius-md`, hover lift + border, name below.
 Selected → `--accent` ring.

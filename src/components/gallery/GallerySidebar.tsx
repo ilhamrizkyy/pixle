@@ -1,17 +1,15 @@
 "use client";
 
 import { ICON_SIZES } from "@/engine/constants";
-import { TINT_PRESETS, hueName, tintFromHex } from "@/engine/color";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
 
 /**
  * Gallery sidebar: Search, Display (color / size / gridlines), Categories.
  *
- * The color control is a DISPLAY tint — it re-hues the previews so the gallery
- * reads as one palette, and never touches stored icons or exports. Each cell
- * keeps its own lightness, which is what stops an envelope from flattening
- * into a rectangle.
+ * The color control is DISPLAY ONLY — one hex recolors every icon in the
+ * gallery, the way Lucide's customizer works. It never touches stored icons or
+ * what gets copied and downloaded.
  *
  * Light/Dark moved out of here: theme is now a whole-app control in the nav.
  */
@@ -21,9 +19,14 @@ export type CategoryFilter = Category | "all";
 type GallerySidebarProps = {
   search: string;
   onSearch: (value: string) => void;
-  /** Hex of the active tint, or null for each icon's own colors. */
-  tint: string | null;
-  onTint: (value: string | null) => void;
+  /**
+   * Raw text of the hex field. Held by the parent (not local state) so the
+   * Reset button can clear it without an effect syncing two sources of truth.
+   */
+  colorText: string;
+  onColorText: (value: string) => void;
+  /** The parsed color, or null when the field is empty or incomplete. */
+  color: string | null;
   size: number;
   onSize: (value: number) => void;
   showGrid: boolean;
@@ -40,8 +43,9 @@ const SIZE_MAX = ICON_SIZES[ICON_SIZES.length - 1];
 export function GallerySidebar({
   search,
   onSearch,
-  tint,
-  onTint,
+  colorText,
+  onColorText,
+  color,
   size,
   onSize,
   showGrid,
@@ -53,7 +57,7 @@ export function GallerySidebar({
 }: GallerySidebarProps) {
   // Position of the fill and the value bubble along the track.
   const progress = ((size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * 100;
-  const tintHsl = tint === null ? null : tintFromHex(tint);
+  const invalid = colorText.trim() !== "" && color === null;
 
   return (
     <aside className="flex w-full shrink-0 flex-col gap-8 border-b border-border px-6 py-7 lg:min-h-[calc(100vh-73px)] lg:w-66 lg:border-r lg:border-b-0">
@@ -75,7 +79,7 @@ export function GallerySidebar({
         <SectionHead title="Display">
           <ResetButton
             onClick={() => {
-              onTint(null);
+              onColorText("");
               onSize(32);
               onShowGrid(false);
             }}
@@ -83,69 +87,72 @@ export function GallerySidebar({
         </SectionHead>
 
         {/* ---- Color ---------------------------------------------------- */}
-        <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-caption text-text-muted">Color</span>
-          <span className="font-data text-caption text-text-faint">
-            {tintHsl === null ? "Original" : hueName(tintHsl.h)}
-          </span>
-        </div>
+        <label
+          htmlFor="icon-color"
+          className="mb-2 block text-caption text-text-muted"
+        >
+          Color
+        </label>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => onTint(null)}
-            aria-pressed={tint === null}
-            title="Each icon's own colors"
-            className={`size-6 rounded-sm border-2 ${
-              tint === null
-                ? "border-accent"
-                : "border-border hover:border-text-faint"
-            }`}
-            style={{
-              // A quartered swatch reads as "many colors" at a glance, which
-              // is exactly what "Original" means here.
-              backgroundImage:
-                "linear-gradient(135deg,#dc2626 0 25%,#d97706 25% 50%,#16a34a 50% 75%,#2b5bff 75% 100%)",
-            }}
-          >
-            <span className="sr-only">Original colors</span>
-          </button>
-
-          {TINT_PRESETS.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              onClick={() => onTint(preset)}
-              aria-pressed={tint === preset}
-              title={preset}
-              className={`size-6 rounded-sm border-2 ${
-                tint === preset
-                  ? "border-accent"
-                  : "border-border hover:border-text-faint"
-              }`}
-              style={{ backgroundColor: preset }}
-            >
-              <span className="sr-only">Tint {hueName(tintFromHex(preset)?.h ?? 0)}</span>
-            </button>
-          ))}
-
+        <div
+          className={`flex items-center gap-2 rounded-sm border bg-surface px-2 py-1.5 focus-within:border-accent ${
+            invalid ? "border-danger" : "border-border"
+          }`}
+        >
+          {/* The swatch is a native color input, so clicking it opens the OS
+              picker while the text field stays the primary way in. */}
           <label
-            className="flex size-6 cursor-pointer items-center justify-center rounded-sm border-2 border-border text-caption text-text-muted hover:border-text-faint"
-            title="Custom color"
+            className="size-5 shrink-0 cursor-pointer rounded-xs border border-border"
+            style={{
+              backgroundColor: color ?? undefined,
+              // No color set: show the multi-color state, not a blank chip.
+              backgroundImage:
+                color === null
+                  ? "linear-gradient(135deg,#dc2626 0 25%,#d97706 25% 50%,#16a34a 50% 75%,#2b5bff 75% 100%)"
+                  : undefined,
+            }}
+            title="Pick a color"
           >
-            +
             <input
               type="color"
-              value={tint ?? "#2b5bff"}
-              onChange={(event) => onTint(event.target.value)}
+              value={color ?? "#111111"}
+              onChange={(event) => onColorText(event.target.value)}
               className="sr-only"
-              aria-label="Custom tint color"
+              aria-label="Pick a color"
             />
           </label>
+
+          <span aria-hidden="true" className="font-data text-ui text-text-faint">
+            #
+          </span>
+          <input
+            id="icon-color"
+            type="text"
+            inputMode="text"
+            spellCheck={false}
+            autoComplete="off"
+            value={colorText.replace(/^#/, "")}
+            onChange={(event) => onColorText(event.target.value)}
+            placeholder="original"
+            aria-invalid={invalid}
+            className="w-full min-w-0 bg-transparent font-data text-ui text-text uppercase placeholder:normal-case placeholder:text-text-faint focus:outline-none"
+          />
+          {colorText !== "" && (
+            <button
+              type="button"
+              onClick={() => onColorText("")}
+              aria-label="Clear color"
+              className="shrink-0 px-1 text-caption text-text-muted hover:text-text"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
-        <p className="mt-2 text-caption text-text-faint">
-          Preview only — copies keep each icon&apos;s own colors.
+        <p className="mt-1.5 text-caption text-text-faint">
+          {invalid
+            ? "Needs 3 or 6 hex digits."
+            : "Preview only — copies keep baked colors."}
         </p>
 
         {/* ---- Size ----------------------------------------------------- */}

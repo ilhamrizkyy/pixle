@@ -26,13 +26,15 @@ niche. Licensed **MIT**.
    color applies only to the **next** cells drawn; existing cells keep theirs
    (no retroactive recolor). Exports carry baked colors. There is **no**
    currentColor.
-   - **Amended 2026-08-17 — gallery tint.** The gallery may apply a
-     **display-only** tint so the set reads as one palette. It re-hues each
-     cell while **keeping that cell's own lightness**, so internal contrast
-     (and therefore the drawing) survives. It is strictly a preview: stored
+   - **Amended 2026-08-17 — gallery color.** The gallery may apply a
+     **display-only** color: one hex recolors **every filled cell of every
+     icon**, as Lucide's customizer does. It is strictly a preview — stored
      `cells` are never modified, and Copy/Download always emit the icon's own
-     baked colors. The modal discloses the mismatch while a tint is active.
-     A tint must never become a persisted property of an `IconDef`.
+     baked colors. The modal discloses the mismatch while a color is active,
+     and the color must never become a persisted property of an `IconDef`.
+   - **Drawing consequence:** because one color can flatten an icon, icons are
+     drawn as **outlines**, not as filled masses whose meaning depends on
+     internal color contrast. See @DESIGN.md §3.
 3. **Grid state is the source of truth**, not SVG. An icon *is* its 11×11 cell
    data; SVG/PNG are render targets generated from it.
 4. **Grid = 11x11 on viewBox "0 0 44 44"** (4 units per cell). Square pixels,
@@ -61,6 +63,10 @@ niche. Licensed **MIT**.
       status: "published" | "pending" | "rejected"; // pending/rejected unused in v1
       createdAt: string;     // ISO
     };
+
+**Naming:** `id`, `name`, and every `tag` are **kebab-case** (`arrow-right`) —
+validated at module load, so a bad name fails the build. The displayed name is
+therefore the same string you would paste into code, matching Lucide/Phosphor.
 
 - v1 icon set = a **static registry** (typed module / JSON in the repo). The
   owner-only composer writes new icons into it (via Supabase or a commit flow —

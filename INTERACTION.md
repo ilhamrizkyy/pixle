@@ -74,15 +74,17 @@
 - **Search**: matches name + tags; category counts reflect the active search.
 - **Category filter**: All + fixed categories.
 - **Display**:
-  - **Color** — swatches + a custom picker apply a display-only tint to every
-    icon, re-hueing while keeping each cell's lightness. "Original" restores
-    each icon's own colors. Never affects stored data or exports.
+  - **Color** — a free-text hex field (3 or 6 digits; the swatch beside it
+    opens the OS picker) recolors **every** icon in the gallery. Empty = each
+    icon's own colors. Display only: never affects stored data or exports, and
+    the detail modal says so while a color is active.
   - **Size** (16/24/32/40/48) applies to every card; drag the slider or click
     a tick label.
   - **Gridlines** — show/hide faint 11×11 cell lines on previews, echoing the
     composer board.
-- **Theme**: Light/Dark/System lives in the top nav and themes the whole app
-  (it replaced the old gallery-only Light/Dark preview toggle).
+- **Card**: shows the icon only; the name appears on hover and on focus.
+- **Theme**: Light/Dark in the top nav, themeing the whole app. No System
+  button — system is simply the default until a choice is made.
 - **Card click** → detail modal (copy SVG / download SVG+PNG / copy name).
 - Backdrop click or ✕ closes the modal; Escape should too.
 

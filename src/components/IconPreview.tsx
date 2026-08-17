@@ -1,0 +1,55 @@
+/**
+ * Renders an icon's cells as SVG rects.
+ *
+ * This is PRESENTATION: it reads engine data and draws it. It holds no icon
+ * logic of its own — geometry comes from engine constants, colors come baked
+ * off the cells. Swapping this out for a canvas or a 3D surface later changes
+ * nothing about the data.
+ */
+
+import { CELL_UNITS, GRID_SIZE, VIEW_BOX } from "@/engine/constants";
+import { toIndex } from "@/engine/grid";
+import type { Cells } from "@/engine/types";
+
+type IconPreviewProps = {
+  cells: Cells;
+  /** Rendered px. Multiples of 8, 16 minimum. */
+  size?: number;
+  /** Accessible name. Omit for decorative use. */
+  title?: string;
+};
+
+export function IconPreview({ cells, size = 32, title }: IconPreviewProps) {
+  const rects = [];
+
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const color = cells[toIndex(row, col)];
+      if (color === null) continue;
+      rects.push(
+        <rect
+          key={`${row}-${col}`}
+          x={col * CELL_UNITS}
+          y={row * CELL_UNITS}
+          width={CELL_UNITS}
+          height={CELL_UNITS}
+          fill={color}
+        />,
+      );
+    }
+  }
+
+  return (
+    <svg
+      viewBox={VIEW_BOX}
+      width={size}
+      height={size}
+      role={title ? "img" : "presentation"}
+      aria-label={title}
+      aria-hidden={title ? undefined : true}
+    >
+      {title ? <title>{title}</title> : null}
+      {rects}
+    </svg>
+  );
+}

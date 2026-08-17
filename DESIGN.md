@@ -101,9 +101,9 @@ owner-only actions. Active nav item in `--accent`.
 
 **Gallery sidebar** — Search (+reset); Display (**Color** free-text hex field
 with a swatch that opens the OS picker, defaulting to the theme's black/white;
-**Size** slider on the 16–48 8-step scale with a value bubble and clickable
-tick labels); Categories (All + per-category counts that follow the active
-search).
+**Size** slider on the 16–48 8-step scale, default **24**, with clickable tick
+labels that double as the readout); Categories (All + per-category counts that
+follow the active search).
 
 **Icon card** — the icon alone, no permanent caption. The name appears on hover
 and on keyboard focus.

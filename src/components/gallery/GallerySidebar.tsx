@@ -1,7 +1,7 @@
 "use client";
 
 import { galleryColorFromInput } from "@/engine/color";
-import { ICON_SIZES } from "@/engine/constants";
+import { DEFAULT_ICON_SIZE, ICON_SIZES } from "@/engine/constants";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
 
@@ -90,7 +90,7 @@ export function GallerySidebar({
           <ResetButton
             onClick={() => {
               onColorText(null);
-              onSize(32);
+              onSize(DEFAULT_ICON_SIZE);
             }}
           />
         </SectionHead>
@@ -124,20 +124,22 @@ export function GallerySidebar({
             />
           </label>
 
-          <span aria-hidden="true" className="font-data text-ui text-text-faint">
-            #
-          </span>
-          <input
-            id="icon-color"
-            type="text"
-            inputMode="text"
-            spellCheck={false}
-            autoComplete="off"
-            value={fieldValue}
-            onChange={(event) => onColorText(event.target.value)}
-            aria-invalid={invalid}
-            className="w-full min-w-0 bg-transparent font-data text-ui text-text uppercase focus:outline-none"
-          />
+          {/* The # and the digits form one string, so they sit flush with no
+              gap between them — "#000000", not "# 000000". */}
+          <div className="flex min-w-0 flex-1 items-center font-data text-ui text-text">
+            <span aria-hidden="true">#</span>
+            <input
+              id="icon-color"
+              type="text"
+              inputMode="text"
+              spellCheck={false}
+              autoComplete="off"
+              value={fieldValue}
+              onChange={(event) => onColorText(event.target.value)}
+              aria-invalid={invalid}
+              className="w-full min-w-0 bg-transparent uppercase focus:outline-none"
+            />
+          </div>
           {colorText !== null && (
             <button
               type="button"
@@ -158,26 +160,16 @@ export function GallerySidebar({
 
         {/* ---- Size ----------------------------------------------------- */}
         <div className="mt-6">
-          <div className="mb-1 flex items-baseline justify-between">
-            <label htmlFor="icon-size" className="text-caption text-text-muted">
-              Size
-            </label>
-          </div>
+          <label
+            htmlFor="icon-size"
+            className="mb-1 block text-caption text-text-muted"
+          >
+            Size
+          </label>
 
-          <div className="relative pt-6">
-            {/* Value bubble rides the thumb. The 20px thumb means its centre
-                travels only (100% - 20px), so the offset is corrected by
-                translating back a matching fraction of the thumb width. */}
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-sm border border-border bg-surface px-1.5 py-0.5 font-data text-caption text-text"
-              style={{
-                left: `calc(${progress}% + ${10 - (progress / 100) * 20}px)`,
-              }}
-            >
-              {size}px
-            </span>
-
+          {/* No value bubble: the tick labels below already show the current
+              size, and the active one is highlighted. */}
+          <div>
             <input
               id="icon-size"
               type="range"

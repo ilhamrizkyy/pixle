@@ -39,3 +39,6 @@ export const SAFE_AREA_MAX = SAFE_AREA_MIN + SAFE_AREA_SIZE - 1; // 9
 export const ICON_SIZES = [16, 24, 32, 40, 48] as const;
 
 export type IconSize = (typeof ICON_SIZES)[number];
+
+/** The size the gallery opens at. */
+export const DEFAULT_ICON_SIZE: IconSize = 24;

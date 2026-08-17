@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Toast } from "@/components/Toast";
 import { galleryColorFromInput, recolorCells } from "@/engine/color";
+import { DEFAULT_ICON_SIZE } from "@/engine/constants";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
 import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
@@ -34,7 +35,7 @@ export function Gallery({ icons }: GalleryProps) {
    * the color at whatever the theme was on mount.
    */
   const [colorText, setColorText] = useState<string | null>(null);
-  const [size, setSize] = useState(32);
+  const [size, setSize] = useState<number>(DEFAULT_ICON_SIZE);
   const [selected, setSelected] = useState<IconDef | null>(null);
   const [toast, setToast] = useState("");
 

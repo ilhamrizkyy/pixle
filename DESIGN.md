@@ -1,0 +1,125 @@
+# DESIGN.md — Visual Style Guide
+
+> Source of truth for look-and-feel. Every color, type, and spacing value comes
+> from the tokens here. The product shell stays calm and minimal (Lucide-like);
+> the personality lives in the icons and the Etch A Sketch composer.
+
+Reflects the v9 prototype (blue toy, silver screen, multi-color). Items marked
+**[FIX]** are known issues to correct while building (see @BACKLOG.md).
+
+---
+
+## 1. Design thesis
+
+Two registers, kept separate:
+- **Shell** (nav, gallery, Guide, Resources): white, monochrome type, one blue
+  accent, generous space. The icons are the stars.
+- **Composer**: a skeuomorphic **blue** Etch A Sketch — the one place we go
+  bold and tactile.
+
+Signature motif: the pixel grid — as icon cells, as the composer board, and in
+empty/loading states.
+
+## 2. Color tokens (CSS variables at :root)
+
+Neutrals / shell
+    --bg:#FFFFFF  --surface:#F4F4F5  --surface-2:#FAFAFA  --border:#E4E4E7
+    --text:#111111  --text-muted:#71717A  --text-faint:#A1A1AA
+
+Accent — Arcade Blue (the one shell accent)
+    --accent:#2B5BFF  --accent-hover:#1E42D6  --accent-subtle:#E8EDFF
+
+Semantic
+    --danger:#DC2626   (errors stay red so they read against the blue toy)
+    --success:#16A34A  --warning:#D97706
+
+Composer toy (blue Etch A Sketch — scoped to the composer only)
+    --frame:#2E46C8      toy body (top of gradient)
+    --frame-2:#20328A    toy body (bottom of gradient)
+    --frame-3:#182662    bottom lip / deep shadow
+    --bezel:#1A2A70      dark rim around the screen (must read RECESSED)
+    --well:#20337F  --well-2:#182660   recessed button wells
+    --screen: silver-gray gradient (#cfd2cb -> #bfc3ba)
+
+Rule: `--frame*/--bezel/--well/--screen` are **composer-only**. Never use them
+in the shell.
+
+## 3. Color inside icons (multi-color)
+
+Icons are multi-color; each cell holds a hex or null. Colors are chosen with the
+full HSL picker (see @INTERACTION.md) and **baked** into the icon. No palette
+restriction (full freedom), so visual coherence relies on curation, not tokens.
+True black (#000) and true white (#fff) are reachable.
+
+## 4. Typography
+
+| Role    | Face                        | Use |
+|---------|-----------------------------|-----|
+| Display | Departure Mono (mono, retro)| Logo, headings, nav, labels, buttons, UI |
+| Body    | Inter                       | Long-form prose in Guide / Resources |
+| Data    | Departure Mono / JetBrains Mono | Counts, hex, sizes, code |
+
+Optional pixel face (Silkscreen / Pixelify Sans) for the **wordmark only**.
+(Prototype uses a system monospace as a stand-in.)
+
+Scale (px): 12 caption · 14 UI · 16 body · 20 h3 · 24 h2 · 32 h1.
+Line-height: 1.5 body, 1.2 headings/labels.
+
+## 5. Spacing, radius, layout
+
+- Base unit **8px** (matches the icon 8-multiple sizing). Scale: 4 8 12 16 24 32 48 64.
+- Radius: `--radius-sm 4` (inputs) · `--radius-md 8` (cards/panels) ·
+  `--radius-lg 16` (modals) · `--radius-toy 32` (toy frame). **Icon cells and the
+  grid are always 0 radius.**
+- Sidebar 264px fixed. Icon grid: auto-fill ~92px cards, 14px gap. Icon centered.
+- Quality floor: visible focus rings (accent), respects `prefers-reduced-motion`,
+  works down to mobile.
+
+## 6. Component specs
+
+**Top nav** — logo left; Icons / Guide / Resources / Contribute; then the
+owner-only actions. Active nav item in `--accent`.
+
+**Gallery sidebar** — Search (+reset); Display (Size slider on the 16–48 8-step
+scale, Light/Dark preview toggle); Categories (All + per-category counts that
+follow the active search).
+
+**Icon card** — `--surface` fill, `--radius-md`, hover lift + border, name below.
+Selected → `--accent` ring.
+
+**Icon detail modal** — small centered panel (~1/4 screen). Large preview, name,
+category, tags, and actions: Copy SVG, Download SVG/PNG, Copy name. Colors are
+baked, so no color control here.
+
+**Composer — toy anatomy**
+- *Frame*: blue gradient body, `--radius-toy`, top highlight + bottom lip.
+- *Screen*: silver-gray, must read **recessed / snub-in** — inner shadow falls
+  inward from the top edge; never convex ("hill"). **[FIX]** the current
+  snub-in still looks slightly off; refine the inset geometry (a true 3D screen
+  in Phase 3 should resolve it).
+- *Bezel*: dark rim (`--bezel`). **[FIX]** the bottom bezel is too thick/fat —
+  even the rim all around; thin it so the screen sits in a slim recessed frame.
+- *Buttons*: 8 total, 4 flanking each side — Game Boy A/B style (soft light
+  domed cap seated in a recessed well). Left: Mirror, Grid, Eyedropper, Undo.
+  Right: Flip-H, Flip-V, Rotate, Redo. Press sinks ~1px only.
+- *Knobs*: two large ridged knobs at the **true bottom corners**, overlapping
+  the frame edge like the real toy. **[FIX]** currently they sit inboard and
+  are too small — move them fully to the corners and enlarge. Only the ridged
+  dial turns; the shadow/ring stay still. Left knob wears a rainbow (hue) ring,
+  right knob a black→color→white (lightness) ring.
+- *Color panel* (between the knobs): current-color swatch, editable hex, a
+  readout (hue name · L% · S%), a saturation slider, and a single row of preset
+  swatches (incl. true black & white).
+- *Slide-to-clear*: a groove the width of the board, just under the screen;
+  dragging wipes the drawing left→right progressively.
+
+**Composer bottom dock** — labelled fields (Name / Category / Tags), a current-
+color chip, and Export / Save (no filled-cell count). **[FIX]** the dock is too
+thick — reduce its height/padding. **[MOVE]** the SVG **Import** control belongs
+here (a composer/owner action), not in the global nav.
+
+## 7. Do / Don't
+
+Do: keep the shell monochrome + one accent; keep pixel cells square; reuse tokens.
+Don't: use `--frame*/--screen` outside the composer; round icon pixels; add
+gradients/shadows to icon art; add a second shell accent.

@@ -111,8 +111,9 @@ but applied to the whole gallery rather than one icon at a time. Stroke and
 Cap/Join are deliberately excluded — pixel cells have no strokes — and there is
 no Bg control: icon backgrounds are **always transparent**.
 
-**Icon card** — the icon alone, no permanent caption. The name appears on hover
-and on keyboard focus.
+**Icon card** — `--surface` fill, `--radius-md`, hover lift + border. The icon
+alone, with **no permanent caption**: the name appears on hover and on keyboard
+focus. Selected → `--accent` ring.
 
 **Theme** — **Light / Dark**, two buttons in the top nav. There is no System
 button, but system is the default: until a choice is made no `data-theme` is
@@ -121,13 +122,10 @@ buttons highlight the *resolved* theme. Dark mode is a redefinition of the
 shell tokens, not a parallel stylesheet. (Superseded the earlier gallery-only
 Light/Dark preview toggle.)
 
-**Icon card** — `--surface` fill, `--radius-md`, hover lift + border, name below.
-Selected → `--accent` ring.
-
 **Icon detail modal** — small centered panel (~1/4 screen). Large preview, name,
 category, tags, and actions: Copy SVG, Download SVG/PNG, Copy name. No color
-control here: the gallery tint is a preview, and what you copy is always the
-icon's own baked colors. While a tint is active the modal says so explicitly.
+control here: the gallery's display settings are a preview, and what you copy is
+always the icon as authored. The modal says so whenever the two would differ.
 
 **Composer — toy anatomy**
 - *Frame*: blue gradient body, `--radius-toy`, top highlight + bottom lip.

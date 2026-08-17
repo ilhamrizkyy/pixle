@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Press_Start_2P } from "next/font/google";
+import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
 // UI / display face. Stands in for Departure Mono until the files are supplied.
@@ -35,6 +36,7 @@ export default function RootLayout({
       <body
         className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable}`}
       >
+        <SiteNav />
         {children}
       </body>
     </html>

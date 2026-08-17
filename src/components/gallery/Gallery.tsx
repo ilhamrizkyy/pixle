@@ -1,0 +1,123 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Toast } from "@/components/Toast";
+import { CATEGORIES } from "@/engine/types";
+import type { Category, IconDef } from "@/engine/types";
+import { EmptyState } from "./EmptyState";
+import { GallerySidebar, type CategoryFilter } from "./GallerySidebar";
+import { IconCard } from "./IconCard";
+import { IconModal } from "./IconModal";
+
+/**
+ * The public gallery. Read-only by design — browse, search, filter, copy,
+ * download. Nothing here mutates an icon.
+ *
+ * The registry is a static module, so there is no async load and therefore no
+ * loading state: the icons are present in the first paint. An empty state
+ * exists because a search can legitimately match nothing.
+ */
+
+type GalleryProps = { icons: readonly IconDef[] };
+
+export function Gallery({ icons }: GalleryProps) {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [size, setSize] = useState(32);
+  const [dark, setDark] = useState(false);
+  const [selected, setSelected] = useState<IconDef | null>(null);
+  const [toast, setToast] = useState("");
+
+  /**
+   * Search matches name + tags (INTERACTION.md §6). Plain substring matching:
+   * with a set this size, fuzzy search would surface noise, not help. Fuse.js
+   * is queued for when the set actually grows (TECH-STACK.md).
+   */
+  const searched = useMemo(() => {
+    const query = search.toLowerCase().trim();
+    if (!query) return icons;
+    return icons.filter(
+      (icon) =>
+        icon.name.toLowerCase().includes(query) ||
+        icon.tags.some((tag) => tag.toLowerCase().includes(query)),
+    );
+  }, [icons, search]);
+
+  // Counts reflect the search, so they answer "what is left in each category".
+  const counts = useMemo(() => {
+    const tally = Object.fromEntries(
+      CATEGORIES.map((entry) => [entry.id, 0]),
+    ) as Record<Category, number>;
+    for (const icon of searched) tally[icon.category] += 1;
+    return tally;
+  }, [searched]);
+
+  const visible = useMemo(
+    () =>
+      category === "all"
+        ? searched
+        : searched.filter((icon) => icon.category === category),
+    [searched, category],
+  );
+
+  return (
+    <div className="flex flex-col items-start lg:flex-row">
+      <GallerySidebar
+        search={search}
+        onSearch={setSearch}
+        size={size}
+        onSize={setSize}
+        dark={dark}
+        onDark={setDark}
+        category={category}
+        onCategory={setCategory}
+        counts={counts}
+        total={searched.length}
+      />
+
+      <main className="w-full min-w-0 flex-1 px-8 pt-6 pb-10">
+        <div className="mb-5 flex flex-wrap items-baseline gap-3">
+          <h1 className="text-h2">Icons</h1>
+          <span className="font-data text-caption text-text-faint">
+            {visible.length} icon{visible.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {visible.length === 0 ? (
+          <EmptyState query={search.trim() || undefined} />
+        ) : (
+          <ul
+            className={`grid list-none grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-[14px] rounded-md p-1 ${
+              dark ? "bg-preview-dark p-3.5" : ""
+            }`}
+          >
+            {/* Each li IS the grid item. `display: contents` would be tidier
+                CSS but has a history of dropping list semantics from the
+                accessibility tree, so the card stretches to fill instead. */}
+            {visible.map((icon) => (
+              <li key={icon.id}>
+                <IconCard
+                  icon={icon}
+                  size={size}
+                  dark={dark}
+                  selected={selected?.id === icon.id}
+                  onSelect={setSelected}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+
+      {selected && (
+        <IconModal
+          icon={selected}
+          onClose={() => setSelected(null)}
+          onNotify={setToast}
+        />
+      )}
+
+      {toast && <Toast message={toast} onDismiss={() => setToast("")} />}
+    </div>
+  );
+}

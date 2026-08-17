@@ -29,6 +29,14 @@
   --color-success: #16a34a;
   --color-warning: #d97706;
 
+  /* --- Dark preview surface (gallery Light/Dark toggle) -------------------
+     Scoped to the icon preview area, not a site-wide dark theme. Icons are
+     multi-color and baked, so this exists to check them against a dark
+     backdrop -- it never recolors the icons themselves. */
+  --color-preview-dark: #17171a;
+  --color-preview-dark-card: #232327;
+  --color-preview-dark-text: #b6b6bd;
+
   /* --- Typography (DESIGN.md §4) ----------------------------------------- */
   /* Display/UI face. Departure Mono is the specified face but is not on
      Google Fonts; JetBrains Mono stands in until the files are supplied.

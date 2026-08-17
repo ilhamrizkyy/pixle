@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /**
  * Top nav (DESIGN.md §6): logo left, then Icons / Guide / Resources /
@@ -36,7 +37,8 @@ export function SiteNav() {
         Pix<span className="text-accent">le</span>
       </Link>
 
-      <ul className="flex flex-wrap items-center gap-5 p-0 list-none">
+      <div className="flex flex-wrap items-center gap-5">
+        <ul className="flex flex-wrap items-center gap-5 p-0 list-none">
         {LINKS.map((link) => {
           const active =
             link.href === "/"
@@ -57,7 +59,10 @@ export function SiteNav() {
             </li>
           );
         })}
-      </ul>
+        </ul>
+
+        <ThemeToggle />
+      </div>
     </nav>
   );
 }

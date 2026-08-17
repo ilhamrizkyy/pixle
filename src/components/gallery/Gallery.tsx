@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Toast } from "@/components/Toast";
+import { tintCells, tintFromHex } from "@/engine/color";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
 import { EmptyState } from "./EmptyState";
@@ -23,8 +24,9 @@ type GalleryProps = { icons: readonly IconDef[] };
 export function Gallery({ icons }: GalleryProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
+  const [tint, setTint] = useState<string | null>(null);
   const [size, setSize] = useState(32);
-  const [dark, setDark] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const [selected, setSelected] = useState<IconDef | null>(null);
   const [toast, setToast] = useState("");
 
@@ -60,15 +62,36 @@ export function Gallery({ icons }: GalleryProps) {
     [searched, category],
   );
 
+  /**
+   * Display cells, keyed by icon id. The registry records are never modified —
+   * this is a parallel map consulted only when drawing. `tintCells` returns
+   * the original array untouched when there is no tint, so the no-tint path
+   * costs nothing.
+   */
+  const activeTint = useMemo(
+    () => (tint === null ? null : tintFromHex(tint)),
+    [tint],
+  );
+
+  const displayCells = useMemo(() => {
+    const map = new Map<string, IconDef["cells"]>();
+    for (const icon of icons) {
+      map.set(icon.id, tintCells(icon.cells, activeTint));
+    }
+    return map;
+  }, [icons, activeTint]);
+
   return (
     <div className="flex flex-col items-start lg:flex-row">
       <GallerySidebar
         search={search}
         onSearch={setSearch}
+        tint={tint}
+        onTint={setTint}
         size={size}
         onSize={setSize}
-        dark={dark}
-        onDark={setDark}
+        showGrid={showGrid}
+        onShowGrid={setShowGrid}
         category={category}
         onCategory={setCategory}
         counts={counts}
@@ -86,11 +109,7 @@ export function Gallery({ icons }: GalleryProps) {
         {visible.length === 0 ? (
           <EmptyState query={search.trim() || undefined} />
         ) : (
-          <ul
-            className={`grid list-none grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-[14px] rounded-md p-1 ${
-              dark ? "bg-preview-dark p-3.5" : ""
-            }`}
-          >
+          <ul className="grid list-none grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-[14px] p-1">
             {/* Each li IS the grid item. `display: contents` would be tidier
                 CSS but has a history of dropping list semantics from the
                 accessibility tree, so the card stretches to fill instead. */}
@@ -98,8 +117,9 @@ export function Gallery({ icons }: GalleryProps) {
               <li key={icon.id}>
                 <IconCard
                   icon={icon}
+                  cells={displayCells.get(icon.id) ?? icon.cells}
                   size={size}
-                  dark={dark}
+                  showGrid={showGrid}
                   selected={selected?.id === icon.id}
                   onSelect={setSelected}
                 />
@@ -112,6 +132,9 @@ export function Gallery({ icons }: GalleryProps) {
       {selected && (
         <IconModal
           icon={selected}
+          displayCells={displayCells.get(selected.id) ?? selected.cells}
+          tinted={activeTint !== null}
+          showGrid={showGrid}
           onClose={() => setSelected(null)}
           onNotify={setToast}
         />

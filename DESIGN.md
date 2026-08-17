@@ -51,6 +51,18 @@ full HSL picker (see @INTERACTION.md) and **baked** into the icon. No palette
 restriction (full freedom), so visual coherence relies on curation, not tokens.
 True black (#000) and true white (#fff) are reachable.
 
+**Gallery tint (display only).** The gallery offers a color control that
+re-hues previews so the set reads as one palette. It replaces each cell's hue
+and saturation but **preserves that cell's lightness** — never a flat
+single-color fill, which would erase any icon whose meaning lives in internal
+contrast (an envelope is a dark border around a light interior; one color makes
+it a rectangle). Stored data and exports are untouched.
+
+**Authoring consequence:** two colors inside one icon that differ in hue but
+not in lightness will collapse into each other under a tint. Separate an icon's
+colors by **lightness**, not hue alone — aim for ~20%+ L between adjacent
+regions.
+
 ## 4. Typography
 
 | Role    | Face                        | Use |
@@ -86,16 +98,22 @@ Line-height: 1.5 body, 1.2 headings/labels.
 **Top nav** — logo left; Icons / Guide / Resources / Contribute; then the
 owner-only actions. Active nav item in `--accent`.
 
-**Gallery sidebar** — Search (+reset); Display (Size slider on the 16–48 8-step
-scale, Light/Dark preview toggle); Categories (All + per-category counts that
-follow the active search).
+**Gallery sidebar** — Search (+reset); Display (**Color** tint swatches +
+custom picker with an "Original" option; **Size** slider on the 16–48 8-step
+scale with a value bubble and clickable tick labels; **Gridlines** toggle);
+Categories (All + per-category counts that follow the active search).
+
+**Theme** — Light / Dark / System applies to the **whole app**, controlled from
+the top nav. Dark mode is a redefinition of the shell tokens, not a parallel
+stylesheet. (Superseded the earlier gallery-only Light/Dark preview toggle.)
 
 **Icon card** — `--surface` fill, `--radius-md`, hover lift + border, name below.
 Selected → `--accent` ring.
 
 **Icon detail modal** — small centered panel (~1/4 screen). Large preview, name,
-category, tags, and actions: Copy SVG, Download SVG/PNG, Copy name. Colors are
-baked, so no color control here.
+category, tags, and actions: Copy SVG, Download SVG/PNG, Copy name. No color
+control here: the gallery tint is a preview, and what you copy is always the
+icon's own baked colors. While a tint is active the modal says so explicitly.
 
 **Composer — toy anatomy**
 - *Frame*: blue gradient body, `--radius-toy`, top highlight + bottom lip.

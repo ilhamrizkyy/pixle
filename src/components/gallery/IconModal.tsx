@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconPreview } from "@/components/IconPreview";
 import { iconToSvg, svgFileName } from "@/engine/svg";
-import type { IconDef } from "@/engine/types";
+import type { Cells, IconDef } from "@/engine/types";
 import {
   cellsToPngBlob,
   copyText,
@@ -24,11 +24,23 @@ const FOCUSABLE =
 
 type IconModalProps = {
   icon: IconDef;
+  /** Possibly tinted cells for the preview. */
+  displayCells: Cells;
+  /** Whether a gallery tint is active, so the mismatch can be disclosed. */
+  tinted: boolean;
+  showGrid: boolean;
   onClose: () => void;
   onNotify: (message: string) => void;
 };
 
-export function IconModal({ icon, onClose, onNotify }: IconModalProps) {
+export function IconModal({
+  icon,
+  displayCells,
+  tinted,
+  showGrid,
+  onClose,
+  onNotify,
+}: IconModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [copyLabel, setCopyLabel] = useState("Copy SVG");
   const svg = iconToSvg(icon);
@@ -135,7 +147,12 @@ export function IconModal({ icon, onClose, onNotify }: IconModalProps) {
         </div>
 
         <div className="my-4 flex items-center justify-center rounded-md bg-surface p-7">
-          <IconPreview cells={icon.cells} size={104} title={icon.name} />
+          <IconPreview
+            cells={displayCells}
+            size={104}
+            title={icon.name}
+            showGrid={showGrid}
+          />
         </div>
 
         {icon.tags.length > 0 && (
@@ -177,8 +194,13 @@ export function IconModal({ icon, onClose, onNotify }: IconModalProps) {
           onFocus={(event) => event.currentTarget.select()}
           className="mt-3.5 h-15 w-full resize-none rounded-sm border border-border bg-surface-2 p-2 font-data text-caption text-text-muted"
         />
+        {/* When a tint is on, the preview above and the markup below disagree.
+            Say so plainly rather than letting someone paste a color they did
+            not get. */}
         <p className="mt-1.5 text-caption text-text-faint">
-          Colors are baked into the SVG.
+          {tinted
+            ? "The gallery tint is preview only — this SVG carries the icon's own baked colors."
+            : "Colors are baked into the SVG."}
         </p>
       </div>
     </div>

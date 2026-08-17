@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Press_Start_2P } from "next/font/google";
 import { SiteNav } from "@/components/SiteNav";
+import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
 import "./globals.css";
 
 // UI / display face. Stands in for Departure Mono until the files are supplied.
@@ -32,7 +33,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Applies the stored theme before first paint. Without this the page
+            renders light and then snaps to dark, which is worse than no dark
+            mode at all. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body
         className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable}`}
       >

@@ -73,8 +73,16 @@
 
 - **Search**: matches name + tags; category counts reflect the active search.
 - **Category filter**: All + fixed categories.
-- **Display**: Size (16/24/32/40/48) applies to every card; Light/Dark toggle
-  swaps the preview background (useful because icons are multi-color).
+- **Display**:
+  - **Color** — swatches + a custom picker apply a display-only tint to every
+    icon, re-hueing while keeping each cell's lightness. "Original" restores
+    each icon's own colors. Never affects stored data or exports.
+  - **Size** (16/24/32/40/48) applies to every card; drag the slider or click
+    a tick label.
+  - **Gridlines** — show/hide faint 11×11 cell lines on previews, echoing the
+    composer board.
+- **Theme**: Light/Dark/System lives in the top nav and themes the whole app
+  (it replaced the old gallery-only Light/Dark preview toggle).
 - **Card click** → detail modal (copy SVG / download SVG+PNG / copy name).
 - Backdrop click or ✕ closes the modal; Escape should too.
 

@@ -29,13 +29,8 @@
   --color-success: #16a34a;
   --color-warning: #d97706;
 
-  /* --- Dark preview surface (gallery Light/Dark toggle) -------------------
-     Scoped to the icon preview area, not a site-wide dark theme. Icons are
-     multi-color and baked, so this exists to check them against a dark
-     backdrop -- it never recolors the icons themselves. */
-  --color-preview-dark: #17171a;
-  --color-preview-dark-card: #232327;
-  --color-preview-dark-text: #b6b6bd;
+  /* Faint gridline inside icon previews, echoing the composer board. */
+  --color-grid-line: #00000021;
 
   /* --- Typography (DESIGN.md §4) ----------------------------------------- */
   /* Display/UI face. Departure Mono is the specified face but is not on
@@ -82,6 +77,60 @@
   --sidebar-width: 264px;
   --icon-card-min: 92px;
   --icon-grid-gap: 14px;
+}
+
+/* ============================================================================
+   Dark theme.
+
+   Because every component is built on tokens, dark mode is a REDEFINITION of
+   those tokens rather than a parallel set of styles -- no `dark:` variants
+   scattered through components, and no chance of one being forgotten.
+
+   Three states: explicit light, explicit dark, and system. `data-theme` on
+   <html> carries an explicit choice; its absence means follow the OS.
+   ========================================================================= */
+
+:root[data-theme="dark"] {
+  --color-bg: #0e0e10;
+  --color-surface: #1a1a1e;
+  --color-surface-2: #141417;
+  --color-border: #2a2a30;
+  --color-text: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-text-faint: #71717a;
+
+  /* Lifted so it still reads as an accent against a dark ground. */
+  --color-accent: #6b8cff;
+  --color-accent-hover: #8aa3ff;
+  --color-accent-subtle: #1b2450;
+
+  --color-danger: #f87171;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+
+  --color-grid-line: #ffffff26;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #0e0e10;
+    --color-surface: #1a1a1e;
+    --color-surface-2: #141417;
+    --color-border: #2a2a30;
+    --color-text: #f4f4f5;
+    --color-text-muted: #a1a1aa;
+    --color-text-faint: #71717a;
+
+    --color-accent: #6b8cff;
+    --color-accent-hover: #8aa3ff;
+    --color-accent-subtle: #1b2450;
+
+    --color-danger: #f87171;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+
+    --color-grid-line: #ffffff26;
+  }
 }
 
 /* ============================================================================
@@ -166,6 +215,79 @@
   .pixel-cell {
     border-radius: 0;
   }
+}
+
+/* ============================================================================
+   Refined range slider (gallery size control).
+
+   Native range pseudo-elements cannot be reached from utility classes, so the
+   track and thumb live here. The track is filled to the left of the thumb via
+   a --fill custom property the component sets, which is what makes the control
+   read as a real instrument rather than a default input.
+   ========================================================================= */
+
+.pixl-range {
+  --fill: 50%;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pixl-range::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0 var(--fill),
+    var(--color-surface) var(--fill) 100%
+  );
+  border: 1px solid var(--color-border);
+}
+
+.pixl-range::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.pixl-range::-moz-range-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-accent);
+}
+
+.pixl-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 3px solid var(--color-accent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: transform 0.1s;
+}
+
+.pixl-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 3px solid var(--color-accent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+.pixl-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.pixl-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* Respect reduced motion globally; the composer's knobs and sweeps honor this

@@ -25,7 +25,14 @@ niche. Licensed **MIT**.
 2. **Multi-color, baked colors.** Icons store a color per cell. A newly chosen
    color applies only to the **next** cells drawn; existing cells keep theirs
    (no retroactive recolor). Exports carry baked colors. There is **no**
-   currentColor and **no** global gallery recolor.
+   currentColor.
+   - **Amended 2026-08-17 — gallery tint.** The gallery may apply a
+     **display-only** tint so the set reads as one palette. It re-hues each
+     cell while **keeping that cell's own lightness**, so internal contrast
+     (and therefore the drawing) survives. It is strictly a preview: stored
+     `cells` are never modified, and Copy/Download always emit the icon's own
+     baked colors. The modal discloses the mismatch while a tint is active.
+     A tint must never become a persisted property of an `IconDef`.
 3. **Grid state is the source of truth**, not SVG. An icon *is* its 11×11 cell
    data; SVG/PNG are render targets generated from it.
 4. **Grid = 11x11 on viewBox "0 0 44 44"** (4 units per cell). Square pixels,

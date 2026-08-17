@@ -129,7 +129,10 @@ export const icons: readonly IconDef[] = [
     category: "nature",
     tags: ["sun", "weather", "light", "day", "bright"],
     createdAt: SEEDED_AT,
-    palette: { "#": "#d97706", o: "#eab308" },
+    // Rays and core are separated by ~45% lightness, not just by hue. Two
+    // colors that differ only in hue collapse into one under a gallery tint,
+    // which is what the original #d97706/#eab308 pair did (3.8% apart).
+    palette: { "#": "#92400e", o: "#fef08a" },
     art: [
       "...........",
       ".....#.....",

@@ -55,12 +55,18 @@ True black (#000) and true white (#fff) are reachable.
 
 | Role    | Face                        | Use |
 |---------|-----------------------------|-----|
-| Display | Departure Mono (mono, retro)| Logo, headings, nav, labels, buttons, UI |
+| Pixel   | Press Start 2P              | Wordmark, h1, h2 |
+| Display | Departure Mono (mono, retro)| Nav, h3, labels, buttons, UI |
 | Body    | Inter                       | Long-form prose in Guide / Resources |
 | Data    | Departure Mono / JetBrains Mono | Counts, hex, sizes, code |
 
-Optional pixel face (Silkscreen / Pixelify Sans) for the **wordmark only**.
-(Prototype uses a system monospace as a stand-in.)
+**Pixel face = Press Start 2P**, scoped to the **wordmark, h1, and h2**. It has
+very wide advance widths and a single weight, so it stops at h2 — h3 and below
+use the display face, where the horizontal cost stops paying for itself.
+
+Departure Mono is not on Google Fonts; until the files are supplied, **JetBrains
+Mono stands in** for Display/Data. It is behind `--font-display`, so the swap is
+a one-line change in `globals.css`.
 
 Scale (px): 12 caption · 14 UI · 16 body · 20 h3 · 24 h2 · 32 h1.
 Line-height: 1.5 body, 1.2 headings/labels.

@@ -6,13 +6,13 @@ import type { Cells, IconDef } from "@/engine/types";
 /**
  * One icon in the grid.
  *
- * On hover-capable devices the name is an overlay revealed on hover or focus.
- * On touch devices, where :hover never fires, it sits permanently under the
- * icon instead — see `.pixl-card-name`. Either way it is ONE element, so the
- * name is never duplicated in the accessibility tree.
+ * The card is always square and the name is always an overlay revealed on
+ * hover or keyboard focus — see `.pixl-card-name`. On touch the name is
+ * reached by tapping through to the detail modal.
  *
  * The label is aria-hidden and the button carries the accessible name instead,
- * so a card announces its name once rather than twice.
+ * so a card announces its name once rather than twice. That also means touch
+ * screen-reader users still get the name from the button itself.
  *
  * Takes `cells` separately from `icon` because the gallery may hand it
  * RECOLORED cells for display while `icon` stays the untouched registry record.
@@ -46,8 +46,9 @@ export function IconCard({
         selected ? "border-accent ring-2 ring-accent" : "border-transparent"
       }`}
     >
-      {/* Fixed height so cards keep their footprint as the size slider moves. */}
-      <span className="flex h-12 items-center">
+      {/* Fills the square, so the icon stays centred at any card size and the
+          footprint never shifts as the size slider moves. */}
+      <span className="flex flex-1 items-center">
         <IconPreview cells={cells} size={size} padding={padding} />
       </span>
 

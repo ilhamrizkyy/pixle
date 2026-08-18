@@ -106,7 +106,9 @@ labels that double as the readout; **Padding** 0–3 cells; **Transform** = Flip
 H / Flip V / Rotate, applied gallery-wide); Categories (All + per-category counts that follow the
 active search).
 
-Below `lg` every control except Search collapses behind a **Filters** toggle.
+Below `lg` every control except Search collapses behind a **Filters** toggle,
+which sits **inline with the search field** as a square icon button rather than
+on its own row, and carries an accent dot while a category filter is active.
 
 Reference point for the gallery's control surface is **Nucleo's icon panel**,
 but applied to the whole gallery rather than one icon at a time. Stroke and
@@ -114,10 +116,14 @@ Cap/Join are deliberately excluded — pixel cells have no strokes — and there
 no Bg control: icon backgrounds are **always transparent**.
 
 **Icon card** — `--surface` fill, `--radius-md`, hover lift + border. Selected
-→ `--accent` ring. The name is keyed to **hover capability**, not breakpoint:
-hover-capable devices get the icon alone with the name as an overlay on hover
-or focus; touch devices get the name permanently beneath the icon, since
-`:hover` never fires there.
+→ `--accent` ring. **Always square**, on every device, so the grid reads as an
+even lattice. The name is therefore always an **overlay** revealed on hover or
+keyboard focus — a name sitting in flow is what stretches a card into a
+rectangle. On touch the name is reached by tapping through to the detail modal,
+as Lucide's mobile grid does.
+
+Grid density follows the same reference: `minmax(70px)` below `lg` (4 columns
+at 375px) and `minmax(92px)` above.
 
 **Theme** — **Light / Dark**, two buttons in the top nav. There is no System
 button, but system is the default: until a choice is made no `data-theme` is

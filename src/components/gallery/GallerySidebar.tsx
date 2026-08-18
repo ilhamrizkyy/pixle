@@ -99,34 +99,40 @@ export function GallerySidebar({
         <SectionHead title="Search">
           {search && <ResetButton onClick={() => onSearch("")} />}
         </SectionHead>
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => onSearch(event.target.value)}
-          placeholder="Search icons…"
-          aria-label="Search icons by name or tag"
-          className="w-full rounded-sm border border-border bg-surface px-3 py-2.5 text-ui text-text placeholder:text-text-faint focus:border-accent"
-        />
+        {/* On phones the filter toggle sits INLINE with search, as one row,
+            rather than taking a row of its own — the Lucide mobile layout. */}
+        <div className="flex items-center gap-2">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder="Search icons…"
+            aria-label="Search icons by name or tag"
+            className="w-full min-w-0 rounded-sm border border-border bg-surface px-3 py-2.5 text-ui text-text placeholder:text-text-faint focus:border-accent"
+          />
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            aria-controls="gallery-filters"
+            aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+            className={`relative flex size-10 shrink-0 items-center justify-center rounded-sm border lg:hidden ${
+              filtersOpen
+                ? "border-accent bg-accent-subtle text-accent"
+                : "border-border bg-surface text-text-muted"
+            }`}
+          >
+            <FilterGlyph />
+            {/* A dot rather than a count: only one filter can be active. */}
+            {category !== "all" && (
+              <span
+                aria-hidden="true"
+                className="absolute top-1 right-1 size-1.5 rounded-full bg-accent"
+              />
+            )}
+          </button>
+        </div>
       </section>
-
-      {/* Mobile-only entry point to the rest of the controls. */}
-      <button
-        type="button"
-        onClick={() => setFiltersOpen((open) => !open)}
-        aria-expanded={filtersOpen}
-        aria-controls="gallery-filters"
-        className="flex items-center justify-between rounded-sm border border-border bg-surface px-3 py-2.5 text-ui text-text lg:hidden"
-      >
-        <span>
-          Filters
-          {category !== "all" && (
-            <span className="ml-2 text-caption text-accent">1 active</span>
-          )}
-        </span>
-        <span aria-hidden="true" className="text-caption text-text-muted">
-          {filtersOpen ? "▲" : "▼"}
-        </span>
-      </button>
 
       <div
         id="gallery-filters"
@@ -311,6 +317,24 @@ export function GallerySidebar({
         </section>
       </div>
     </aside>
+  );
+}
+
+/** Sliders glyph for the mobile filter toggle. */
+function FilterGlyph() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16M4 12h10M4 17h6" />
+    </svg>
   );
 }
 

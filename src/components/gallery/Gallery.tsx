@@ -129,7 +129,7 @@ export function Gallery({ icons }: GalleryProps) {
         total={searched.length}
       />
 
-      <main className="w-full min-w-0 flex-1 px-8 pt-6 pb-10">
+      <main className="w-full min-w-0 flex-1 px-6 pt-6 pb-10 lg:px-8">
         <div className="mb-5 flex flex-wrap items-baseline gap-3">
           <h1 className="text-h2">Icons</h1>
           <span className="font-data text-caption text-text-faint">
@@ -140,7 +140,9 @@ export function Gallery({ icons }: GalleryProps) {
         {visible.length === 0 ? (
           <EmptyState query={search.trim() || undefined} />
         ) : (
-          <ul className="grid list-none grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-[14px] p-1">
+          // Denser on phones so the grid reads as a lattice rather than a short
+          // list — 4 columns at 375px, matching the Lucide reference.
+          <ul className="grid list-none grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-[14px] p-1 lg:grid-cols-[repeat(auto-fill,minmax(92px,1fr))]">
             {/* Each li IS the grid item. `display: contents` would be tidier
                 CSS but has a history of dropping list semantics from the
                 accessibility tree, so the card stretches to fill instead. */}

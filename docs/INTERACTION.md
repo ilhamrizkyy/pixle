@@ -1,7 +1,7 @@
 # INTERACTION.md — Interaction Spec
 
 > How everything behaves. Keep behavior consistent with this while building;
-> expect small updates once it's in real code. Visuals live in @DESIGN.md.
+> expect small updates once it's in real code. Visuals live in @docs/DESIGN.md.
 
 ---
 
@@ -11,7 +11,7 @@
   Resources. Read-only.
 - **Owner only** (authenticated as Ilham): the Create/composer route and, later,
   curation. The "+ Create" entry and the composer route are hidden/blocked for
-  everyone else (server-side check, not just a hidden button). See @TECH-STACK.md.
+  everyone else (server-side check, not just a hidden button). See @docs/TECH-STACK.md.
 
 ## 1. Composer — drawing
 
@@ -22,7 +22,7 @@
   across every cell entered; start on a filled cell → erases across them.
   **OPEN:** when a paint drag crosses an already-filled cell, overwrite it with
   the current color, or skip and only fill empties? Assume overwrite; confirm
-  in build (see @BACKLOG.md).
+  in build (see @docs/BACKLOG.md).
 - **Hover** (no press) → faint preview of the current color on the hovered cell.
 - **Mirror** (toggle): while on, painting one side mirrors live to the other
   across the vertical center. It's a drawing aid — not stored on the icon.

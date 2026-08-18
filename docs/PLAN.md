@@ -8,14 +8,14 @@
 
 - Public = gallery only. **The composer is owner-only** — build the gate no later
   than Phase 3, and never deploy it publicly reachable.
-- The **engine is decoupled from presentation** from day one (see @TECH-STACK.md).
+- The **engine is decoupled from presentation** from day one (see @docs/TECH-STACK.md).
 - The full **Three.js 3D toy is a stretch goal.** A polished DOM/CSS-3D composer
   is a valid v1 — protect the ship date over the 3D.
 
 ## Phase 0 — Foundation · Days 1–2
 
 Goal: a deployable skeleton with the rules encoded.
-- Next.js + TS + Tailwind repo; @DESIGN.md tokens as CSS variables; MIT LICENSE;
+- Next.js + TS + Tailwind repo; @docs/DESIGN.md tokens as CSS variables; MIT LICENSE;
   CLAUDE.md at the repo root.
 - Define the **IconDef** type + a small **engine** module (data + op stubs); seed
   ~6 icons in a static registry.
@@ -56,7 +56,7 @@ Goal: a fully functional composer (DOM/CSS-3D) wired to the engine.
   multi-color **HSL picker** (2 knobs + saturation + hex + presets + eyedropper),
   transforms (mirror / flip / rotate), progressive **slide-to-clear**,
   undo/redo, metadata dock, Save, Export, **Import (in the dock)**.
-- Apply the **polish fixes** (@BACKLOG.md A): thinner bezel, better snub-in,
+- Apply the **polish fixes** (@docs/BACKLOG.md A): thinner bezel, better snub-in,
   slimmer dock, corner knobs (bigger), remove the pixel count.
 - idb-keyval drafts. (Vitest already landed in Phase 1 — extend it to the new
   composer ops rather than setting it up.)
@@ -85,7 +85,7 @@ are real.
 Goal: production-ready launch.
 - SVGO pipeline on stored icons; (optional) package/sprite build script.
 - QA: Playwright smoke tests; a11y + reduced-motion pass; cross-browser/mobile.
-- README; final sweep of @BACKLOG.md; deploy v1.
+- README; final sweep of @docs/BACKLOG.md; deploy v1.
 
 Exit: v1 live — public gallery + owner-only composer, MIT, documented.
 
@@ -103,7 +103,7 @@ Exit: v1 live — public gallery + owner-only composer, MIT, documented.
 
 Public **Contribute** flow + **curation mode** + backend; the full **Three.js**
 toy if not reached in Phase 3; **npm package** + **web font**; gallery
-enhancements (@BACKLOG.md E).
+enhancements (@docs/BACKLOG.md E).
 
 ## Top risks
 

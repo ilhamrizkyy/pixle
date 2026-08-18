@@ -5,7 +5,7 @@
 > the personality lives in the icons and the Etch A Sketch composer.
 
 Reflects the v9 prototype (blue toy, silver screen, multi-color). Items marked
-**[FIX]** are known issues to correct while building (see @BACKLOG.md).
+**[FIX]** are known issues to correct while building (see @docs/BACKLOG.md).
 
 ---
 
@@ -62,11 +62,11 @@ fails the suite.
 
 **What the data model still allows.** `cells` holds a hex per cell, so the
 format *can* carry multi-color, and the composer's HSL picker (see
-@INTERACTION.md) still paints real colors — that is what makes the icon's own
+@docs/INTERACTION.md) still paints real colors — that is what makes the icon's own
 color the one baked into an export. The gallery simply never renders more than
 one. Keeping the capability costs nothing and is what a future **duotone** mode
 would build on, deriving roles from an icon's distinct colors (parked; see
-@BACKLOG.md).
+@docs/BACKLOG.md).
 
 True black (#000) and true white (#fff) are reachable.
 

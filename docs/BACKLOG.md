@@ -61,7 +61,7 @@
 - **Import scope:** v1 only guarantees round-tripping the tool's own export
   format; behavior for arbitrary external SVGs is undefined.
 - *(nothing else outstanding on fonts — Display/Data locked to JetBrains Mono
-  on 2026-08-18; see @DESIGN.md §4.)*
+  on 2026-08-18; see @docs/DESIGN.md §4.)*
 
 ## E. Gallery — future explorations (post-v1)
 

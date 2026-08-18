@@ -6,7 +6,7 @@ An open-source pixel / 32-bit / arcade **icon set**, plus an in-browser
 > **Status: Phase 1 complete — the public gallery is live.** 24 icons, search,
 > filtering, a single-color customizer, size/padding/transform controls, and
 > copy/download that matches what you see. The owner-only composer is Phase 2.
-> See [PLAN.md](PLAN.md).
+> See [PLAN.md](docs/PLAN.md).
 
 ## Getting started
 
@@ -84,9 +84,9 @@ Zero-config on Vercel — import the repo and it builds with the defaults. No
 ## Docs
 
 [CLAUDE.md](CLAUDE.md) is the constitution and index; it links
-[DESIGN.md](DESIGN.md), [INTERACTION.md](INTERACTION.md),
-[TECH-STACK.md](TECH-STACK.md), [PLAN.md](PLAN.md), and
-[BACKLOG.md](BACKLOG.md).
+[DESIGN.md](docs/DESIGN.md), [INTERACTION.md](docs/INTERACTION.md),
+[TECH-STACK.md](docs/TECH-STACK.md), [PLAN.md](docs/PLAN.md), and
+[BACKLOG.md](docs/BACKLOG.md).
 
 ## License
 

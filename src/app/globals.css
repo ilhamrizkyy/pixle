@@ -34,13 +34,15 @@
   /* Display/UI face. JetBrains Mono, locked (DESIGN.md §4) — a second
      retro-pixel face here would compete with the Press Start 2P wordmark and
      headings rather than frame them. */
-  --font-display: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
+  --font-display: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace,
+    "SFMono-Regular", monospace;
+  --font-body: var(--font-inter, "Inter"), ui-sans-serif, system-ui, sans-serif;
+  --font-data: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace,
     monospace;
-  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-data: var(--font-jetbrains-mono), ui-monospace, monospace;
-  /* Pixel face: wordmark + h1/h2 only. See DESIGN.md §4. */
-  --font-pixel: var(--font-press-start-2p), var(--font-jetbrains-mono),
-    monospace;
+  /* Pixel face: wordmark, h1/h2, and the gallery section eyebrows. Single
+     weight — never synthesise a bold from it. See DESIGN.md §4. */
+  --font-pixel: var(--font-press-start-2p, "Press Start 2P"),
+    var(--font-jetbrains-mono, "JetBrains Mono"), monospace;
 
   /* Type scale, px (DESIGN.md §4) */
   --text-caption: 0.75rem; /* 12 */
@@ -465,6 +467,67 @@
 
 .pixl-modal {
   animation: pixl-modal-in var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* --- Exits ---------------------------------------------------------------
+   Mirrors of the entrances, on the faster close clock. `forwards` holds the
+   final frame so the surface does not flash back to its resting state in the
+   moment before React unmounts it. */
+
+@keyframes pixl-sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes pixl-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pixl-modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(var(--scale-modal));
+  }
+}
+
+.pixl-sheet-backdrop.is-closing,
+.pixl-modal-backdrop.is-closing {
+  animation: pixl-fade-out var(--duration-quick) var(--ease-smooth-out) forwards;
+}
+
+.pixl-sheet.is-closing {
+  animation: pixl-sheet-out var(--duration-medium) var(--ease-smooth-out)
+    forwards;
+}
+
+.pixl-modal.is-closing {
+  animation: pixl-modal-out var(--duration-quick) var(--ease-smooth-out)
+    forwards;
+}
+
+/* The detail panel exits the way it entered — straight back down. */
+.pixl-detail.is-closing {
+  animation: pixl-sheet-out var(--duration-medium) var(--ease-smooth-out)
+    forwards;
+}
+
+/* The icon detail docks to the bottom edge at every width, so it climbs into
+   place on the panel clock and slides back down the same way. */
+.pixl-detail {
+  animation: pixl-sheet-in var(--duration-slow) var(--ease-smooth-out);
 }
 
 /* The toast is already x-centred by a translate, so its keyframes carry that

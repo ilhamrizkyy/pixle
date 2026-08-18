@@ -33,16 +33,24 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    /* The font variables MUST sit on <html>, not <body>. Tailwind's @theme
+       declares --font-display/-pixel/-body on :root, and a custom property's
+       var() lookups resolve on the element that declares them — so a font var
+       living one level down on <body> is invisible there, which invalidates
+       the whole declaration and silently drops every face to the browser
+       default. */
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable}`}
+    >
       <head>
         {/* Applies the stored theme before first paint. Without this the page
             renders light and then snaps to dark, which is worse than no dark
             mode at all. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body
-        className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable}`}
-      >
+      <body>
         <SiteNav />
         {children}
       </body>

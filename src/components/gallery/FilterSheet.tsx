@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Category } from "@/engine/types";
 import { useDialog } from "@/lib/useDialog";
+import { CLOSE_MS, useDismissible } from "@/lib/useDismissible";
 import { GalleryControls } from "./GalleryControls";
 import {
   DEFAULT_SETTINGS,
@@ -43,15 +44,18 @@ export function FilterSheet({
   total,
 }: FilterSheetProps) {
   const [draft, setDraft] = useState<GallerySettings>(settings);
-  const { ref, onKeyDown } = useDialog<HTMLDivElement>(onClose);
+  const { closing, requestClose } = useDismissible(onClose, CLOSE_MS.sheet);
+  const { ref, onKeyDown } = useDialog<HTMLDivElement>(requestClose);
 
   // The swatch has to track the DRAFT, not the committed settings.
   const draftColor = resolveGalleryColor(draft.colorText, themeColor);
 
   return (
     <div
-      className="pixl-sheet-backdrop fixed inset-0 z-50 flex items-end bg-text/45 lg:hidden"
-      onClick={onClose}
+      className={`pixl-sheet-backdrop fixed inset-0 z-50 flex items-end bg-text/45 lg:hidden ${
+        closing ? "is-closing" : ""
+      }`}
+      onClick={requestClose}
     >
       <div
         ref={ref}
@@ -61,7 +65,9 @@ export function FilterSheet({
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
         onKeyDown={onKeyDown}
-        className="pixl-sheet flex max-h-[85vh] w-full flex-col rounded-t-lg bg-bg shadow-[var(--shadow-overlay)] outline-none"
+        className={`pixl-sheet relative flex max-h-[85vh] w-full flex-col rounded-t-lg bg-bg shadow-[var(--shadow-overlay)] outline-none ${
+          closing ? "is-closing" : ""
+        }`}
       >
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 id="filter-sheet-title" className="text-h3">
@@ -69,7 +75,7 @@ export function FilterSheet({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close without applying"
             className="rounded-sm px-2 text-body text-text-muted hover:text-text"
           >
@@ -98,7 +104,7 @@ export function FilterSheet({
             type="button"
             onClick={() => {
               onApply(DEFAULT_SETTINGS);
-              onClose();
+              requestClose();
             }}
             className="flex-1 rounded-sm border border-border bg-surface px-4 py-3 text-ui text-text"
           >
@@ -108,7 +114,7 @@ export function FilterSheet({
             type="button"
             onClick={() => {
               onApply(draft);
-              onClose();
+              requestClose();
             }}
             className="flex-1 rounded-sm border border-accent bg-accent px-4 py-3 text-ui font-bold text-bg"
           >

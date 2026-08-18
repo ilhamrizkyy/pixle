@@ -11,7 +11,7 @@ import { EmptyState } from "./EmptyState";
 import { FilterSheet } from "./FilterSheet";
 import { GallerySidebar } from "./GallerySidebar";
 import { IconCard } from "./IconCard";
-import { IconModal } from "./IconModal";
+import { IconDetail } from "./IconDetail";
 import {
   DEFAULT_SETTINGS,
   resolveGalleryColor,
@@ -103,7 +103,13 @@ export function Gallery({ icons }: GalleryProps) {
         total={searched.length}
       />
 
-      <main className="w-full min-w-0 flex-1 px-6 pt-6 pb-10 lg:px-8">
+      <main
+        className="w-full min-w-0 flex-1 px-6 pt-6 pb-10 lg:px-8"
+        /* The detail panel is docked rather than overlaid, so the grid needs
+           room to scroll clear of it — otherwise the last row is unreachable
+           behind the panel. */
+        style={selected ? { paddingBottom: "clamp(14rem, 40vh, 22rem)" } : undefined}
+      >
         <div className="mb-5 flex flex-wrap items-baseline gap-3">
           <h1 className="text-h2">Icons</h1>
           <span className="font-data text-caption text-text-faint">
@@ -128,7 +134,10 @@ export function Gallery({ icons }: GalleryProps) {
         ) : (
           // Denser on phones so the grid reads as a lattice rather than a short
           // list — 4 columns at 375px, matching the Lucide reference.
-          <ul className="grid list-none grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-[14px] p-1 lg:grid-cols-[repeat(auto-fill,minmax(92px,1fr))]">
+          <ul
+            aria-label="Icons"
+            className="grid list-none grid-cols-[repeat(auto-fill,minmax(70px,1fr))] gap-[14px] p-1 lg:grid-cols-[repeat(auto-fill,minmax(92px,1fr))]"
+          >
             {/* Each li IS the grid item. `display: contents` would be tidier
                 CSS but has a history of dropping list semantics from the
                 accessibility tree, so the card stretches to fill instead. */}
@@ -160,7 +169,7 @@ export function Gallery({ icons }: GalleryProps) {
       )}
 
       {selected && (
-        <IconModal
+        <IconDetail
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
           padding={settings.padding}

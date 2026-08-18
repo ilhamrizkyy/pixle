@@ -6,6 +6,7 @@ import {
   ICON_SIZES,
   PADDING_STEPS,
 } from "@/engine/constants";
+import { GRID_SIZE } from "@/engine/constants";
 import { IDENTITY_ORIENTATION } from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
 import type { Category } from "@/engine/types";
@@ -195,8 +196,11 @@ export function GalleryControls({
         <div className="mt-5">
           <div className="mb-1 flex items-baseline justify-between">
             <span className="text-caption text-text-muted">Padding</span>
+            {/* Reads out the resulting CANVAS, not the input number. "1" tells
+                you nothing; "13×13" tells you the art keeps its size and the
+                canvas grows around it. */}
             <span className="font-data text-caption text-text-faint">
-              {padding === 0 ? "none" : `${padding} cell`}
+              {GRID_SIZE + padding * 2}×{GRID_SIZE + padding * 2}
             </span>
           </div>
           <div className="flex gap-1.5">
@@ -261,7 +265,12 @@ export function SectionHead({
 }) {
   return (
     <div className="mb-3 flex items-center justify-between">
-      <h3 className="text-caption font-bold tracking-widest uppercase">
+      {/* Pixel face on the gallery's section eyebrows (DESIGN.md §4). NOT
+          bolded: Press Start 2P ships a single weight, so `font-bold` would
+          synthesise one and smear a face whose whole point is crisp edges.
+          Tracking is modest for the same reason the wordmark's is — the face
+          already carries a full-em advance, so `widest` reads as gappy. */}
+      <h3 className="font-pixel text-caption tracking-wide uppercase">
         {title}
       </h3>
       {children}

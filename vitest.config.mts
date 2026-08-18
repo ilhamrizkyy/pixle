@@ -2,14 +2,17 @@ import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 /**
- * The engine is plain TypeScript with no DOM dependency, so tests run in the
- * default node environment — no jsdom, no React testing setup. That is the
- * architectural boundary (TECH-STACK.md) paying off: if a test here ever needs
- * a browser, something has leaked into the engine that should not be there.
+ * Engine and registry tests run in the default node environment — the engine
+ * has no DOM dependency, which is the architectural boundary (TECH-STACK.md)
+ * paying off.
+ *
+ * Component tests opt into jsdom per file with a
+ * `// @vitest-environment jsdom` docblock, so the fast node default is never
+ * paid for by the pure tests.
  */
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
   resolve: {
     alias: {

@@ -79,9 +79,21 @@ True black (#000) and true white (#fff) are reachable.
 | Body    | Inter          | Long-form prose in Guide / Resources |
 | Data    | JetBrains Mono | Counts, hex, sizes, code |
 
-**Pixel face = Press Start 2P**, scoped to the **wordmark, h1, and h2**. It has
-very wide advance widths and a single weight, so it stops at h2 — h3 and below
-use the display face, where the horizontal cost stops paying for itself.
+**Pixel face = Press Start 2P**, scoped to the **wordmark, h1, h2, and the
+gallery's section eyebrows** (Search / Display / Categories). It has very wide
+advance widths, so it does not run to prose h3 and below, where the horizontal
+cost stops paying for itself — the eyebrows are the exception because they are
+six-to-ten-character chrome labels, not running text.
+
+Two rules travel with it, both consequences of it being a pixel face:
+
+- **Never bold it.** It ships a single weight, so `font-bold` synthesises one
+  and smears the very edges the face exists for. Emphasis comes from case,
+  color, or size instead.
+- **It is crispest at multiples of 8px**, its design grid. The wordmark sits at
+  16px for that reason. The eyebrows sit at 12px anyway, trading a little
+  softness to stay smaller than the 14px controls they head — in a control
+  panel, a label that outranks its own content is the worse defect.
 
 **Display/Data = JetBrains Mono — locked 2026-08-18.** Departure Mono was the
 original pick and was considered, then rejected: with a genuinely pixel
@@ -116,13 +128,20 @@ inherits the house curve rather than the framework's.
     --duration-medium 350ms  toast open, hover-out settle
     --duration-slow  400ms   sheet open (full-screen travel)
 
+**Padding** reads out the resulting canvas (11×11 → 13×13 → 15×15 → 17×17),
+not the step number. The art is unchanged at every step; only the viewBox grows
+around it, which is what keeps cells on-grid. It is unrelated to the safe area:
+the safe area is where art is *drawn* and is already baked into every icon.
+
     --ease-smooth-out cubic-bezier(0.22, 1, 0.36, 1)   the house curve
     --ease-bounce     cubic-bezier(0.34, 1.36, 0.64, 1) entrances only
 
 **The rules that make motion read as authored, not merely present:**
 
-- **Closes are faster than opens.** A modal opens in 250ms and would close in
-  150ms. Never bounce a close.
+- **Closes are faster than opens.** A modal opens in 250ms and closes in
+  150ms; the sheet opens in 400ms and closes in 350ms. Never bounce a close.
+  Overlays defer their unmount for exactly the close duration so the exit has
+  something to play on, and skip the wait entirely under reduced motion.
 - **Duration follows distance, not category.** The sheet travels the full
   screen height, so it opens on the 400ms clock; the modal scales in place on
   250ms.
@@ -196,11 +215,27 @@ buttons highlight the *resolved* theme. Dark mode is a redefinition of the
 shell tokens, not a parallel stylesheet. (Superseded the earlier gallery-only
 Light/Dark preview toggle.)
 
-**Icon detail modal** — small centered panel (~1/4 screen). Large preview, name,
-category, tags, and actions: Copy SVG, Download SVG/PNG, Copy name. No color
-control here — the gallery already owns it. **What you see is what you copy:**
-every export carries the gallery's color, flip, rotation, and padding, so the
-clipboard matches the preview exactly.
+**Icon detail** — a **docked bottom panel**, not a modal (the Lucide pattern).
+It spans the content width along the bottom edge, clearing the sidebar at `lg`,
+and **dims nothing**: the grid above stays visible and clickable, so choosing
+another icon swaps the panel's contents instead of forcing a dismiss-then-open
+cycle. Comparing icons is the common task, and a modal fights it.
+
+Being non-modal is honoured properly — no backdrop, no scroll lock, no focus
+trap, no `aria-modal`. Escape and ✕ close it; focus returns to the card. The
+grid gains bottom padding while it is open so the last row can still scroll
+clear.
+
+Contents: the icon **on** a faint cell lattice — for a pixel set the grid *is*
+the art, so each filled cell occupies exactly one box. Art and lattice are
+drawn in a **single SVG** sharing one viewBox; layering two makes alignment
+depend on two sizes agreeing, which is how they drift. The lattice spans the
+padded canvas, so padding reads as extra boxes around the art (11×11 → 13×13
+→ …) rather than as the art shrinking. Then the name in the data face since it is a code identifier, tags as a
+`·`-separated line, a category chip, the four actions, and the SVG markup
+behind a disclosure. No color control — the gallery owns it. **What you see is
+what you copy:** every export carries the gallery's color, flip, rotation, and
+padding.
 
 **Composer — toy anatomy**
 - *Frame*: blue gradient body, `--radius-toy`, top highlight + bottom lip.

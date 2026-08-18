@@ -105,11 +105,18 @@
   navigation. The theme toggle stays visible in the bar.
 - **Theme**: Light/Dark in the top nav, themeing the whole app. No System
   button — system is simply the default until a choice is made.
-- **Card click** → detail modal (copy SVG / download SVG+PNG / copy name).
+- **Card click** → a **docked detail panel** at the bottom of the content area
+  (copy SVG / download SVG+PNG / copy name). It is **not modal**: nothing dims,
+  the grid stays scrollable and clickable, and clicking another icon swaps the
+  panel's contents rather than closing it. Escape or ✕ closes; focus returns to
+  the card.
 - **What you see is what you copy.** Every export is built from the displayed
   cells, so the gallery's color, flip, rotation, and padding all travel with a
   copied or downloaded icon. Stored `IconDef` data is still never modified.
-- Backdrop click or ✕ closes the modal; Escape should too.
+- The **filter sheet** IS modal (it owns the screen while you edit a draft), so
+  it dims, traps Tab, and closes on backdrop click, ✕, or Escape.
+- Every overlay animates out before unmounting, on a close clock shorter than
+  its open clock. Under `prefers-reduced-motion` the wait is skipped entirely.
 
 ## 7. Feedback & states
 

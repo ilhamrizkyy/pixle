@@ -20,14 +20,31 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(", ");
 
-export function useDialog<T extends HTMLElement>(onClose: () => void) {
+type DialogOptions = {
+  /**
+   * Modal surfaces trap Tab and lock background scroll. A NON-modal surface —
+   * one the visitor is meant to keep working around, like a docked detail
+   * panel — must do neither: trapping focus in a panel the page still uses
+   * would strand the keyboard, and locking scroll would freeze a grid that is
+   * still meant to be browsed.
+   */
+  modal?: boolean;
+};
+
+export function useDialog<T extends HTMLElement>(
+  onClose: () => void,
+  { modal = true }: DialogOptions = {},
+) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     ref.current?.focus();
 
-    // Stop the page behind from scrolling while the surface is open.
+    if (!modal) {
+      return () => opener?.focus?.();
+    }
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -36,7 +53,7 @@ export function useDialog<T extends HTMLElement>(onClose: () => void) {
       // Keyboard users land back where they came from, not at the page top.
       opener?.focus?.();
     };
-  }, []);
+  }, [modal]);
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -46,7 +63,8 @@ export function useDialog<T extends HTMLElement>(onClose: () => void) {
         return;
       }
 
-      if (event.key !== "Tab" || ref.current === null) return;
+      // Tab is only trapped on modal surfaces.
+      if (!modal || event.key !== "Tab" || ref.current === null) return;
 
       const focusable = [
         ...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE),
@@ -65,7 +83,7 @@ export function useDialog<T extends HTMLElement>(onClose: () => void) {
         first.focus();
       }
     },
-    [onClose],
+    [onClose, modal],
   );
 
   return { ref, onKeyDown };

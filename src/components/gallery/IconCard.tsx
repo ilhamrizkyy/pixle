@@ -24,6 +24,8 @@ type IconCardProps = {
   size: number;
   padding: number;
   selected: boolean;
+  /** Saved in this browser only, not in the published registry. */
+  local?: boolean;
   onSelect: (icon: IconDef) => void;
 };
 
@@ -33,6 +35,7 @@ export function IconCard({
   size,
   padding,
   selected,
+  local = false,
   onSelect,
 }: IconCardProps) {
   return (
@@ -40,10 +43,15 @@ export function IconCard({
       type="button"
       onClick={() => onSelect(icon)}
       aria-haspopup="dialog"
-      aria-label={icon.name}
-      title={icon.name}
+      aria-label={local ? `${icon.name} (saved locally)` : icon.name}
+      title={local ? `${icon.name} — saved in this browser only` : icon.name}
       className={`pixl-card group relative flex w-full flex-col items-center justify-center overflow-hidden p-3 ${
         selected ? "is-selected" : ""
+      } ${
+        /* Dashed into the border space the card already reserves, so a
+           local-only icon is legible without a second accent colour and
+           without the card changing size. */
+        local && !selected ? "border-dashed border-text-faint" : ""
       }`}
     >
       {/* Fills the square, so the icon stays centred at any card size and the

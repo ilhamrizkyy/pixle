@@ -16,13 +16,22 @@
 ## 1. Composer — drawing
 
 - **Tap a cell** → fill with the current color. **Tap a filled cell** → clear it
-  (no separate eraser).
-- **Drag-fill** → press a cell and drag to paint across cells continuously.
-  Mode is decided on press: start on an empty cell → paints the current color
-  across every cell entered; start on a filled cell → erases across them.
-  **OPEN:** when a paint drag crosses an already-filled cell, overwrite it with
-  the current color, or skip and only fill empties? Assume overwrite; confirm
-  in build (see @docs/BACKLOG.md).
+  (no separate eraser). From the keyboard: arrows move a cell cursor and
+  **Space** fills or clears it.
+- **Drag = rectangle fill** (decided 2026-08-18). Press one corner and drag to
+  the opposite one; the whole axis-aligned rectangle fills, following the
+  pointer live. Mode is decided on press and fixed for the gesture: start on an
+  empty cell → the rectangle paints; start on a filled cell → it erases. A paint
+  drag **overwrites** filled cells it covers.
+  - The rectangle is recomputed against the **pre-gesture** drawing on every
+    pointer sample, so it **shrinks** when the pointer comes back toward the
+    origin. Building on the running result instead would make a drag a one-way
+    ratchet that keeps everything it ever touched.
+  - Corners are normalised: dragging up-left covers the same cells as dragging
+    down-right.
+  - The whole drag is **one undo step**, committed on release.
+  - This replaced freehand line-drag. `cellsBetween` (Bresenham) is retained in
+    the engine, unused, so a freehand mode can be added later without rework.
 - **Hover** (no press) → faint preview of the current color on the hovered cell.
 - **Mirror** (toggle): while on, painting one side mirrors live to the other
   across the vertical center. It's a drawing aid — not stored on the icon.
@@ -54,7 +63,10 @@
 - **Saturation slider** in the color panel (0 = neutral gray → full color).
 - **Hex field**: type any 6-digit hex; the knobs + slider snap to the nearest
   match and the exact hex becomes the paint color.
-- **Presets**: one row of quick swatches including true black and true white.
+- **No preset swatches** (removed 2026-08-18). A row of fixed colours under
+  the screen is a second, competing colour control next to two knobs, a
+  saturation slider and a hex field — true black and true white are one knob
+  turn away.
 - **Rule**: changing the color affects only the **next** cells drawn; existing
   cells keep their color.
 
@@ -66,8 +78,10 @@
   exported by the tool; it parses the rects back into cells and loads them for
   editing / adds to the set. Round-trips the tool's own export format.
 - **Export**: download the current drawing as SVG (baked colors).
-- **Save icon**: requires a name and a non-empty drawing; writes an `IconDef`
-  into the set and returns to the gallery with a confirmation toast.
+- **Save icon**: requires a **unique** name and a non-empty drawing. A name
+  already used by the registry or by a locally saved icon is **refused** with an
+  inline error rather than auto-suffixed — an id is immutable once published,
+  so a name the owner did not choose would be permanent. Save then writes an `IconDef` into the set and confirms with a toast.
 
 ## 6. Gallery interactions
 

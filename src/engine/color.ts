@@ -40,7 +40,18 @@ export const PRESET_COLORS: readonly string[] = [
 ] as const;
 
 /** The color a fresh composer session starts on. */
-export const DEFAULT_COLOR = "#111111";
+/**
+ * What the composer opens on: fully saturated, lightness dead centre.
+ *
+ * Mid lightness matters more than the hue does — it is the one position where
+ * the right knob can travel as far toward black as toward white, so the first
+ * turn in either direction actually changes something. Opening near black (the
+ * old #111111 sat at 7%) meant most of that knob's range was already spent.
+ */
+export const DEFAULT_HSL: Hsl = { h: 0, s: 100, l: 50 };
+
+/** Derived, never written twice — the hex and the HSL cannot drift apart. */
+export const DEFAULT_COLOR = hslToHex(DEFAULT_HSL);
 
 /** HSL to a stored hex. */
 export function hslToHex(hsl: Hsl): string {

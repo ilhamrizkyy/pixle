@@ -70,6 +70,8 @@
   --radius-md: 8px; /* cards / panels */
   --radius-lg: 16px; /* modals */
   --radius-toy: 32px; /* composer toy frame */
+  --nav-h: 73px; /* top nav; the composer sizes itself against it */
+  --board-line: var(--color-border); /* cell lattice; the toy overrides it */
   /* Icon cells and the grid are ALWAYS 0 radius. There is no token for that
      because there is no decision to make. */
 
@@ -199,6 +201,39 @@
    ========================================================================= */
 
 .composer-scope {
+  /* Clears the floating dock, which the gallery does not have. */
+  --toast-bottom: 6.5rem;
+  /* Everything horizontal that is NOT the board: page padding, the frame's
+     padding, both tool columns, and their gaps. */
+  --toy-side: 13rem;
+  /* Everything vertical that is NOT the board: page padding, the frame's
+     padding, the bezel's brow and chin, the groove, the knob row, and the
+     clearance the floating dock needs.
+
+     THIS BASE DECLARATION IS LOAD-BEARING. It was once only set inside the
+     narrow-screen media query, which left it undefined above 640px — and an
+     undefined var makes the calc invalid, which makes the min() invalid, which
+     makes --board-size invalid, which silently drops the board back to `auto`.
+     The failure is invisible: the layout still looks plausible, so the sizing
+     rule can be dead for weeks while every calculation about it reads fine. */
+  --toy-chrome: 19.5rem;
+  /* The board's edge length, computed ONCE. Deliberately no percentages: the
+     frame shrinks to fit its contents, so a percentage here would be circular.
+     Sizing off the viewport breaks the cycle and lets the whole toy scale
+     down together instead of the frame standing wide around a small board. */
+  --board-size: min(
+    /* The board's ceiling. It only started biting once the sizing rule was
+       actually live — before that flex was quietly picking a smaller number,
+       so 46rem had never been reached and read as safe. An 11x11 grid at 30rem
+       is ~44px a cell, which is a comfortable target without the toy taking
+       over the screen. */
+    24rem,
+    calc(100dvh - var(--nav-h) - var(--toy-chrome)),
+    calc(100vw - var(--toy-side))
+  );
+  /* Gridlines on the silver screen. The shell's --color-border is near-white
+     and would vanish on it, so the composer redefines the same role. */
+  --board-line: rgb(0 0 0 / 0.16);
   --frame: #2e46c8; /* toy body, top of gradient */
   --frame-2: #20328a; /* toy body, bottom of gradient */
   --frame-3: #182662; /* bottom lip / deep shadow */
@@ -207,6 +242,14 @@
   --well-2: #182660;
   --screen: #cfd2cb; /* silver-gray screen, top of gradient */
   --screen-2: #bfc3ba; /* screen, bottom of gradient */
+}
+
+/* Narrow screens: no tool columns beside the board, one strip under it. */
+@media (max-width: 639px) {
+  .composer-scope {
+    --toy-side: 4rem;
+    --toy-chrome: 21rem;
+  }
 }
 
 /* ============================================================================
@@ -620,4 +663,324 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================================
+   Composer toy (DESIGN.md §6). Everything here is scoped to .composer-scope —
+   The frame, bezel, well and screen tokens must never appear in the shell (§7).
+   ========================================================================= */
+
+/* The keyboard caret behaves like a text cursor: it blinks while you are using
+   it and gets out of the way when you are not.
+   
+   Blinking is what tells you it is a CURSOR and not a mark you have drawn —
+   without it, a static blue outline on a pixel grid reads as part of the art.
+   And it retires after a few idle seconds because a cursor that blinks forever
+   is a permanent distraction on a surface whose whole job is showing you an
+   icon (WCAG 2.2.2 exempts a text cursor from the blink limit; retiring it
+   sidesteps the argument entirely). */
+@keyframes pixl-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.pixl-caret {
+  animation: pixl-caret-blink 1.15s steps(1, end) infinite;
+  transition: opacity var(--duration-medium) var(--ease-smooth-out);
+}
+
+/* Idle, or the board is not focused: fade out and stop. */
+.pixl-caret.is-idle {
+  animation: none;
+  opacity: 0;
+}
+
+/* The global reduced-motion rule only shortens animations; on a two-step blink
+   that would freeze the caret on its DIM frame and leave it almost invisible.
+   Under reduced motion it is simply steady, and still retires when idle. */
+@media (prefers-reduced-motion: reduce) {
+  .pixl-caret {
+    animation: none;
+    opacity: 1;
+  }
+  .pixl-caret.is-idle {
+    opacity: 0;
+  }
+}
+
+/* The toy arrives rather than appearing. One entrance, on the house curve and
+   the sheet clock, because it is a full-screen object; everything inside rides
+   in with it rather than staggering, which would read as a page assembling
+   itself. Neutered by the global reduced-motion rule. */
+@keyframes toy-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+}
+
+.toy-frame {
+  position: relative;
+  animation: toy-in var(--duration-slow) var(--ease-smooth-out) both;
+  background: linear-gradient(180deg, var(--frame) 0%, var(--frame-2) 100%);
+  border-radius: var(--radius-toy);
+  /* Three separate jobs: light catching the top edge, the body's own thickness
+     as a bottom lip, and the shadow the whole object casts on what it sits on. */
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.22),
+    inset 0 -7px 0 var(--frame-3),
+    0 12px 28px -10px rgb(0 0 0 / 0.5);
+}
+
+/* BACKLOG.md §A1 — the rim is EVEN on all four sides. The v9 bottom bezel was
+   fat because the padding was not symmetric, which read as a chin rather than
+   a rim. */
+.toy-bezel {
+  /* Deeper top and bottom than the sides — a brow above the screen and a
+     little chin under it, as the real toy has. Still nothing like the fat,
+     lopsided bottom BACKLOG.md §A1 was about: that one was uneven by accident,
+     this is deliberate and the two horizontals stay equal. */
+  padding: 22px 15px 20px;
+  background: var(--bezel);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 2px 5px rgb(0 0 0 / 0.5),
+    0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+/* BACKLOG.md §A2 — the snub-in.
+   A recess is DARKEST AT THE TOP, where the wall above it occludes the light,
+   and catches a highlight along its bottom inner edge. The prototype ran the
+   screen gradient the other way (light at top), which is the signature of a
+   dome — that is why it kept reading as a hill however much blur was added. */
+.toy-screen {
+  background: linear-gradient(180deg, var(--screen-2) 0%, var(--screen) 100%);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 7px 12px -5px rgb(0 0 0 / 0.5),
+    inset 0 2px 3px -1px rgb(0 0 0 / 0.35),
+    inset 0 -1px 0 rgb(255 255 255 / 0.55);
+}
+
+/* Game Boy A/B: a soft light dome seated in a dark recessed well. */
+.toy-well {
+  padding: 3px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 35%, var(--well-2), var(--well));
+  box-shadow:
+    inset 0 2px 4px rgb(0 0 0 / 0.55),
+    0 1px 0 rgb(255 255 255 / 0.12);
+}
+
+.toy-button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  color: var(--frame-3);
+  background: radial-gradient(circle at 38% 28%, #fdfdff 0%, #dfe3f0 58%, #bcc2d8 100%);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    inset 0 -2px 3px rgb(0 0 0 / 0.18),
+    0 2px 3px rgb(0 0 0 / 0.4);
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* "Press sinks ~1px only" — a deeper travel reads as a key, not a game button. */
+.toy-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.6),
+    inset 0 -1px 2px rgb(0 0 0 / 0.2),
+    0 1px 1px rgb(0 0 0 / 0.35);
+}
+
+/* A latched toggle rests in the same shallow click a momentary press makes,
+   and simply sits a shade darker. It is the same cap, held down — not a
+   different, blue button. Depth here is the state; colour would be a second
+   signal saying the same thing louder. */
+.toy-button[aria-pressed="true"] {
+  transform: translateY(1px);
+  /* Distinctly darker than the resting cap, not a shade off it. Depth alone
+     was carrying the whole on/off signal, and a 1px sink is easy to miss at a
+     glance — value difference is what reads across the frame. */
+  background: radial-gradient(circle at 40% 76%, #c2c8db 0%, #9aa2bd 58%, #7b849f 100%);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.6),
+    inset 0 -1px 2px rgb(0 0 0 / 0.2),
+    0 1px 1px rgb(0 0 0 / 0.35);
+}
+
+.toy-button:disabled {
+  opacity: 0.42;
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.4);
+}
+
+/* The groove, and the handle that rides in it. */
+.toy-groove {
+  position: relative;
+  /* A drag across the groove must wipe, never select. Without this the label
+     and everything past it highlights as the pointer travels. */
+  user-select: none;
+  -webkit-user-select: none;
+  height: 26px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--well-2), var(--well));
+  box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.55);
+}
+
+.toy-groove-handle {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 34px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 40% 25%, #fdfdff, #dfe3f0 60%, #bcc2d8);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    0 2px 3px rgb(0 0 0 / 0.45);
+  transition: left var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* Knobs (DESIGN.md §6). The real toy's are cream plastic cylinders with a
+   milled rim and a smooth domed cap — not metal discs. Only the DIAL turns;
+   the coloured ring and the housing shadow stay put, which is what reads as a
+   dial seated in a body rather than a spinning sticker. */
+.toy-knob {
+  position: relative;
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  /* Seated on the frame, thrown down-right like everything else on the toy.
+     BOX-shadow, never `filter: drop-shadow()`: a filter has to rasterise the
+     element to derive its alpha mask, and rasterising a WebGL canvas whose
+     drawing buffer was already composited away yields nothing — so the whole
+     knob disappears. Never put a filter on an ancestor of a demand-rendered
+     canvas. */
+  box-shadow:
+    0 8px 16px -6px rgb(0 0 0 / 0.6),
+    1px 3px 5px rgb(0 0 0 / 0.4),
+    inset 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+
+/* Held. A knob you are turning should answer, and lifting it slightly is what
+   a hand does to a real one — the grip pulls it out of its housing a touch. */
+.toy-knob[data-grabbed="true"] {
+  transform: scale(1.045);
+  box-shadow:
+    0 12px 22px -6px rgb(0 0 0 / 0.65),
+    0 3px 6px rgb(0 0 0 / 0.4),
+    inset 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+
+.toy-knob-dial {
+  position: absolute;
+  inset: 9%;
+  border-radius: 999px;
+  /* 72 fine flutes, plus a radial shade that darkens them toward the rim —
+     standing in for the CONE the WebGL version actually models, so the two
+     read as the same object. */
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgb(255 255 255 / 0.85) 0%,
+      rgb(255 255 255 / 0.25) 58%,
+      rgb(0 0 0 / 0.16) 88%,
+      rgb(0 0 0 / 0.3) 100%
+    ),
+    repeating-conic-gradient(#ffffff 0deg 2.5deg, #d4d4d4 2.5deg 5deg);
+  box-shadow:
+    inset 0 -3px 6px rgb(0 0 0 / 0.28),
+    inset 0 3px 4px rgb(255 255 255 / 0.85),
+    0 3px 6px rgb(0 0 0 / 0.45);
+}
+
+/* The smooth cap the ribs stop at, domed so light gathers off-centre. */
+/* The DISHED centre the flutes stop at.
+   A bowl lit from the upper left catches its highlight on the LOWER RIGHT
+   interior wall and shadows the near one — the exact inverse of a dome. This
+   rule sat un-updated for several passes, so the CSS knob was a raised cap
+   while the WebGL one was a dish. */
+.toy-knob-cap {
+  position: absolute;
+  inset: 22%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 62% 72%, #ffffff 0%, #f4f4f4 42%, #d9d9d9 100%);
+  box-shadow:
+    inset 0 3px 5px rgb(0 0 0 / 0.18),
+    inset 0 -2px 3px rgb(255 255 255 / 0.8);
+}
+
+/* The pointer, so the dial's angle is readable at a glance. */
+/* A scored line in the knob's own plastic, not a painted marker — the real
+   knob has none, but ours selects a value, so the angle must be readable. */
+/* THE POINTER. The real knob has none — its position is meaningless on a
+   physical toy — but ours selects a hue and a lightness, so the angle has to be
+   legible. Short, near the rim, and dark against the cream. */
+.toy-knob-mark {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  width: 4px;
+  height: 14%;
+  border-radius: 2px;
+  background: #000000;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* The screen and the groove under it, sized as ONE column, so the groove is
+   always exactly the width of the board (DESIGN.md §6).
+   
+   Width is driven by whichever runs out first — the column, or the height the
+   viewport has left. Doing it the other way (height-driven, clamped by width)
+   silently breaks the square when the clamp bites, which is what left the board
+   tall with dead space beside it. `--toy-chrome` is everything vertical that is
+   NOT the board: page padding, the dock, the frame's own padding, the knob row,
+   and the groove. */
+/* The board column: exactly the board's width, so the groove under the screen
+   matches it. */
+.toy-stack {
+  inline-size: var(--board-size);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-block-size: 0;
+}
+
+/* The colour lane spans the whole screen ROW — outer edge of the left tool
+   column to outer edge of the right one.
+
+   100%, NOT board + a computed gutter. The frame is width:fit-content, so its
+   content box is already exactly the widest child, and that child is the screen
+   row. Asking for all of it is therefore correct BY CONSTRUCTION at every
+   breakpoint, including the one where the tool columns move above and below the
+   board and the row narrows to the board alone. Adding up button widths and
+   gaps gave the same answer only while nobody touched those numbers — and a
+   stale addend is invisible, because the arithmetic still looks right. */
+.toy-lane {
+  inline-size: 100%;
+}
+
+/* The tool strip scrolls; its scrollbar would sit on the blue frame and read as
+   a defect. The arrows and the drag are the affordance. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

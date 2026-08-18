@@ -44,13 +44,20 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable}`}
     >
-      <head>
-        {/* Applies the stored theme before first paint. Without this the page
-            renders light and then snaps to dark, which is worse than no dark
-            mode at all. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
       <body>
+        {/* Applies the stored theme BEFORE FIRST PAINT — without it the page
+            renders light and then snaps to dark, which is worse than no dark
+            mode at all.
+
+            It is the FIRST CHILD OF <body>, not a child of a hand-written
+            <head>, and both halves of that matter. A synchronous inline script
+            blocks parsing, so sitting ahead of all visible markup is early
+            enough — nothing has been painted yet. And React manages <head>
+            children as its own resources, re-creating rather than hydrating
+            them; a <script> down that path gets swapped for a <div> on the
+            client and warns. In <body> the server HTML and the React tree
+            agree, so React hydrates the tag it already sent. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <SiteNav />
         {children}
       </body>

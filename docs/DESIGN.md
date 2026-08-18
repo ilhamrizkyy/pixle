@@ -243,8 +243,9 @@ padding.
   inward from the top edge; never convex ("hill"). **[FIX]** the current
   snub-in still looks slightly off; refine the inset geometry (a true 3D screen
   in Phase 3 should resolve it).
-- *Bezel*: dark rim (`--bezel`). **[FIX]** the bottom bezel is too thick/fat —
-  even the rim all around; thin it so the screen sits in a slim recessed frame.
+- *Bezel*: dark rim (`--bezel`), even on the sides and bottom, with a deeper
+  **brow above the screen** as the real toy has. (The old [FIX] was a fat chin,
+  which is a different thing from a header.)
 - *Buttons*: 8 total, 4 flanking each side — Game Boy A/B style (soft light
   domed cap seated in a recessed well). Left: Mirror, Grid, Eyedropper, Undo.
   Right: Flip-H, Flip-V, Rotate, Redo. Press sinks ~1px only.
@@ -254,8 +255,8 @@ padding.
   dial turns; the shadow/ring stay still. Left knob wears a rainbow (hue) ring,
   right knob a black→color→white (lightness) ring.
 - *Color panel* (between the knobs): current-color swatch, editable hex, a
-  readout (hue name · L% · S%), a saturation slider, and a single row of preset
-  swatches (incl. true black & white).
+  readout (hue name · L% · S%), and a saturation slider. **No preset swatches** —
+  they duplicated controls the knobs already cover.
 - *Slide-to-clear*: a groove the width of the board, just under the screen;
   dragging wipes the drawing left→right progressively.
 

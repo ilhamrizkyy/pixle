@@ -6,6 +6,7 @@ import { recolorCells } from "@/engine/color";
 import { applyOrientation } from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
+import { mergeLocalIcons, useLocalIcons } from "@/composer/useLocalIcons";
 import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
 import { EmptyState } from "./EmptyState";
 import { FilterSheet } from "./FilterSheet";
@@ -29,7 +30,21 @@ import {
 
 type GalleryProps = { icons: readonly IconDef[] };
 
-export function Gallery({ icons }: GalleryProps) {
+export function Gallery({ icons: registry }: GalleryProps) {
+  // Icons the owner saved in the composer join the published set after mount.
+  // They are browser-local until Phase 3 persists them for real.
+  const local = useLocalIcons();
+  const icons = useMemo(() => mergeLocalIcons(registry, local), [registry, local]);
+  // Only the local icons that actually SURVIVED the merge. Building this from
+  // the raw local list would badge a published icon as local whenever an id
+  // collided — the registry wins that collision, so it is a registry icon.
+  const localIds = useMemo(() => {
+    const published = new Set(registry.map((icon) => icon.id));
+    return new Set(
+      local.filter((icon) => !published.has(icon.id)).map((icon) => icon.id),
+    );
+  }, [registry, local]);
+
   const [search, setSearch] = useState("");
   const [settings, setSettings] = useState<GallerySettings>(DEFAULT_SETTINGS);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -149,6 +164,7 @@ export function Gallery({ icons }: GalleryProps) {
                   size={settings.size}
                   padding={settings.padding}
                   selected={selected?.id === icon.id}
+                  local={localIds.has(icon.id)}
                   onSelect={setSelected}
                 />
               </li>

@@ -77,6 +77,11 @@ export function normalizeHex(value: string): string | null {
 /** Paint one cell. Returns new state; the input is untouched. */
 export function fillCell(cells: Cells, index: number, color: string): Cells {
   if (index < 0 || index >= CELL_COUNT) return cells;
+  // Painting a cell the colour it already holds is not a change. Returning the
+  // same reference matters most during a drag, which re-enters cells it has
+  // already painted on almost every pointer frame: a fresh array each time
+  // would re-render the whole 121-cell grid for no visible difference.
+  if (cells[index] === color) return cells;
   const next = cells.slice();
   next[index] = color;
   return next;
@@ -85,6 +90,7 @@ export function fillCell(cells: Cells, index: number, color: string): Cells {
 /** Empty one cell. */
 export function clearCell(cells: Cells, index: number): Cells {
   if (index < 0 || index >= CELL_COUNT) return cells;
+  if (cells[index] === null) return cells;
   const next = cells.slice();
   next[index] = null;
   return next;

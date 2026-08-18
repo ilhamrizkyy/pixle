@@ -121,6 +121,17 @@ describe("cell mutation is immutable", () => {
     expect(cleared[6]).toBe(RED);
   });
 
+  it("returns the SAME array when the write changes nothing", () => {
+    // The identity guarantee a drag depends on: re-entering a painted cell,
+    // or erasing an already-empty one, must not allocate.
+    const painted = fillCell(createEmptyCells(), 5, RED);
+    expect(fillCell(painted, 5, RED)).toBe(painted);
+    expect(clearCell(painted, 6)).toBe(painted);
+    // A genuine change still allocates.
+    expect(fillCell(painted, 5, "#00ff00")).not.toBe(painted);
+    expect(clearCell(painted, 5)).not.toBe(painted);
+  });
+
   it("ignores out-of-range indices instead of growing the array", () => {
     const cells = createEmptyCells();
     expect(fillCell(cells, -1, RED)).toBe(cells);

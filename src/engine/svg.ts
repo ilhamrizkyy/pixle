@@ -11,9 +11,15 @@
  * produces.
  */
 
-import { CELL_UNITS, GRID_SIZE, viewBoxWithPadding } from "./constants";
+import {
+  CANVAS_UNITS,
+  CELL_UNITS,
+  GRID_SIZE,
+  VIEW_BOX,
+  viewBoxWithPadding,
+} from "./constants";
 import type { Cells, IconDef } from "./types";
-import { toIndex } from "./grid";
+import { createEmptyCells, inBounds, normalizeHex, toIndex } from "./grid";
 
 export type ToSvgOptions = {
   /** Rendered width/height attribute in px. Omit for a viewBox-only SVG. */
@@ -101,18 +107,228 @@ export function svgFileName(icon: IconDef): string {
   return `${icon.id}.svg`;
 }
 
+
+/* ============================================================================
+   Import.
+
+   The reader half of this file. It is deliberately NOT a general SVG parser:
+   v1 guarantees round-tripping only what `cellsToSvg` wrote (BACKLOG.md D), so
+   this reads one known shape and refuses everything else. Same constraint as
+   the writer — string scanning only, no DOMParser, or the engine boundary
+   breaks (TECH-STACK.md).
+   ========================================================================= */
+
+/** Attributes read off one tag, keyed by name. */
+type Attributes = Record<string, string>;
+
+/** The open `<svg …>` tag. Searched for, so an XML prolog is tolerated. */
+const ROOT_TAG = /<svg(\s[^>]*)?>/;
+
+/** `name="value"`, double-quoted — the only form the writer emits. */
+const ATTRIBUTE = /([a-zA-Z_:][-\w:.]*)\s*=\s*"([^"]*)"/g;
+
+const TAG_NAME = /^[a-zA-Z][-\w:.]*/;
+
+/** Coordinates are whole user units — a fractional one cannot be on-grid. */
+const WHOLE_NUMBER = /^-?\d+$/;
+
 /**
- * PHASE 2 STUB — parse an SVG back into cells.
- *
- * Scope is deliberately narrow (BACKLOG.md D): v1 guarantees round-tripping
- * only SVGs this tool exported. Arbitrary external SVGs are undefined behavior
- * and should fail loudly rather than half-import.
- *
- * Must stay DOM-free — a regex/string parse over our own known-shape output,
- * not DOMParser, or the engine boundary breaks. Note that `buildRects` merges
- * horizontal runs, so the parser has to expand a rect of width N back into
- * N cells rather than assuming one rect per cell.
+ * Every rejection funnels through here so an import failure names the file's
+ * problem rather than surfacing as a drawing that is quietly missing pixels.
  */
-export function svgToCells(_svg: string): Cells {
-  throw new Error("svgToCells: not implemented until Phase 2");
+function fail(message: string): never {
+  throw new Error(`svgToCells: ${message}`);
+}
+
+function parseAttributes(source: string): Attributes {
+  const attributes: Attributes = {};
+  for (const match of source.matchAll(ATTRIBUTE)) {
+    attributes[match[1]] = match[2];
+  }
+  return attributes;
+}
+
+/** Markup between our elements may only be whitespace — never stray text. */
+function assertBlank(text: string, where: string): void {
+  if (text.trim() !== "") fail(`unexpected content ${where}: "${text.trim()}"`);
+}
+
+/**
+ * Validate the root viewBox and return the padding it encodes, in cells.
+ *
+ * The padding is then DISCARDED — see the note on `svgToCells`. Validating it
+ * anyway is what makes the viewBox the thing that identifies a Pixle canvas:
+ * any other extent means the file came from somewhere else.
+ */
+function readPaddingCells(viewBox: string | undefined): number {
+  if (viewBox === undefined) fail("the <svg> has no viewBox");
+
+  const parts = viewBox.trim().split(/[\s,]+/);
+  if (parts.length !== 4 || !parts.every((part) => WHOLE_NUMBER.test(part))) {
+    fail(`viewBox="${viewBox}" is not four whole numbers`);
+  }
+
+  const [minX, minY, width, height] = parts.map(Number);
+  const pad = -minX;
+  const symmetric = minY === minX && pad >= 0 && pad % CELL_UNITS === 0;
+  if (!symmetric || width !== CANVAS_UNITS + pad * 2 || height !== width) {
+    fail(
+      `viewBox="${viewBox}" is not a Pixle canvas — expected "${VIEW_BOX}" or a symmetrically padded form of it`,
+    );
+  }
+
+  return pad / CELL_UNITS;
+}
+
+/** Read an attribute that must be present and a whole number of user units. */
+function readUnits(attributes: Attributes, name: string): number {
+  const raw = attributes[name];
+  if (raw === undefined) fail(`a <rect> is missing ${name}`);
+  if (!WHOLE_NUMBER.test(raw)) {
+    fail(`<rect> ${name}="${raw}" is not a whole number of user units`);
+  }
+  return Number(raw);
+}
+
+/**
+ * Expand one rect into the cells it covers.
+ *
+ * The expansion is the whole point: `buildRects` merges a horizontal run of
+ * same-colored cells into ONE rect of width N*CELL_UNITS, so a reader that
+ * assumed one rect per cell would silently drop every pixel after the first of
+ * each run.
+ */
+function paintRect(cells: Cells, attributes: Attributes): void {
+  const x = readUnits(attributes, "x");
+  const y = readUnits(attributes, "y");
+  const width = readUnits(attributes, "width");
+  const height = readUnits(attributes, "height");
+
+  if (height !== CELL_UNITS) {
+    fail(`<rect> height="${height}" — every exported rect is one cell tall`);
+  }
+  if (x % CELL_UNITS !== 0 || y % CELL_UNITS !== 0) {
+    fail(`<rect> at (${x}, ${y}) is off the ${CELL_UNITS}-unit cell grid`);
+  }
+  if (width <= 0 || width % CELL_UNITS !== 0) {
+    fail(`<rect> width="${width}" is not a whole number of cells`);
+  }
+
+  const col = x / CELL_UNITS;
+  const row = y / CELL_UNITS;
+  const run = width / CELL_UNITS;
+  if (!inBounds(row, col) || col + run > GRID_SIZE) {
+    fail(
+      `<rect> at (${x}, ${y}) spanning ${run} cells falls outside the ${GRID_SIZE}x${GRID_SIZE} grid`,
+    );
+  }
+
+  // normalizeHex also accepts 3-digit and uppercase hex, so a hand-edited
+  // export still imports, and every cell lands in the stored form: lowercase,
+  // 6 digits, leading # (types.ts). `fill="none"` fails here, as it should —
+  // a colorless rect is not a pixel.
+  const color = normalizeHex(attributes.fill ?? "");
+  if (color === null) {
+    fail(`<rect> fill="${attributes.fill ?? ""}" is not a hex color`);
+  }
+
+  for (let step = 0; step < run; step++) {
+    const index = toIndex(row, col + step);
+    if (cells[index] !== null) {
+      fail(`two rects overlap at row ${row}, col ${col + step}`);
+    }
+    cells[index] = color;
+  }
+}
+
+/** Index just past `</name>`, which must exist. */
+function afterCloseTag(body: string, from: number, name: string): number {
+  const close = body.indexOf(`</${name}>`, from);
+  if (close === -1) fail(`<${name}> is never closed`);
+  return close + name.length + 3;
+}
+
+/**
+ * Parse an SVG back into cells — the reader behind Import in the composer
+ * dock (INTERACTION.md §5).
+ *
+ * SCOPE (BACKLOG.md D): v1 guarantees round-tripping only what `cellsToSvg`
+ * wrote. Behavior on arbitrary external SVGs is undefined, so this throws on
+ * the first thing it does not recognize instead of importing what it can. A
+ * half-parsed import hands the owner a drawing that is subtly missing pixels,
+ * which is far worse than a refusal they can act on.
+ *
+ * TOLERATED SHAPE: an `<svg>` element containing only an optional `<title>`
+ * and any number of `<rect>`, each self-closed or `</rect>`-closed, with
+ * double-quoted attributes in any order and whitespace between elements. Root
+ * attributes other than `viewBox` — the optional `width`/`height`, plus
+ * `fill`, `role`, `xmlns` — are ignored: the viewBox is what identifies the
+ * canvas.
+ *
+ * PADDING IS DROPPED, deliberately. A padded export carries a negative-origin
+ * viewBox while its rects stay in the unpadded 0..44 space, because padding
+ * grows the viewBox instead of moving the art (constants.ts). Padding is a
+ * display setting rather than part of the icon, so importing a padded export
+ * yields the same 11x11 art as importing the unpadded one — which is also the
+ * only reading that can round-trip, since `Cells` has nowhere to put it.
+ */
+export function svgToCells(svg: string): Cells {
+  const open = ROOT_TAG.exec(svg);
+  if (open === null) fail("input has no <svg> element");
+
+  const bodyStart = open.index + open[0].length;
+  const bodyEnd = svg.lastIndexOf("</svg>");
+  if (bodyEnd < bodyStart) fail("the <svg> element is never closed");
+
+  // Validated for shape, then thrown away: padding is a display setting, not
+  // something `Cells` can hold.
+  readPaddingCells(parseAttributes(open[1] ?? "").viewBox);
+
+  const cells = createEmptyCells();
+  const body = svg.slice(bodyStart, bodyEnd);
+  let cursor = 0;
+
+  while (cursor < body.length) {
+    const start = body.indexOf("<", cursor);
+    if (start === -1) {
+      assertBlank(body.slice(cursor), "after the last element");
+      break;
+    }
+    assertBlank(body.slice(cursor, start), "between elements");
+
+    const end = body.indexOf(">", start);
+    if (end === -1) fail("an element's tag is never terminated");
+
+    const tag = body.slice(start + 1, end);
+    const name = TAG_NAME.exec(tag)?.[0];
+    if (name === undefined) fail(`unexpected markup "<${tag}>"`);
+
+    const selfClosing = tag.trimEnd().endsWith("/");
+    const attributes = tag.slice(name.length);
+
+    if (name === "title") {
+      // Title text is the icon's name, which lives on the IconDef rather than
+      // in cells, so it is read past and dropped.
+      cursor = selfClosing ? end + 1 : afterCloseTag(body, end + 1, name);
+      continue;
+    }
+
+    if (name === "rect") {
+      paintRect(cells, parseAttributes(attributes));
+      if (selfClosing) {
+        cursor = end + 1;
+      } else {
+        cursor = afterCloseTag(body, end + 1, name);
+        const close = cursor - name.length - 3;
+        assertBlank(body.slice(end + 1, close), "in a <rect>");
+      }
+      continue;
+    }
+
+    fail(
+      `unsupported element <${name}> — a Pixle export holds only <title> and <rect>`,
+    );
+  }
+
+  return cells;
 }

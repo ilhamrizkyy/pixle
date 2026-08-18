@@ -23,10 +23,14 @@
   not a global page feature — remove it from the top nav. (Reflected in
   DESIGN.md / INTERACTION.md.)
 
-## C. New feature — drag-fill
+## C. Drag behaviour
 
-- Press a cell and **drag to auto-fill** across cells (continuous paint). Mode is
-  set on press: start empty → paint the current color; start filled → erase.
+- **RESOLVED 2026-08-18 — drag is a RECTANGLE fill.** Press one corner, drag to
+  the opposite one, and the axis-aligned rectangle fills live. Mode is set on
+  press: start empty → paint; start filled → erase. This replaced freehand
+  line-drag, which drew a Bresenham path whose diagonals touched only at the
+  corners and read as broken. `cellsBetween` stays in the engine, tested and
+  unused, so freehand can return as a tool toggle without rework.
 - **RESOLVED 2026-08-18 — overwrite.** A paint drag crossing an already-filled
   cell **overwrites** it with the current color. This matches the v9
   prototype's own behavior (`applyCell` assigns unconditionally), so it is what
@@ -59,7 +63,15 @@
 - **Auth:** Supabase recommended (smaller blast radius than a repo-write
   token). Parked — see G.
 - **Import scope:** v1 only guarantees round-tripping the tool's own export
-  format; behavior for arbitrary external SVGs is undefined.
+  format; behavior for arbitrary external SVGs is undefined. The reader refuses
+  on the first thing it does not recognise rather than importing what it can —
+  a half-parsed import hands the owner a drawing that is quietly missing
+  pixels, which is worse than a refusal.
+  - **Padding is validated, then dropped.** A padded export carries a
+    negative-origin viewBox while its rects stay in unpadded 0..44 space, so
+    padding is a display setting with nowhere to live in `cells`. The viewBox
+    is still fully checked, because it is what identifies a Pixle canvas — a
+    Lucide 24x24 is rejected there.
 - *(nothing else outstanding on fonts — Display/Data locked to JetBrains Mono
   on 2026-08-18; see @docs/DESIGN.md §4.)*
 

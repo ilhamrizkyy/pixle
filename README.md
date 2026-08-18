@@ -3,8 +3,10 @@
 An open-source pixel / 32-bit / arcade **icon set**, plus an in-browser
 **composer** styled like an Etch A Sketch. MIT licensed.
 
-> **Status: Phase 0 — foundation.** The public gallery is Phase 1; the
-> owner-only composer is Phase 2. See [PLAN.md](PLAN.md).
+> **Status: Phase 1 complete — the public gallery is live.** 24 icons, search,
+> filtering, a single-color customizer, size/padding/transform controls, and
+> copy/download that matches what you see. The owner-only composer is Phase 2.
+> See [PLAN.md](PLAN.md).
 
 ## Getting started
 
@@ -18,6 +20,7 @@ npm run dev      # http://localhost:3000
 | `npm run dev` | Dev server |
 | `npm run build` | Production build |
 | `npm run start` | Serve the production build |
+| `npm test` | Vitest over the engine + registry |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 

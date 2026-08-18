@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ICON_SIZES } from "@/engine/constants";
+import { LICENSE_URL, REPO_URL } from "@/lib/site";
 import { icons } from "@/registry";
 
 export const metadata: Metadata = {
@@ -102,7 +103,14 @@ const SECTIONS: { title: string; blurb: string; items: Resource[] }[] = [
       {
         label: "MIT",
         detail:
-          "Free for personal and commercial use, with attribution kept in the license file. The set ships with a LICENSE at the repository root.",
+          "Free for personal and commercial use, with the copyright notice kept in the license file.",
+        href: LICENSE_URL,
+        status: "available",
+      },
+      {
+        label: "Source on GitHub",
+        detail: "The registry, the engine, and the specs the set is built to.",
+        href: REPO_URL,
         status: "available",
       },
     ],
@@ -168,11 +176,26 @@ function ResourceRow({ item }: { item: Resource }) {
     );
   }
 
+  const className =
+    "block rounded-md border border-border bg-surface-2 px-4 py-3 no-underline transition-colors hover:border-accent";
+
+  // next/link is for in-app routes; an external URL needs a plain anchor, and
+  // noreferrer so the destination cannot see where the click came from.
+  if (item.href.startsWith("http")) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noreferrer"
+        className={className}
+      >
+        {body}
+      </a>
+    );
+  }
+
   return (
-    <Link
-      href={item.href}
-      className="block rounded-md border border-border bg-surface-2 px-4 py-3 no-underline transition-colors hover:border-accent"
-    >
+    <Link href={item.href} className={className}>
       {body}
     </Link>
   );

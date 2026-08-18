@@ -27,6 +27,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored agent skills — third-party code we neither wrote nor ship.
+    // Linting it produced ~150 warnings that would bury our own.
+    ".agents/**",
+    ".claude/**",
   ]),
 ]);
 

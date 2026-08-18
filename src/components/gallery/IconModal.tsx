@@ -75,7 +75,7 @@ export function IconModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-text/45 p-5"
+      className="pixl-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-text/45 p-5"
       onClick={onClose}
     >
       <div
@@ -86,7 +86,7 @@ export function IconModal({
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
         onKeyDown={onKeyDown}
-        className="w-full max-w-100 rounded-lg border border-border bg-bg p-6 shadow-2xl outline-none"
+        className="pixl-modal w-full max-w-100 rounded-lg bg-bg p-6 shadow-[var(--shadow-overlay)] outline-none"
       >
         <div className="flex items-start justify-between gap-4">
           <div>

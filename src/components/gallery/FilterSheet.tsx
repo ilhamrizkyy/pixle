@@ -61,7 +61,7 @@ export function FilterSheet({
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
         onKeyDown={onKeyDown}
-        className="pixl-sheet flex max-h-[85vh] w-full flex-col rounded-t-lg border-t border-border bg-bg outline-none"
+        className="pixl-sheet flex max-h-[85vh] w-full flex-col rounded-t-lg bg-bg shadow-[var(--shadow-overlay)] outline-none"
       >
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 id="filter-sheet-title" className="text-h3">

@@ -42,8 +42,8 @@ export function IconCard({
       aria-haspopup="dialog"
       aria-label={icon.name}
       title={icon.name}
-      className={`pixl-card group relative flex w-full flex-col items-center justify-center overflow-hidden rounded-md border bg-surface p-3 transition-[box-shadow,border-color,transform] duration-100 hover:-translate-y-0.5 hover:border-border hover:shadow-md ${
-        selected ? "border-accent ring-2 ring-accent" : "border-transparent"
+      className={`pixl-card group relative flex w-full flex-col items-center justify-center overflow-hidden p-3 ${
+        selected ? "is-selected" : ""
       }`}
     >
       {/* Fills the square, so the icon stays centred at any card size and the

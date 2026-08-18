@@ -78,6 +78,48 @@
 }
 
 /* ============================================================================
+   Motion scale.
+
+   One shared vocabulary, so nothing in the app invents its own timing. Kept in
+   plain :root rather than @theme deliberately: motion belongs in the component
+   rules below, where the open/close asymmetry lives, not sprinkled through
+   markup as utility classes.
+
+   The rules that make it feel authored rather than merely animated:
+   - closes are faster and quieter than opens (250/150 for a modal)
+   - overshoot easing is for entrances only; never bounce a close
+   - hover-in is quick and direct; hover-out may settle more slowly
+   - trim duration before adding delay, and never delay a close
+   ========================================================================= */
+
+:root {
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+
+  /* Exponential ease-out: fast departure, long settle. The house curve. */
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  --distance-base: 8px;
+  --distance-toast: 16px;
+
+  --scale-modal: 0.96;
+  --blur-small: 2px;
+
+  /* --- Depth ---------------------------------------------------------------
+     Every shadow carries an offset AND a soft blur; a zero-offset halo is
+     decoration, not depth. Elevation is declared ONCE per element — either a
+     border or a shadow, never a 1px border under a wide soft shadow. */
+  --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.08), 0 4px 12px -2px
+    rgb(0 0 0 / 0.1);
+  --shadow-overlay: 0 8px 16px -4px rgb(0 0 0 / 0.16), 0 24px 48px -12px
+    rgb(0 0 0 / 0.24);
+}
+
+/* ============================================================================
    Dark theme.
 
    Because every component is built on tokens, dark mode is a REDEFINITION of
@@ -106,6 +148,11 @@
   --color-success: #4ade80;
   --color-warning: #fbbf24;
 
+  /* Shadows need more opacity to register against a dark ground. */
+  --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.4), 0 4px 12px -2px
+    rgb(0 0 0 / 0.5);
+  --shadow-overlay: 0 8px 16px -4px rgb(0 0 0 / 0.5), 0 24px 48px -12px
+    rgb(0 0 0 / 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -126,6 +173,10 @@
     --color-success: #4ade80;
     --color-warning: #fbbf24;
 
+    --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.4), 0 4px 12px -2px
+      rgb(0 0 0 / 0.5);
+    --shadow-overlay: 0 8px 16px -4px rgb(0 0 0 / 0.5), 0 24px 48px -12px
+      rgb(0 0 0 / 0.6);
   }
 }
 
@@ -205,11 +256,68 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 
   /* Icon art is always crisp squares -- never let a stray radius in. */
   .pixel-cell {
     border-radius: 0;
+  }
+
+  /* --- Browser surfaces ---------------------------------------------------
+     The parts we did not draw still carry the design. Selection, the caret,
+     and scrollbars ship with defaults that belong to no design system, and
+     they are the cheapest tell that a page was assembled rather than built. */
+
+  ::selection {
+    background: var(--color-accent-subtle);
+    color: var(--color-accent);
+  }
+
+  :is(input, textarea) {
+    caret-color: var(--color-accent);
+  }
+
+  /* Firefox. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  /* WebKit. Overlay-style: a thin thumb on a transparent track, darkening on
+     hover so the control is discoverable without being permanent furniture. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-faint);
+    background-clip: content-box;
+  }
+
+  /* Counts, hex, and sizes are DATA — they must not reflow as digits change,
+     so they get tabular figures rather than proportional ones. */
+  .font-data,
+  input[type="text"],
+  input[type="search"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Long-form prose stays inside a comfortable measure (65–75ch). */
+  .prose-body {
+    max-width: 68ch;
   }
 }
 
@@ -227,6 +335,31 @@
 
 .pixl-card {
   aspect-ratio: 1 / 1;
+  background: var(--color-surface);
+  /* A transparent border reserves the space the selected state fills, so
+     selecting a card never nudges the grid. */
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  /* Hover-OUT clock: softer, so the card settles instead of snapping back. */
+  transition:
+    transform var(--duration-medium) var(--ease-smooth-out),
+    box-shadow var(--duration-medium) var(--ease-smooth-out),
+    border-color var(--duration-medium) var(--ease-smooth-out);
+}
+
+@media (hover: hover) {
+  .pixl-card:hover {
+    /* Hover-IN clock: quick and direct. */
+    transition-duration: var(--duration-fast);
+    transform: translateY(-2px);
+    /* Elevation is declared ONCE. The border stays transparent under the
+       shadow — a 1px border beneath a wide soft shadow is the ghost card. */
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+.pixl-card.is-selected {
+  border-color: var(--color-accent);
 }
 
 .pixl-card-name {
@@ -244,20 +377,29 @@
   background: color-mix(in oklab, var(--color-text) 85%, transparent);
   color: var(--color-bg);
   opacity: 0;
-  transition: opacity 0.1s;
+  /* Reveal-OUT: lingers slightly so the label does not snap away. */
+  transition: opacity var(--duration-fast) var(--ease-smooth-out);
 }
 
 .group:hover .pixl-card-name,
 .group:focus-visible .pixl-card-name {
   opacity: 1;
+  /* Reveal-IN: quick and direct. */
+  transition-duration: var(--duration-quick);
 }
 
 /* ============================================================================
-   Bottom sheet (mobile filters).
+   Overlay motion — sheet, modal, toast.
 
-   Both animations are entry-only — an exit animation would need the element
-   kept mounted while it played, and the sheet unmounts on close. The global
-   reduced-motion rule collapses these to ~0s.
+   All entry-only: these surfaces unmount on close, so there is nothing left to
+   animate out. Where an exit matters most (the sheet, which the thumb is
+   still resting on) the backdrop fade covers the gap.
+
+   Durations follow the shared scale by USAGE, not by nearest number: a panel
+   travelling the full height of the screen opens slower (400ms) than a modal
+   scaling in place (250ms), because it covers more distance.
+
+   The global reduced-motion rule collapses every one of these to ~0s.
    ========================================================================= */
 
 @keyframes pixl-sheet-in {
@@ -278,12 +420,49 @@
   }
 }
 
-.pixl-sheet {
-  animation: pixl-sheet-in 0.22s ease-out;
+@keyframes pixl-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--scale-modal));
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
 }
 
-.pixl-sheet-backdrop {
-  animation: pixl-fade-in 0.15s ease-out;
+@keyframes pixl-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, var(--distance-toast)) scale(0.97);
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.pixl-sheet {
+  animation: pixl-sheet-in var(--duration-slow) var(--ease-smooth-out);
+}
+
+.pixl-sheet-backdrop,
+.pixl-modal-backdrop {
+  animation: pixl-fade-in var(--duration-quick) var(--ease-smooth-out);
+}
+
+.pixl-modal {
+  animation: pixl-modal-in var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* The toast is already x-centred by a translate, so its keyframes carry that
+   translate through rather than fighting it. */
+.pixl-toast {
+  animation: pixl-toast-in var(--duration-medium) var(--ease-smooth-out);
 }
 
 /* ============================================================================

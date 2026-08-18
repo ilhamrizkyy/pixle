@@ -25,7 +25,7 @@ export function Toast({ message, onDismiss, duration = 2200 }: ToastProps) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-6 left-1/2 z-60 -translate-x-1/2 rounded-md bg-text px-5 py-3 text-ui text-bg shadow-lg"
+      className="pixl-toast fixed bottom-6 left-1/2 z-60 -translate-x-1/2 rounded-md bg-text px-5 py-3 text-ui text-bg shadow-[var(--shadow-overlay)]"
     >
       {message}
     </div>

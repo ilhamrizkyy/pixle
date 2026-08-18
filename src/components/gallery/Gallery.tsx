@@ -112,7 +112,19 @@ export function Gallery({ icons }: GalleryProps) {
         </div>
 
         {visible.length === 0 ? (
-          <EmptyState query={search.trim() || undefined} />
+          <EmptyState
+            query={search.trim() || undefined}
+            // Clear whichever thing is actually hiding the icons: the search
+            // if there is one, otherwise the category filter.
+            onReset={
+              search.trim()
+                ? () => setSearch("")
+                : settings.category !== "all"
+                  ? () => setSettings({ ...settings, category: "all" })
+                  : undefined
+            }
+            resetLabel={search.trim() ? "Clear search" : "Show all categories"}
+          />
         ) : (
           // Denser on phones so the grid reads as a lattice rather than a short
           // list — 4 columns at 375px, matching the Lucide reference.

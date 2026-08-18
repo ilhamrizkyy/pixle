@@ -214,6 +214,21 @@
 }
 
 /* ============================================================================
+   Icon card.
+
+   The card is SQUARE wherever the name is an overlay, since the name then
+   costs no layout height. On touch the name occupies real space under the
+   icon, so the card grows to fit it rather than squeezing the art — forcing a
+   square there would crush the icon to make room for its own caption.
+   ========================================================================= */
+
+@media (hover: hover) {
+  .pixl-card {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* ============================================================================
    Icon card name.
 
    Keyed on HOVER CAPABILITY, not screen width. A touch device never fires

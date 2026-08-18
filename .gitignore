@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Agent skills — vendored third-party content (~7.5MB).
+# skills-lock.json IS tracked: it pins source + hash for every skill, so
+# `npx skills install` reproduces them exactly. Committing the bodies would
+# put megabytes of other people's code in an icon-set repo.
+.agents/
+.claude/skills/

@@ -31,9 +31,9 @@
 
 
   /* --- Typography (DESIGN.md §4) ----------------------------------------- */
-  /* Display/UI face. Departure Mono is the specified face but is not on
-     Google Fonts; JetBrains Mono stands in until the files are supplied.
-     Swapping is a one-line change here. */
+  /* Display/UI face. JetBrains Mono, locked (DESIGN.md §4) — a second
+     retro-pixel face here would compete with the Press Start 2P wordmark and
+     headings rather than frame them. */
   --font-display: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
     monospace;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

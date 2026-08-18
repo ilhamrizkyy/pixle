@@ -60,7 +60,8 @@
   token). Parked — see G.
 - **Import scope:** v1 only guarantees round-tripping the tool's own export
   format; behavior for arbitrary external SVGs is undefined.
-- **Departure Mono:** font files not yet supplied; JetBrains Mono stands in.
+- *(nothing else outstanding on fonts — Display/Data locked to JetBrains Mono
+  on 2026-08-18; see @DESIGN.md §4.)*
 
 ## E. Gallery — future explorations (post-v1)
 

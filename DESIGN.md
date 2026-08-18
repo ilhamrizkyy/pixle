@@ -72,20 +72,25 @@ True black (#000) and true white (#fff) are reachable.
 
 ## 4. Typography
 
-| Role    | Face                        | Use |
-|---------|-----------------------------|-----|
-| Pixel   | Press Start 2P              | Wordmark, h1, h2 |
-| Display | Departure Mono (mono, retro)| Nav, h3, labels, buttons, UI |
-| Body    | Inter                       | Long-form prose in Guide / Resources |
-| Data    | Departure Mono / JetBrains Mono | Counts, hex, sizes, code |
+| Role    | Face           | Use |
+|---------|----------------|-----|
+| Pixel   | Press Start 2P | Wordmark, h1, h2 |
+| Display | JetBrains Mono | Nav, h3, labels, buttons, UI |
+| Body    | Inter          | Long-form prose in Guide / Resources |
+| Data    | JetBrains Mono | Counts, hex, sizes, code |
 
 **Pixel face = Press Start 2P**, scoped to the **wordmark, h1, and h2**. It has
 very wide advance widths and a single weight, so it stops at h2 — h3 and below
 use the display face, where the horizontal cost stops paying for itself.
 
-Departure Mono is not on Google Fonts; until the files are supplied, **JetBrains
-Mono stands in** for Display/Data. It is behind `--font-display`, so the swap is
-a one-line change in `globals.css`.
+**Display/Data = JetBrains Mono — locked 2026-08-18.** Departure Mono was the
+original pick and was considered, then rejected: with a genuinely pixel
+wordmark and pixel headings already in place, a *second* retro-pixel face for
+the UI makes the shell compete with the icons instead of framing them (§1).
+JetBrains Mono reads as "developer tool", which is the register Lucide and
+Phosphor use for their chrome, and it is on Google Fonts so there are no files
+to source. It sits behind `--font-display`, so reversing this is a one-line
+change in `globals.css`.
 
 Scale (px): 12 caption · 14 UI · 16 body · 20 h3 · 24 h2 · 32 h1.
 Line-height: 1.5 body, 1.2 headings/labels.

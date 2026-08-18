@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-// UI / display face. Stands in for Departure Mono until the files are supplied.
+// UI / display face. Locked to JetBrains Mono — see DESIGN.md §4.
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],

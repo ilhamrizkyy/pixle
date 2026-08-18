@@ -105,6 +105,55 @@ Line-height: 1.5 body, 1.2 headings/labels.
 - Quality floor: visible focus rings (accent), respects `prefers-reduced-motion`,
   works down to mobile.
 
+## 5b. Motion
+
+One shared scale in `:root`, referenced by every component. Tailwind's
+`--default-transition-*` point at it too, so a stray `transition-colors`
+inherits the house curve rather than the framework's.
+
+    --duration-quick 150ms   close, hover-in, text swap
+    --duration-fast  250ms   modal open, card hover-in
+    --duration-medium 350ms  toast open, hover-out settle
+    --duration-slow  400ms   sheet open (full-screen travel)
+
+    --ease-smooth-out cubic-bezier(0.22, 1, 0.36, 1)   the house curve
+    --ease-bounce     cubic-bezier(0.34, 1.36, 0.64, 1) entrances only
+
+**The rules that make motion read as authored, not merely present:**
+
+- **Closes are faster than opens.** A modal opens in 250ms and would close in
+  150ms. Never bounce a close.
+- **Duration follows distance, not category.** The sheet travels the full
+  screen height, so it opens on the 400ms clock; the modal scales in place on
+  250ms.
+- **Hover-in is quick and direct; hover-out may settle.** Cards enter at 250ms
+  and return at 350ms, so they land rather than snap.
+- **Trim duration before adding delay**, and never delay a close.
+- Overlay entrances reach past transform and opacity — a 2px cross-blur reads
+  as depth of field rather than a slide.
+
+Every animation sits behind the global `prefers-reduced-motion` rule.
+
+## 5c. Depth
+
+    --shadow-raised   cards on hover
+    --shadow-overlay  modal, sheet, toast
+
+Shadows carry **both an offset and a soft blur**; a zero-offset halo is
+decoration, not depth. Dark mode raises the opacity, since a light shadow does
+not register on a dark ground.
+
+**Elevation is declared once per element** — a border *or* a shadow, never a
+1px border under a wide soft blur. The icon card keeps a transparent border to
+reserve the space its selected state fills, and lifts with shadow alone.
+
+## 5d. Browser surfaces
+
+Text selection, the caret, and scrollbars are themed from the palette rather
+than left at browser defaults, and data (counts, hex, sizes) uses
+`tabular-nums` so figures do not reflow as digits change. Prose is capped at a
+68ch measure.
+
 ## 6. Component specs
 
 **Top nav** — logo left; Icons / Guide / Resources / Contribute; then the

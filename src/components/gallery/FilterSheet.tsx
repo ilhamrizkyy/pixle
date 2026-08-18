@@ -15,8 +15,9 @@ import {
  *
  * DRAFT SEMANTICS. An Apply button only means something if changes are held
  * until it is pressed, so the sheet edits a copy and commits on Apply.
- * Dismissing — backdrop, ✕, or Escape — discards. Reset returns the draft to
- * defaults without closing, so you can see what you are about to apply.
+ * Dismissing — backdrop, ✕, or Escape — discards. Reset commits the defaults
+ * and closes, which is why it does not simply clear the draft: since
+ * dismissing discards, clearing-and-closing would change nothing at all.
  *
  * The draft is seeded from `settings` at mount, and the sheet is only rendered
  * while open, so every open starts from the live values with no effect needed
@@ -90,9 +91,15 @@ export function FilterSheet({
         {/* Sits below the scroll area, so the actions stay reachable however
             long the controls get. */}
         <div className="flex gap-3 border-t border-border px-6 py-4">
+          {/* Reset COMMITS defaults and closes. It cannot merely reset the
+              draft: dismissing discards, so a reset that closed without
+              committing would be a no-op. */}
           <button
             type="button"
-            onClick={() => setDraft(DEFAULT_SETTINGS)}
+            onClick={() => {
+              onApply(DEFAULT_SETTINGS);
+              onClose();
+            }}
             className="flex-1 rounded-sm border border-border bg-surface px-4 py-3 text-ui text-text"
           >
             Reset

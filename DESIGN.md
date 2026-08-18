@@ -112,7 +112,7 @@ Below `lg` every control except Search moves into a **bottom sheet**, opened by
 a square icon button sitting **inline with the search field**. The button
 carries an accent dot while a category filter is active. The sheet has a
 **Reset** and an **Apply** in a footer below its scroll area, so the actions
-stay reachable however long the controls get.
+stay reachable however long the controls get. Both commit and close.
 
 Reference point for the gallery's control surface is **Nucleo's icon panel**,
 but applied to the whole gallery rather than one icon at a time. Stroke and

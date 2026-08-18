@@ -97,8 +97,8 @@
   to the detail modal. Screen readers get the name from the button's own label
   either way.
 - **Filter sheet (mobile)**: edits a **draft**. Changes do not affect the grid
-  until **Apply** is pressed; **Reset** returns the draft to defaults without
-  closing; dismissing (backdrop, ✕, or Escape) **discards**. On `lg` and up the
+  until **Apply** is pressed, which commits and closes. **Reset** commits the
+  defaults and closes. Dismissing (backdrop, ✕, or Escape) **discards**. On `lg` and up the
   same controls sit in the sidebar and apply **live** — only the sheet defers,
   because only the sheet covers the grid it is changing.
 - **Nav**: below `lg` the links collapse behind a hamburger, which closes on

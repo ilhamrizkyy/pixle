@@ -23,16 +23,31 @@ Goal: a deployable skeleton with the rules encoded.
 
 Exit: repo builds green and deploys; tokens live; engine module compiles.
 
-## Phase 1 — Gallery (public) · Days 3–8
+## Phase 1 — Gallery (public) · Days 3–8 → ran long, by choice
 
 Goal: the public product, read-only.
-- Gallery: sidebar (Search; Display = size + Light/Dark; Categories + counts),
-  icon grid, detail modal (Copy SVG / Download SVG+PNG / Copy name).
-- Reads the static registry; responsive; empty/loading states; focus + a11y.
-- Guide + Resources page shells; Contribute = "coming soon".
 
-Exit: a stranger can browse, search, filter, and copy/download icons on desktop
-and mobile.
+**Done, as originally scoped**
+- Gallery: sidebar, icon grid, detail modal (Copy SVG / Download SVG+PNG /
+  Copy name); reads the static registry; empty state; focus + a11y.
+- Guide + Resources pages; Contribute = "coming soon".
+- 24 seed icons across all six categories.
+
+**Added during the phase** — not in the original scope. The plan grew because
+the interface bar rose, which is a deliberate trade, not slippage to hide:
+- Whole-app **Light/Dark theme** (token redefinition, system default).
+- **Colour** control: one hex recolours the whole gallery, Lucide-style.
+- **Padding** (0–3 cells) and **Transform** (flip H/V, rotate).
+- **Exports follow display settings** — what you see is what you copy.
+- Mobile pass to a **Lucide-like layout**: square cards everywhere, 4-column
+  grid, hamburger nav, and a **bottom-sheet** filter surface with Apply/Reset.
+- **Vitest** pulled forward from Phase 2: 143 tests over engine + registry.
+
+Exit: **met.** A stranger can browse, search, filter, and copy/download icons
+on desktop and mobile.
+
+**Deferred out of this phase:** the `/guide` interface pass (content is done),
+and Fuse.js search (unnecessary at 24 icons).
 
 ## Phase 2 — Composer engine + DOM UI (owner build) · Days 9–16
 
@@ -43,7 +58,12 @@ Goal: a fully functional composer (DOM/CSS-3D) wired to the engine.
   undo/redo, metadata dock, Save, Export, **Import (in the dock)**.
 - Apply the **polish fixes** (@BACKLOG.md A): thinner bezel, better snub-in,
   slimmer dock, corner knobs (bigger), remove the pixel count.
-- idb-keyval drafts; Vitest on engine ops.
+- idb-keyval drafts. (Vitest already landed in Phase 1 — extend it to the new
+  composer ops rather than setting it up.)
+
+Confirmed for this phase: **keep both knobs** — they are the toy's identity,
+they choose the authoring colour, and they gain a second job if duotone ever
+lands. Drag-fill **overwrites** filled cells it crosses.
 
 Exit: the owner can draw a multi-color icon end-to-end and it shows in the
 gallery; engine tests pass.
@@ -74,7 +94,7 @@ Exit: v1 live — public gallery + owner-only composer, MIT, documented.
 | #  | Milestone                          | ~Day |
 |----|------------------------------------|------|
 | M1 | Deployable shell + engine stub     | 2    |
-| M2 | Public gallery usable              | 8    |
+| M2 | Public gallery usable              | 8 (ran long — interface raised) |
 | M3 | Composer functional (DOM)          | 16   |
 | M4 | Owner-gated + content done         | 24   |
 | M5 | **v1 launched**                    | 30   |
@@ -87,6 +107,9 @@ enhancements (@BACKLOG.md E).
 
 ## Top risks
 
+- **Interface polish expands scope.** Phase 1 ran well past its window because
+  the bar rose mid-phase. Worth it, but the same pull will hit the composer —
+  timebox the toy's polish separately from its function.
 - **3D toy overruns** → mitigated: it's a stretch; CSS-3D ships if needed.
 - **Auth/save scope creep** → keep v1 to a single-owner gate; real multi-user
   auth waits for the contribution phase.

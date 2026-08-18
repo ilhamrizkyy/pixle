@@ -1,59 +1,179 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ICON_SIZES } from "@/engine/constants";
+import { icons } from "@/registry";
 
 export const metadata: Metadata = {
   title: "Resources — Pixle",
-  description: "Ways to get the whole Pixle set and work with it.",
+  description: "Ways to get the Pixle icon set and work with it.",
 };
 
 /**
- * Resources shell. Contents are still an open decision (BACKLOG.md D), so this
- * lists the candidates and marks what is not built rather than implying links
- * that go nowhere.
+ * Resources, modelled on how Lucide and Phosphor organise theirs: get the
+ * icons, packages, design tools, learn, license.
+ *
+ * Status is stated on every row. Nothing here links to something that does not
+ * exist yet — a "Coming soon" with no href is honest; a link to an empty
+ * GitHub repo is not.
  */
 
-const RESOURCES = [
-  { label: "Full set download — SVG & PNG", status: "later" },
-  { label: "Figma library", status: "later" },
-  { label: "Changelog", status: "later" },
-  { label: "npm package", status: "later" },
-] as const;
+type Resource = {
+  label: string;
+  detail: string;
+  href?: string;
+  status: "available" | "planned";
+};
+
+const SECTIONS: { title: string; blurb: string; items: Resource[] }[] = [
+  {
+    title: "Get the icons",
+    blurb: "Every icon is downloadable individually today.",
+    items: [
+      {
+        label: "Copy SVG",
+        detail:
+          "Open any icon and copy its markup. Colors are baked in, and the gallery's color, padding, and rotation travel with it.",
+        href: "/",
+        status: "available",
+      },
+      {
+        label: "Download SVG or PNG",
+        detail: `Transparent background, sized on the ${ICON_SIZES.join("/")} scale.`,
+        href: "/",
+        status: "available",
+      },
+      {
+        label: "Full set archive",
+        detail: "One download for every icon, SVG and PNG.",
+        status: "planned",
+      },
+    ],
+  },
+  {
+    title: "Packages",
+    blurb:
+      "Pixle is a static set for now. Packaging follows once the set is bigger.",
+    items: [
+      {
+        label: "npm package",
+        detail: "Tree-shakeable React components generated from the registry.",
+        status: "planned",
+      },
+      {
+        label: "Icon font",
+        detail: "A web font build for projects that would rather not ship SVG.",
+        status: "planned",
+      },
+      {
+        label: "Sprite sheet",
+        detail: "A single SVG sprite for referencing icons by id.",
+        status: "planned",
+      },
+    ],
+  },
+  {
+    title: "Design tools",
+    blurb: "",
+    items: [
+      {
+        label: "Figma library",
+        detail: "The full set as a published Figma library.",
+        status: "planned",
+      },
+    ],
+  },
+  {
+    title: "Learn",
+    blurb: "",
+    items: [
+      {
+        label: "Guide",
+        detail:
+          "The grid, the safe area, sizing, and the rules every icon follows.",
+        href: "/guide",
+        status: "available",
+      },
+    ],
+  },
+  {
+    title: "License",
+    blurb: "",
+    items: [
+      {
+        label: "MIT",
+        detail:
+          "Free for personal and commercial use, with attribution kept in the license file. The set ships with a LICENSE at the repository root.",
+        status: "available",
+      },
+    ],
+  },
+];
 
 export default function ResourcesPage() {
   return (
-    <div className="max-w-3xl px-8 py-10">
+    <div className="max-w-3xl px-6 py-10 lg:px-8">
       <h1 className="mb-2 text-h2">Resources</h1>
-      <p className="prose-body mb-6 text-text-muted">
-        Ways to get the whole set and work with it. Still being defined — for
-        now, every icon is downloadable individually from the{" "}
-        <Link href="/" className="text-accent">
-          gallery
-        </Link>
-        .
+      <p className="prose-body mb-10 text-text-muted">
+        Ways to get the set and work with it. {icons.length} icons today, all
+        MIT licensed.
       </p>
 
-      <ul className="list-none p-0">
-        <li className="flex items-center justify-between border-b border-border py-3.5 text-ui">
-          <span>License — MIT</span>
-          <a
-            href="https://github.com/ilhamrizkyakbar/pixle/blob/main/LICENSE"
-            className="text-caption text-accent"
-          >
-            Read
-          </a>
-        </li>
-        {RESOURCES.map((resource) => (
-          <li
-            key={resource.label}
-            className="flex items-center justify-between border-b border-border py-3.5 text-ui text-text-muted"
-          >
-            <span>{resource.label}</span>
-            <span className="rounded-full bg-accent-subtle px-2.5 py-0.5 text-caption text-accent">
-              {resource.status}
-            </span>
-          </li>
+      <div className="flex flex-col gap-10">
+        {SECTIONS.map((section) => (
+          <section key={section.title}>
+            <h3 className="mb-1">{section.title}</h3>
+            {section.blurb && (
+              <p className="prose-body mb-4 text-ui text-text-muted">
+                {section.blurb}
+              </p>
+            )}
+
+            <ul className="mt-3 flex list-none flex-col gap-2 p-0">
+              {section.items.map((item) => (
+                <li key={item.label}>
+                  <ResourceRow item={item} />
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
     </div>
+  );
+}
+
+function ResourceRow({ item }: { item: Resource }) {
+  const body = (
+    <>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="text-ui text-text">{item.label}</span>
+        {item.status === "planned" && (
+          <span className="rounded-full bg-surface px-2 py-0.5 text-caption text-text-faint">
+            planned
+          </span>
+        )}
+      </div>
+      <p className="prose-body mt-1 text-caption text-text-muted">
+        {item.detail}
+      </p>
+    </>
+  );
+
+  // Planned items are not links. There is nowhere to send anyone yet.
+  if (item.href === undefined) {
+    return (
+      <div className="rounded-md border border-border bg-surface-2 px-4 py-3">
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      className="block rounded-md border border-border bg-surface-2 px-4 py-3 no-underline transition-colors hover:border-accent"
+    >
+      {body}
+    </Link>
   );
 }

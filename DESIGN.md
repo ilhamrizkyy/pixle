@@ -44,25 +44,31 @@ Composer toy (blue Etch A Sketch — scoped to the composer only)
 Rule: `--frame*/--bezel/--well/--screen` are **composer-only**. Never use them
 in the shell.
 
-## 3. Color inside icons (multi-color)
+## 3. Color inside icons (single-color)
 
-Icons are multi-color; each cell holds a hex or null. Colors are chosen with the
-full HSL picker (see @INTERACTION.md) and **baked** into the icon. No palette
-restriction (full freedom), so visual coherence relies on curation, not tokens.
+**Icons render in exactly one color.** A hex field in the gallery sets it for
+**every filled cell of every icon**, matching Lucide's customizer. It defaults
+to **#000000 in light and #ffffff in dark**, follows the theme, and clearing it
+returns to that default. There is no state in which the gallery shows
+multi-color art — the point is that the set reads as one coherent family rather
+than each icon carrying its own palette.
+
+**Authoring rule — one color, drawn as outlines.** Every icon is authored in a
+single color, and must be legible as a **silhouette**: draw outlines, not
+filled masses whose meaning depends on internal contrast. A filled envelope
+with a lighter interior collapses into a plain rectangle; an outlined envelope
+survives. This is enforced by test — a seed icon using more than one color
+fails the suite.
+
+**What the data model still allows.** `cells` holds a hex per cell, so the
+format *can* carry multi-color, and the composer's HSL picker (see
+@INTERACTION.md) still paints real colors — that is what makes the icon's own
+color the one baked into an export. The gallery simply never renders more than
+one. Keeping the capability costs nothing and is what a future **duotone** mode
+would build on, deriving roles from an icon's distinct colors (parked; see
+@BACKLOG.md).
+
 True black (#000) and true white (#fff) are reachable.
-
-**Gallery renders single-color, always.** A hex field recolors **every filled
-cell of every icon**, matching Lucide's customizer. It defaults to **#000000 in
-light and #ffffff in dark** and follows the theme; clearing the field returns to
-that default. There is no state in which the gallery shows multi-color art.
-Stored data and exports are untouched by the control.
-
-**Authoring rule — one color, drawn as outlines.** Seed icons are authored in a
-single color, since multi-color cell data would be unreachable in the gallery
-and would only surface as a surprise in an exported SVG. An icon must be legible
-as a silhouette: draw outlines, not filled masses whose meaning depends on
-internal contrast. A filled envelope with a lighter interior is a plain
-rectangle in one color; an outlined envelope survives.
 
 ## 4. Typography
 

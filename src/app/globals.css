@@ -71,6 +71,14 @@
   /* Icon cells and the grid are ALWAYS 0 radius. There is no token for that
      because there is no decision to make. */
 
+  /* --- Motion defaults ---------------------------------------------------
+     Tailwind's `transition-*` utilities read these, so every transition-colors
+     in the app inherits the house curve and clock without being told to. Kept
+     in sync with the motion scale below by hand -- @theme cannot reference
+     :root variables defined after it. */
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
   /* --- Layout ------------------------------------------------------------ */
   --sidebar-width: 264px;
   --icon-card-min: 92px;
@@ -517,7 +525,7 @@
   background: var(--color-bg);
   border: 3px solid var(--color-accent);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
-  transition: transform 0.1s;
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
 }
 
 .pixl-range::-moz-range-thumb {

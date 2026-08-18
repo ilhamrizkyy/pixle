@@ -11,10 +11,7 @@ const PATTERN_CELLS = 25;
 export function EmptyState({ query }: { query?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-20 text-text-muted">
-      <div
-        aria-hidden="true"
-        className="grid grid-cols-5 gap-[3px]"
-      >
+      <div aria-hidden="true" className="grid grid-cols-5 gap-[3px]">
         {Array.from({ length: PATTERN_CELLS }, (_, i) => (
           <div
             key={i}

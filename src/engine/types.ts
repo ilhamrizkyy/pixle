@@ -29,12 +29,7 @@ export type Cells = CellColor[];
  * Extending the set is a deliberate edit here plus a CATEGORIES entry.
  */
 export type Category =
-  | "interface"
-  | "media"
-  | "arcade"
-  | "system"
-  | "communication"
-  | "nature";
+  "interface" | "media" | "arcade" | "system" | "communication" | "nature";
 
 /** Display metadata for each category. Order is the order the UI shows. */
 export const CATEGORIES: readonly { id: Category; label: string }[] = [

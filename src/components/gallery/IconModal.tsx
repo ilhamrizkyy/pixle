@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { IconPreview } from "@/components/IconPreview";
 import { cellsToSvg, svgFileName } from "@/engine/svg";
 import type { Cells, IconDef } from "@/engine/types";
+import { useDialog } from "@/lib/useDialog";
 import {
   cellsToPngBlob,
   copyText,
@@ -20,9 +21,6 @@ import {
  * clipboard matches the preview. There is no color control here because the
  * gallery already owns it.
  */
-
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 type IconModalProps = {
   icon: IconDef;
@@ -41,48 +39,9 @@ export function IconModal({
   onClose,
   onNotify,
 }: IconModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const { ref: dialogRef, onKeyDown } = useDialog<HTMLDivElement>(onClose);
   const [copyLabel, setCopyLabel] = useState("Copy SVG");
   const svg = cellsToSvg(displayCells, { title: icon.name, padding });
-
-  // Restore focus to whatever opened the dialog when it closes, so keyboard
-  // users land back on the card they came from rather than at the page top.
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    dialogRef.current?.focus();
-    return () => opener?.focus?.();
-  }, []);
-
-  // Escape closes (INTERACTION.md §6), and Tab stays inside the dialog.
-  const onKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        onClose();
-        return;
-      }
-
-      if (event.key !== "Tab" || dialogRef.current === null) return;
-
-      const focusable = [
-        ...dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
-      ];
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    },
-    [onClose],
-  );
 
   const handleCopySvg = async () => {
     if (await copyText(svg)) {

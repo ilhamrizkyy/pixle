@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  rotationDegrees,
-  type Orientation,
-} from "@/engine/transform";
+import { rotationDegrees, type Orientation } from "@/engine/transform";
 
 /**
  * Gallery-wide flip and rotate, applied to every icon at once.
@@ -119,7 +116,14 @@ const SVG_PROPS = {
 function FlipHGlyph() {
   return (
     <svg {...SVG_PROPS}>
-      <line x1="12" y1="3" x2="12" y2="21" strokeWidth="1.4" strokeDasharray="2 2" />
+      <line
+        x1="12"
+        y1="3"
+        x2="12"
+        y2="21"
+        strokeWidth="1.4"
+        strokeDasharray="2 2"
+      />
       <path d="M9 8 L5 12 L9 16" />
       <path d="M15 8 L19 12 L15 16" />
     </svg>
@@ -129,7 +133,14 @@ function FlipHGlyph() {
 function FlipVGlyph() {
   return (
     <svg {...SVG_PROPS}>
-      <line x1="3" y1="12" x2="21" y2="12" strokeWidth="1.4" strokeDasharray="2 2" />
+      <line
+        x1="3"
+        y1="12"
+        x2="21"
+        y2="12"
+        strokeWidth="1.4"
+        strokeDasharray="2 2"
+      />
       <path d="M8 9 L12 5 L16 9" />
       <path d="M8 15 L12 19 L16 15" />
     </svg>

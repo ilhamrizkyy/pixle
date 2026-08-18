@@ -78,9 +78,8 @@
     opens the OS picker) recolors **every** icon in the gallery. Defaults to
     #000000 in light and #ffffff in dark, and follows the theme; ✕ returns to
     that default. Icons are **never** shown multi-color.
-  - On narrow screens everything except Search collapses behind a **Filters**
-    toggle, placed inline with the search field, so icons are not pushed below
-    a screenful of controls.
+  - On narrow screens everything except Search moves into a **bottom sheet**,
+    opened from a button inline with the search field.
   - **Size** (16/24/32/40/48) applies to every card; drag the slider or click
     a tick label. Default 24.
   - **Padding** — 0–3 **cells** of empty space around the art, applied to
@@ -97,6 +96,13 @@
   overlay on hover or keyboard focus; on touch it is reached by tapping through
   to the detail modal. Screen readers get the name from the button's own label
   either way.
+- **Filter sheet (mobile)**: edits a **draft**. Changes do not affect the grid
+  until **Apply** is pressed; **Reset** returns the draft to defaults without
+  closing; dismissing (backdrop, ✕, or Escape) **discards**. On `lg` and up the
+  same controls sit in the sidebar and apply **live** — only the sheet defers,
+  because only the sheet covers the grid it is changing.
+- **Nav**: below `lg` the links collapse behind a hamburger, which closes on
+  navigation. The theme toggle stays visible in the bar.
 - **Theme**: Light/Dark in the top nav, themeing the whole app. No System
   button — system is simply the default until a choice is made.
 - **Card click** → detail modal (copy SVG / download SVG+PNG / copy name).

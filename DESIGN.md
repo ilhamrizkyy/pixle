@@ -97,7 +97,9 @@ Line-height: 1.5 body, 1.2 headings/labels.
 ## 6. Component specs
 
 **Top nav** — logo left; Icons / Guide / Resources / Contribute; then the
-owner-only actions. Active nav item in `--accent`.
+owner-only actions. Active nav item in `--accent`. Below `lg` the links
+collapse behind a **hamburger**; the theme toggle stays in the bar, since
+burying a one-tap control behind two taps costs more than the space it saves.
 
 **Gallery sidebar** — Search (+reset); Display (**Color** free-text hex field
 with a swatch that opens the OS picker, defaulting to the theme's black/white;
@@ -106,9 +108,11 @@ labels that double as the readout; **Padding** 0–3 cells; **Transform** = Flip
 H / Flip V / Rotate, applied gallery-wide); Categories (All + per-category counts that follow the
 active search).
 
-Below `lg` every control except Search collapses behind a **Filters** toggle,
-which sits **inline with the search field** as a square icon button rather than
-on its own row, and carries an accent dot while a category filter is active.
+Below `lg` every control except Search moves into a **bottom sheet**, opened by
+a square icon button sitting **inline with the search field**. The button
+carries an accent dot while a category filter is active. The sheet has a
+**Reset** and an **Apply** in a footer below its scroll area, so the actions
+stay reachable however long the controls get.
 
 Reference point for the gallery's control surface is **Nucleo's icon panel**,
 but applied to the whole gallery rather than one icon at a time. Stroke and

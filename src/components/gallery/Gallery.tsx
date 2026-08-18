@@ -2,20 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { Toast } from "@/components/Toast";
-import { galleryColorFromInput, recolorCells } from "@/engine/color";
-import { DEFAULT_ICON_SIZE } from "@/engine/constants";
-import {
-  IDENTITY_ORIENTATION,
-  applyOrientation,
-  type Orientation,
-} from "@/engine/transform";
+import { recolorCells } from "@/engine/color";
+import { applyOrientation } from "@/engine/transform";
 import { CATEGORIES } from "@/engine/types";
 import type { Category, IconDef } from "@/engine/types";
 import { THEME_ICON_COLOR, useResolvedTheme } from "@/lib/theme";
 import { EmptyState } from "./EmptyState";
-import { GallerySidebar, type CategoryFilter } from "./GallerySidebar";
+import { FilterSheet } from "./FilterSheet";
+import { GallerySidebar } from "./GallerySidebar";
 import { IconCard } from "./IconCard";
 import { IconModal } from "./IconModal";
+import {
+  DEFAULT_SETTINGS,
+  resolveGalleryColor,
+  type GallerySettings,
+} from "./settings";
 
 /**
  * The public gallery. Read-only by design — browse, search, filter, copy,
@@ -30,22 +31,14 @@ type GalleryProps = { icons: readonly IconDef[] };
 
 export function Gallery({ icons }: GalleryProps) {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<CategoryFilter>("all");
-  /**
-   * The raw field text lives here, not in the sidebar, so Reset can clear it
-   * without two pieces of state needing an effect to stay in sync.
-   *
-   * null means "follow the theme", which is why the theme default is derived
-   * on every render rather than seeded into state — seeding it would freeze
-   * the color at whatever the theme was on mount.
-   */
-  const [colorText, setColorText] = useState<string | null>(null);
-  const [size, setSize] = useState<number>(DEFAULT_ICON_SIZE);
-  const [padding, setPadding] = useState(0);
-  const [orientation, setOrientation] =
-    useState<Orientation>(IDENTITY_ORIENTATION);
+  const [settings, setSettings] = useState<GallerySettings>(DEFAULT_SETTINGS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<IconDef | null>(null);
   const [toast, setToast] = useState("");
+
+  const theme = useResolvedTheme();
+  const themeColor = THEME_ICON_COLOR[theme];
+  const activeColor = resolveGalleryColor(settings.colorText, themeColor);
 
   /**
    * Search matches name + tags (INTERACTION.md §6). Plain substring matching:
@@ -73,10 +66,10 @@ export function Gallery({ icons }: GalleryProps) {
 
   const visible = useMemo(
     () =>
-      category === "all"
+      settings.category === "all"
         ? searched
-        : searched.filter((icon) => icon.category === category),
-    [searched, category],
+        : searched.filter((icon) => icon.category === settings.category),
+    [searched, settings.category],
   );
 
   /**
@@ -85,46 +78,27 @@ export function Gallery({ icons }: GalleryProps) {
    * the input array unchanged in their identity cases, so the default path
    * costs nothing.
    */
-  const theme = useResolvedTheme();
-  const themeColor = THEME_ICON_COLOR[theme];
-
-  /**
-   * Icons ALWAYS render in exactly one color. An unparsed or empty field falls
-   * back to the theme default rather than to per-icon colors, so there is no
-   * state in which the gallery shows multi-color art.
-   */
-  const activeColor =
-    colorText === null
-      ? themeColor
-      : (galleryColorFromInput(colorText) ?? themeColor);
-
   const displayCells = useMemo(() => {
     const map = new Map<string, IconDef["cells"]>();
     for (const icon of icons) {
       // Orientation first, then color: both are per-cell-independent, but
       // fixing the order keeps the pipeline easy to reason about.
-      const oriented = applyOrientation(icon.cells, orientation);
+      const oriented = applyOrientation(icon.cells, settings.orientation);
       map.set(icon.id, recolorCells(oriented, activeColor));
     }
     return map;
-  }, [icons, activeColor, orientation]);
+  }, [icons, activeColor, settings.orientation]);
 
   return (
     <div className="flex flex-col items-start lg:flex-row">
       <GallerySidebar
         search={search}
         onSearch={setSearch}
-        colorText={colorText}
-        onColorText={setColorText}
+        settings={settings}
+        onSettings={setSettings}
         color={activeColor}
-        size={size}
-        onSize={setSize}
-        padding={padding}
-        onPadding={setPadding}
-        orientation={orientation}
-        onOrientation={setOrientation}
-        category={category}
-        onCategory={setCategory}
+        onOpenFilters={() => setFiltersOpen(true)}
+        filtersOpen={filtersOpen}
         counts={counts}
         total={searched.length}
       />
@@ -151,8 +125,8 @@ export function Gallery({ icons }: GalleryProps) {
                 <IconCard
                   icon={icon}
                   cells={displayCells.get(icon.id) ?? icon.cells}
-                  size={size}
-                  padding={padding}
+                  size={settings.size}
+                  padding={settings.padding}
                   selected={selected?.id === icon.id}
                   onSelect={setSelected}
                 />
@@ -162,11 +136,22 @@ export function Gallery({ icons }: GalleryProps) {
         )}
       </main>
 
+      {filtersOpen && (
+        <FilterSheet
+          settings={settings}
+          onApply={setSettings}
+          onClose={() => setFiltersOpen(false)}
+          themeColor={themeColor}
+          counts={counts}
+          total={searched.length}
+        />
+      )}
+
       {selected && (
         <IconModal
           icon={selected}
           displayCells={displayCells.get(selected.id) ?? selected.cells}
-          padding={padding}
+          padding={settings.padding}
           onClose={() => setSelected(null)}
           onNotify={setToast}
         />

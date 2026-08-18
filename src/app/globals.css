@@ -253,6 +253,40 @@
 }
 
 /* ============================================================================
+   Bottom sheet (mobile filters).
+
+   Both animations are entry-only — an exit animation would need the element
+   kept mounted while it played, and the sheet unmounts on close. The global
+   reduced-motion rule collapses these to ~0s.
+   ========================================================================= */
+
+@keyframes pixl-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pixl-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pixl-sheet {
+  animation: pixl-sheet-in 0.22s ease-out;
+}
+
+.pixl-sheet-backdrop {
+  animation: pixl-fade-in 0.15s ease-out;
+}
+
+/* ============================================================================
    Refined range slider (gallery size control).
 
    Native range pseudo-elements cannot be reached from utility classes, so the

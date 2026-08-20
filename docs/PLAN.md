@@ -80,11 +80,32 @@ Goal: lock it down, make it feel real, finish content.
 Exit: composer is owner-only and persists; the toy feels tactile; content pages
 are real.
 
+**Where it stands (2026-08-20).** Owner-only: MET, by the env gate — closed by
+default, checked in the route handler, `/create` 404s without it. Tactile: MET.
+Persists: met by a **Copy entry** action rather than a backend. The composer
+emits the registry source for the owner to paste and commit, which closes the
+loop the set actually needs and matches CLAUDE.md's "static registry in the
+repo". Supabase stays parked (BACKLOG §G) — it buys authoring on the deployed
+site, which the owner does not need to author locally.
+
 ## Phase 4 — Ship v1 · Days 25–30
 
 Goal: production-ready launch.
 - SVGO pipeline on stored icons; (optional) package/sprite build script.
-- QA: Playwright smoke tests; a11y + reduced-motion pass; cross-browser/mobile.
+- QA: Playwright smoke tests **(landed early, 2026-08-20 — 14 tests)**; a11y +
+  reduced-motion pass; cross-browser/mobile.
+
+  Pulled forward from Phase 4 because it covered the one gap Vitest structurally
+  could not: jsdom has no layout, so a synthetic pointerdown proves a handler
+  ran, not that it ran with the cell the user was over. Drag-fill (including the
+  rectangle SHRINKING as the pointer returns), second-tap clear, erase-drag,
+  one-undo-step, the slide-to-clear wipe, knob drag, and a real touch drag over
+  CDP are now covered against a production build.
+
+  It also gave the project its first browser with WebGL. Everything in the
+  composer's 3D had been verified numerically and never seen; the first look
+  found the knob's dish reading flat, traced to a fill light from below erasing
+  the very shadow that makes a dish look sunken.
 - README; final sweep of @docs/BACKLOG.md; deploy v1.
 
 Exit: v1 live — public gallery + owner-only composer, MIT, documented.

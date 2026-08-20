@@ -26,6 +26,12 @@
 
   /* --- Semantic ---------------------------------------------------------- */
   --color-danger: #dc2626;
+  /* The danger SURFACE and the ink that sits on it. A tinted panel needs both:
+     --color-danger is a border-and-icon red, and at 4.0:1 on its own tint it
+     misses AA for body text by a hair. The ink is a step darker so the pairing
+     actually passes. */
+  --color-danger-surface: #fee2e2;
+  --color-danger-ink: #b91c1c;
   --color-success: #16a34a;
   --color-warning: #d97706;
 
@@ -116,7 +122,7 @@
   --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
 
   --distance-base: 8px;
-  --distance-toast: 16px;
+  --distance-toast: 12px; /* enough travel to read as arriving, not as flying in */
 
   --scale-modal: 0.96;
   --blur-small: 2px;
@@ -157,6 +163,8 @@
   --color-accent-subtle: #1b2450;
 
   --color-danger: #f87171;
+  --color-danger-surface: #450a0a;
+  --color-danger-ink: #fca5a5;
   --color-success: #4ade80;
   --color-warning: #fbbf24;
 
@@ -182,6 +190,8 @@
     --color-accent-subtle: #1b2450;
 
     --color-danger: #f87171;
+    --color-danger-surface: #450a0a;
+    --color-danger-ink: #fca5a5;
     --color-success: #4ade80;
     --color-warning: #fbbf24;
 
@@ -240,8 +250,26 @@
   --bezel: #1a2a70; /* dark rim; must read RECESSED */
   --well: #20337f; /* recessed button well */
   --well-2: #182660;
-  --screen: #cfd2cb; /* silver-gray screen, top of gradient */
-  --screen-2: #bfc3ba; /* screen, bottom of gradient */
+  /* The drawing surface. Lifted close to white on 2026-08-20 — the old
+     #cfd2cb read as a dusty grey slab and made every colour drawn on it look
+     muddier than the hex actually was. A trace of green is kept so it still
+     reads as a physical screen rather than a blank page. */
+  --screen: #f6f7f2; /* screen, bottom of gradient (the lit end) */
+  --screen-2: #e5e7de; /* screen, top of gradient (under the brow's shadow) */
+  /* Moulded plastic grain. A flat gradient is the single clearest tell that a
+     shape was drawn in CSS rather than injection-moulded, and no amount of
+     shadow work substitutes for surface. Sits in the frame's BACKGROUND stack,
+     never as an overlay: an overlay with a blend mode over a demand-rendered
+     WebGL canvas is how the knobs disappeared once already.
+
+     Two things about the data URI are load-bearing. The `#` in `url(#g)` MUST
+     be percent-encoded — inside a data: URI a literal `#` opens the fragment,
+     so the SVG is truncated mid-attribute and simply never paints, with no
+     error anywhere. And `color-interpolation-filters` is pinned to sRGB,
+     because the default is linearRGB and the alpha the colour matrix derives
+     then lands nowhere near the number written here. Strength was swept against
+     the frame's own blue: 0.05 is invisible, 0.16 starts muddying the colour. */
+  --toy-grain: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20color-interpolation-filters='sRGB'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.65'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%200.12%200.12%200.12%200%20-0.1'/%3E%3C/filter%3E%3Crect%20width='180'%20height='180'%20filter='url%28%23g%29'/%3E%3C/svg%3E");
 }
 
 /* Narrow screens: no tool columns beside the board, one strip under it. */
@@ -486,16 +514,38 @@
   }
 }
 
+/* TOAST MOTION — transform and opacity ONLY.
+   The entrance used to carry a 2px blur, and `filter` is the one property here
+   that cannot run on the compositor: it forces the element to be rasterised
+   again on every frame. On a route already holding two WebGL canvases that is
+   exactly the cost you feel, and it is why this read as laggy rather than slow.
+   Blur belongs on a swap or a slide, not on a small surface arriving.
+
+   Timing follows the house rule that closes are faster than opens: in on
+   --duration-fast (250ms), out on --duration-quick (150ms). The old 350ms
+   entrance was the toast-CLOSE beat spent on the open, which is why a
+   confirmation felt like it took a moment to decide to appear. */
 @keyframes pixl-toast-in {
   from {
     opacity: 0;
-    transform: translate(-50%, var(--distance-toast)) scale(0.97);
-    filter: blur(var(--blur-small));
+    transform: translate(-50%, var(--distance-toast)) scale(0.98);
   }
   to {
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
-    filter: blur(0);
+  }
+}
+
+/* The exit travels HALF as far as the entrance. Arriving is worth watching;
+   leaving should get out of the way rather than fling itself off-screen. */
+@keyframes pixl-toast-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(var(--distance-toast) * 0.5)) scale(0.98);
   }
 }
 
@@ -576,7 +626,40 @@
 /* The toast is already x-centred by a translate, so its keyframes carry that
    translate through rather than fighting it. */
 .pixl-toast {
-  animation: pixl-toast-in var(--duration-medium) var(--ease-smooth-out);
+  animation: pixl-toast-in var(--duration-fast) var(--ease-smooth-out);
+}
+.pixl-toast.is-leaving {
+  animation: pixl-toast-out var(--duration-quick) var(--ease-smooth-out) both;
+}
+
+/* The error tone enters from ABOVE, because it lives at the top. A toast that
+   rises into place at the top of the screen has travelled the wrong way and
+   reads as the bottom one misplaced. */
+@keyframes pixl-toast-in-top {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(var(--distance-toast) * -1)) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+@keyframes pixl-toast-out-top {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(var(--distance-toast) * -0.5)) scale(0.98);
+  }
+}
+.pixl-toast-top {
+  animation: pixl-toast-in-top var(--duration-fast) var(--ease-smooth-out);
+}
+.pixl-toast-top.is-leaving {
+  animation: pixl-toast-out-top var(--duration-quick) var(--ease-smooth-out) both;
 }
 
 /* ============================================================================
@@ -728,30 +811,99 @@
 .toy-frame {
   position: relative;
   animation: toy-in var(--duration-slow) var(--ease-smooth-out) both;
-  background: linear-gradient(180deg, var(--frame) 0%, var(--frame-2) 100%);
+  /* THREE LAYERS, so the body reads as a moulded shell rather than a flat card.
+     A single top-to-bottom ramp is the giveaway of a rectangle with a gradient
+     on it: real plastic gathers light along its crown and turns away at the
+     sides, so the sides need to darken independently of the top-to-bottom fall.
+     Order matters — the crown sits over the side shading, over the base ramp. */
+  background:
+    /* Grain first, so it sits over the shading — a texture under a gradient is
+       a texture nobody sees. */
+    var(--toy-grain),
+    radial-gradient(130% 96% at 50% -12%, rgb(255 255 255 / 0.19) 0%, transparent 56%),
+    linear-gradient(
+      100deg,
+      rgb(0 0 0 / 0.2) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgb(0 0 0 / 0.24) 100%
+    ),
+    linear-gradient(180deg, var(--frame) 0%, var(--frame-2) 100%);
   border-radius: var(--radius-toy);
   /* Three separate jobs: light catching the top edge, the body's own thickness
      as a bottom lip, and the shadow the whole object casts on what it sits on. */
   box-shadow:
-    inset 0 2px 0 rgb(255 255 255 / 0.22),
-    inset 0 -7px 0 var(--frame-3),
-    0 12px 28px -10px rgb(0 0 0 / 0.5);
+    /* The crown: a bright hairline where the top face turns over, and a wider
+       soft glow just under it so the turn has thickness rather than being a
+       drawn line. */
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 0 4px 8px -4px rgb(255 255 255 / 0.22),
+    /* The body's own thickness, read as a lip along the bottom. */
+    inset 0 -9px 0 var(--frame-3),
+    inset 0 -14px 12px -10px rgb(0 0 0 / 0.45),
+    /* Sides turning away from the light. */
+    inset 6px 0 14px -12px rgb(0 0 0 / 0.5),
+    inset -6px 0 14px -12px rgb(0 0 0 / 0.5),
+    /* What the whole object casts on what it sits on. */
+    0 14px 32px -10px rgb(0 0 0 / 0.55),
+    0 3px 8px -4px rgb(0 0 0 / 0.4);
+}
+
+/* The product legend, moulded into the brow above the screen — where the toy
+   this is modelled on carries its own. It is the detail that turns a shaded
+   rectangle into a manufactured thing, and it costs no layout: the brow is
+   padding the bezel already reserves, so the legend is positioned into it.
+   Embossed, not printed — a dark line below and a light one above, which is
+   what raised lettering in dark plastic actually does under a light from
+   above. */
+.toy-legend {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em; /* letter-spacing pads the right; recentre for it */
+  color: rgb(255 255 255 / 0.34);
+  text-shadow:
+    0 1px 0 rgb(0 0 0 / 0.55),
+    0 -1px 0 rgb(255 255 255 / 0.1);
+  pointer-events: none;
+  user-select: none;
 }
 
 /* BACKLOG.md §A1 — the rim is EVEN on all four sides. The v9 bottom bezel was
    fat because the padding was not symmetric, which read as a chin rather than
    a rim. */
 .toy-bezel {
+  position: relative; /* the legend is positioned into the brow */
   /* Deeper top and bottom than the sides — a brow above the screen and a
      little chin under it, as the real toy has. Still nothing like the fat,
      lopsided bottom BACKLOG.md §A1 was about: that one was uneven by accident,
      this is deliberate and the two horizontals stay equal. */
   padding: 22px 15px 20px;
-  background: var(--bezel);
+  /* A WALL around the recess, not a flat mat. Lit along its top face, turning
+     dark at the bottom — which is what a rim standing proud of the frame does,
+     and it gives the screen's own shadow something to fall against. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bezel) 84%, white) 0%,
+    var(--bezel) 30%,
+    color-mix(in srgb, var(--bezel) 86%, black) 100%
+  );
   border-radius: 14px;
   box-shadow:
-    inset 0 2px 5px rgb(0 0 0 / 0.5),
-    0 1px 0 rgb(255 255 255 / 0.1);
+    inset 0 3px 7px rgb(0 0 0 / 0.55),
+    inset 0 -2px 3px rgb(255 255 255 / 0.08),
+    /* Dropped INTO the body, not laid on it: a hairline of the frame's own
+       shadow all the way round, plus the light catching the far edge of the
+       step below. */
+    0 0 0 1px rgb(0 0 0 / 0.28),
+    0 3px 6px -1px rgb(0 0 0 / 0.4),
+    0 1px 0 1px rgb(255 255 255 / 0.1);
 }
 
 /* BACKLOG.md §A2 — the snub-in.
@@ -759,13 +911,75 @@
    and catches a highlight along its bottom inner edge. The prototype ran the
    screen gradient the other way (light at top), which is the signature of a
    dome — that is why it kept reading as a hill however much blur was added. */
+/* THE SCREEN, as a recess with glass over it (DESIGN.md §6 — it must read
+   SNUB-IN, never as a hill).
+
+   The recess is built from four walls, not one. Only the top had a shadow
+   before, which describes an overhang rather than a well: a hole casts shadow
+   inward from every edge, deepest from the brow because the light is above, and
+   catches a bright line along its BOTTOM lip where light bounces off the far
+   wall. That bright-bottom/dark-top pairing is the same cue the knob's dish
+   uses, and it is the whole difference between sunken and flat. */
 .toy-screen {
-  background: linear-gradient(180deg, var(--screen-2) 0%, var(--screen) 100%);
+  position: relative;
+  overflow: hidden; /* the well's canvas is square; the screen's corners are not */
+  background:
+    /* Glass, behind the art: a soft diagonal wash off the upper left. */
+    linear-gradient(
+      146deg,
+      rgb(255 255 255 / 0.32) 0%,
+      rgb(255 255 255 / 0.07) 32%,
+      transparent 52%
+    ),
+    /* The well's own falloff — the ground is slightly further away at the
+       edges than in the middle. Kept faint: any stronger and it reads as a
+       dirty screen rather than a deep one. */
+      radial-gradient(120% 108% at 50% 6%, transparent 44%, rgb(0 0 0 / 0.12) 100%),
+    linear-gradient(180deg, var(--screen-2) 0%, var(--screen) 100%);
   border-radius: 3px;
   box-shadow:
-    inset 0 7px 12px -5px rgb(0 0 0 / 0.5),
-    inset 0 2px 3px -1px rgb(0 0 0 / 0.35),
-    inset 0 -1px 0 rgb(255 255 255 / 0.55);
+    inset 0 10px 14px -8px rgb(0 0 0 / 0.6),
+    inset 0 3px 4px -2px rgb(0 0 0 / 0.45),
+    inset 7px 0 11px -9px rgb(0 0 0 / 0.45),
+    inset -7px 0 11px -9px rgb(0 0 0 / 0.45),
+    inset 0 -7px 9px -7px rgb(0 0 0 / 0.2),
+    inset 0 -1px 0 rgb(255 255 255 / 0.6);
+}
+
+/* The 3D well, under the grid. Wrapped in a positioned span rather than
+   styled directly: R3F writes `position: relative` onto its own canvas inline,
+   and a wrapper is a cleaner way to place it than fighting that. Inert — the
+   grid above owns every event. */
+.toy-well-canvas {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* The grid sits on the well's FLOOR, inset by exactly the wall width — 4% of
+   the box, which is (1 - FLOOR) / 2 from ScreenMesh. Applied whether or not the
+   canvas renders, so there is only ever one layout to keep in step. */
+.toy-well-floor {
+  position: absolute;
+  inset: 4%;
+}
+
+/* The reflection ON the glass rather than under it. Deliberately faint — this
+   layer sits over the drawing, and a screen you cannot read through is a
+   worse screen however convincing its glass. */
+.toy-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    146deg,
+    rgb(255 255 255 / 0.1) 0%,
+    rgb(255 255 255 / 0.03) 26%,
+    transparent 46%
+  );
 }
 
 /* Game Boy A/B: a soft light dome seated in a dark recessed well. */
@@ -855,8 +1069,23 @@
    milled rim and a smooth domed cap — not metal discs. Only the DIAL turns;
    the coloured ring and the housing shadow stay put, which is what reads as a
    dial seated in a body rather than a spinning sticker. */
+/* The knob's HOUSING — a dark socket the dial is seated in.
+   The coloured ring is a child rather than this element's own background,
+   because the ring is an annulus and a mask would clip the seating shadow along
+   with the fill.
+
+   THE SOCKET IS WHY THIS HAS A FILL AT ALL. The gap between ring and dial was
+   left transparent at first, and on a blue toy transparent means BLUE — so the
+   knob wore a bright blue outline that read as a stray border rather than as
+   air. A recess is what is actually there: the dial is mounted through the
+   panel, so the gap is the hole it turns in. */
 .toy-knob {
   position: relative;
+  background: radial-gradient(
+    closest-side,
+    var(--well-2) 0 88%,
+    transparent 88%
+  );
   transition:
     transform var(--duration-quick) var(--ease-smooth-out),
     box-shadow var(--duration-quick) var(--ease-smooth-out);
@@ -872,6 +1101,10 @@
   box-shadow:
     0 8px 16px -6px rgb(0 0 0 / 0.6),
     1px 3px 5px rgb(0 0 0 / 0.4),
+    /* The socket's own lip: light along the bottom, shadow along the top, which
+       is the signature of a hole rather than a disc. */
+      inset 0 2px 3px rgb(0 0 0 / 0.55),
+    inset 0 -1px 2px rgb(255 255 255 / 0.18),
     inset 0 0 0 1px rgb(0 0 0 / 0.3);
 }
 
@@ -885,59 +1118,79 @@
     inset 0 0 0 1px rgb(0 0 0 / 0.3);
 }
 
+/* The value ring: hue on the left knob, black -> colour -> white on the right.
+   A true annulus with clear air between it and the dial, so it reads as a scale
+   the knob turns against rather than a coloured edge of the knob itself. */
+.toy-knob-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  /* Inner edge at 89%, against a dial reaching about 79% — so there is real air
+     between them. At 86% the gap was two pixels at the size this renders, which
+     is a seam, not a separation. */
+  -webkit-mask: radial-gradient(closest-side, transparent 0 89%, #000 89%);
+  mask: radial-gradient(closest-side, transparent 0 89%, #000 89%);
+}
+
+/* THE DIAL, in CSS, for when WebGL is unavailable.
+   It models the same solid the mesh does — a smooth shoulder falling to the rim
+   with a dished face sunk inside it — because the two have drifted apart before
+   and a fallback that looks like a different object is worse than no fallback.
+   No milling: the reference knob is moulded, not serrated. */
 .toy-knob-dial {
   position: absolute;
-  inset: 9%;
+  inset: 10%;
   border-radius: 999px;
-  /* 72 fine flutes, plus a radial shade that darkens them toward the rim —
-     standing in for the CONE the WebGL version actually models, so the two
-     read as the same object. */
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      rgb(255 255 255 / 0.85) 0%,
-      rgb(255 255 255 / 0.25) 58%,
-      rgb(0 0 0 / 0.16) 88%,
-      rgb(0 0 0 / 0.3) 100%
-    ),
-    repeating-conic-gradient(#ffffff 0deg 2.5deg, #d4d4d4 2.5deg 5deg);
+  /* Offset centre, not 50% 50%: the key light comes from the upper left in the
+     mesh and everywhere else on the toy, so a centred highlight would be the
+     one lit-from-nowhere object on the frame. */
+  /* Kept in the same tonal band as the mesh — nothing darker than about
+     #c0c0c0, so the knob reads as white plastic in shadow rather than as grey
+     plastic. The two builds have drifted before; tone is part of that. */
+  background: radial-gradient(
+    circle at 32% 24%,
+    #ffffff 0%,
+    #fbfbfb 30%,
+    #ebebeb 66%,
+    #cfcfcf 100%
+  );
   box-shadow:
-    inset 0 -3px 6px rgb(0 0 0 / 0.28),
+    inset 0 -3px 6px rgb(0 0 0 / 0.15),
     inset 0 3px 4px rgb(255 255 255 / 0.85),
     0 3px 6px rgb(0 0 0 / 0.45);
 }
 
-/* The smooth cap the ribs stop at, domed so light gathers off-centre. */
-/* The DISHED centre the flutes stop at.
-   A bowl lit from the upper left catches its highlight on the LOWER RIGHT
-   interior wall and shadows the near one — the exact inverse of a dome. This
-   rule sat un-updated for several passes, so the CSS knob was a raised cap
-   while the WebGL one was a dish. */
+/* The DISHED face inside the shoulder.
+   A bowl lit from above shadows its NEAR wall and catches the light on the far
+   one, so the gradient runs dark at the top to bright at the bottom — the exact
+   inverse of a dome. Getting this backwards is what makes a recess read as a
+   button, and this rule sat inverted for several passes while the mesh had it
+   right. Sized at 76% of the dial, matching FACE_RADIUS / BODY_RADIUS in
+   KnobMesh, so the two builds describe one object. */
 .toy-knob-cap {
   position: absolute;
-  inset: 22%;
+  inset: 12%;
   border-radius: 999px;
-  background:
-    radial-gradient(circle at 62% 72%, #ffffff 0%, #f4f4f4 42%, #d9d9d9 100%);
+  background: linear-gradient(178deg, #bcbcbc 0%, #e2e2e2 48%, #fdfdfd 100%);
   box-shadow:
-    inset 0 3px 5px rgb(0 0 0 / 0.18),
-    inset 0 -2px 3px rgb(255 255 255 / 0.8);
+    inset 0 5px 7px rgb(0 0 0 / 0.17),
+    inset 0 -2px 3px rgb(255 255 255 / 0.9);
 }
 
-/* The pointer, so the dial's angle is readable at a glance. */
-/* A scored line in the knob's own plastic, not a painted marker — the real
-   knob has none, but ours selects a value, so the angle must be readable. */
-/* THE POINTER. The real knob has none — its position is meaningless on a
-   physical toy — but ours selects a hue and a lightness, so the angle has to be
-   legible. Short, near the rim, and dark against the cream. */
+/* THE POINTER, as a notch in the lip rather than a painted bar. The real knob
+   has none — its position is meaningless on a physical toy — but ours selects a
+   hue and a lightness, so the angle has to be legible. It straddles the dish's
+   edge, because that circular edge is the line the eye is already following and
+   a break in it registers faster than a mark inside an even field. */
 .toy-knob-mark {
   position: absolute;
-  top: 15%;
+  top: 8%;
   left: 50%;
-  width: 4px;
-  height: 14%;
-  border-radius: 2px;
-  background: #000000;
+  width: 9%;
+  height: 9%;
+  border-radius: 1px;
+  background: #4a4a4a;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.55);
   transform: translateX(-50%);
   z-index: 1;
 }
@@ -974,6 +1227,26 @@
    stale addend is invisible, because the arithmetic still looks right. */
 .toy-lane {
   inline-size: 100%;
+}
+
+/* THE MOUNTING PAD each tool column sits on. Real hardware does not drop
+   buttons straight into a flat shell — it raises a boss around them, both to
+   give the moulding somewhere to thicken and to group the controls by touch.
+   Here it does the second job: it says the four buttons on this side are one
+   set, which is what the four-a-side symmetry is for. */
+.toy-rail {
+  border-radius: 999px;
+  padding: 12px 7px;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.09) 0%,
+    rgb(255 255 255 / 0.02) 45%,
+    rgb(0 0 0 / 0.09) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3),
+    0 2px 4px -1px rgb(0 0 0 / 0.28);
 }
 
 /* The tool strip scrolls; its scrollbar would sit on the blue frame and read as

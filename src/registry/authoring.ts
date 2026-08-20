@@ -65,6 +65,90 @@ export function cellsFromArt(art: ArtMap, palette: Palette): Cells {
 }
 
 /**
+ * Characters an art map may use, in the order they get assigned.
+ *
+ * `#` first because every single-colour icon — which is every seed, per the
+ * authoring rule — then reads exactly like the ones already in the file. None
+ * of these need escaping inside a double-quoted string, and none collide with
+ * EMPTY_CHARS.
+ */
+const ART_CHARS = ["#", "o", "+", "x", "*", "=", "~", "%", "@", "&"] as const;
+
+/**
+ * Cells back to an art map — the exact inverse of `cellsFromArt`.
+ *
+ * This is what lets a drawing made in the composer land in the registry in the
+ * form the registry is actually written in: eleven readable rows, where a
+ * changed pixel is a changed character in the diff. Emitting the 121-element
+ * cell array instead would be the same data and unreviewable, which is the
+ * whole reason art maps exist.
+ *
+ * Colours are numbered in the order they are first met, scanning the way the
+ * grid is stored, so the same drawing always produces the same art.
+ */
+export function cellsToArt(cells: Cells): { art: string[]; palette: Palette } {
+  const chars = new Map<string, string>();
+
+  for (const cell of cells) {
+    if (cell === null || chars.has(cell)) continue;
+    const char = ART_CHARS[chars.size];
+    if (char === undefined) {
+      throw new Error(
+        `An art map can carry ${ART_CHARS.length} colours; this drawing uses more`,
+      );
+    }
+    chars.set(cell, char);
+  }
+
+  const art: string[] = [];
+  for (let row = 0; row < GRID_SIZE; row++) {
+    let line = "";
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const cell = cells[toIndex(row, col)];
+      line += cell === null ? "." : (chars.get(cell) ?? ".");
+    }
+    art.push(line);
+  }
+
+  const palette: Record<string, string> = {};
+  for (const [hex, char] of chars) palette[char] = hex;
+
+  return { art, palette };
+}
+
+/**
+ * An icon as the source text you paste into the registry.
+ *
+ * The composer writes to the browser; the published set is a typed module in
+ * the repo (CLAUDE.md). This is the bridge, and it is deliberately a STRING
+ * rather than a commit: the registry is reviewed in a diff, and an id is
+ * immutable once published, so the last step before an icon becomes permanent
+ * should be a human looking at it.
+ */
+export function toRegistryEntry(source: Omit<IconSource, "art" | "palette"> & { cells: Cells }): string {
+  const { art, palette } = cellsToArt(source.cells);
+  const quoted = (value: string) => JSON.stringify(value);
+  const paletteText = Object.entries(palette)
+    .map(([char, hex]) => `${quoted(char)}: ${quoted(hex)}`)
+    .join(", ");
+
+  return [
+    "  defineIcon({",
+    `    id: ${quoted(source.id)},`,
+    `    name: ${quoted(source.name)},`,
+    `    category: ${quoted(source.category)},`,
+    `    tags: [${source.tags.map(quoted).join(", ")}],`,
+    `    createdAt: ${quoted(source.createdAt)},`,
+    `    palette: { ${paletteText} },`,
+    "    art: [",
+    ...art.map((row) => `      ${quoted(row)},`),
+    "    ],",
+    "  }),",
+    "",
+  ].join("\n");
+}
+
+/**
  * Names, ids, and tags are all kebab-case: lowercase words joined by single
  * hyphens. `arrow-right`, never `Arrow Right` or `arrowRight`.
  *

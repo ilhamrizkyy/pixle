@@ -3,9 +3,13 @@
 An open-source pixel / 32-bit / arcade **icon set**, plus an in-browser
 **composer** styled like an Etch A Sketch. MIT licensed.
 
-> **Status: Phase 1 complete — the public gallery is live.** 24 icons, search,
-> filtering, a single-color customizer, size/padding/transform controls, and
-> copy/download that matches what you see. The owner-only composer is Phase 2.
+> **Status: Phase 2 complete — gallery and composer both build.** The public
+> gallery has 24 icons, search, filtering, a single-color customizer,
+> size/padding/transform controls, and copy/download that matches what you see.
+> The owner-only composer draws, transforms, undoes, imports and exports, with
+> its knobs and screen recess rendered in three.js. Still open: the composer
+> saves to the browser, not to the registry, so a drawn icon does not yet reach
+> the published set; and the owner gate is an env flag rather than real auth.
 > See [PLAN.md](docs/PLAN.md).
 
 ## Getting started
@@ -21,6 +25,7 @@ npm run dev      # http://localhost:3000
 | `npm run build` | Production build |
 | `npm run start` | Serve the production build |
 | `npm test` | Vitest over the engine + registry |
+npm run test:e2e   # Playwright: pointer paths, touch, WebGL
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 

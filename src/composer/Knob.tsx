@@ -23,7 +23,9 @@ const KnobMesh = dynamic(() => import("./KnobMesh"), { ssr: false });
  * field, a preset, the eyedropper.
  *
  * Only the dial turns. The coloured ring and the housing shadow stay put; that
- * is what reads as a dial seated in a body rather than a spinning sticker.
+ * is what reads as a dial seated in a body rather than a spinning sticker. The
+ * ring is a true annulus with clear air between it and the dial, so it reads as
+ * a scale the knob turns against rather than a painted edge of the knob.
  *
  * The dial itself is drawn in WebGL where it is available and in CSS where it
  * is not. THE CONTROL IS THE SAME EITHER WAY: this element carries the role,
@@ -149,10 +151,14 @@ export function Knob({
       onPointerCancel={release}
       onKeyDown={onKeyDown}
       className="toy-knob size-16 cursor-grab touch-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:cursor-grabbing sm:size-20"
-      style={{ background: ring }}
     >
+      {/* The ring is its own element, not the housing's background: it is masked
+          into an annulus, and a mask on the housing would clip the seating
+          shadow with it. */}
+      <span aria-hidden="true" className="toy-knob-ring" style={{ background: ring }} />
+
       {webgl ? (
-        <span aria-hidden="true" className="absolute inset-[7%]">
+        <span aria-hidden="true" className="absolute inset-[6%]">
           <KnobMesh angle={(value / max) * Math.PI * 2} />
         </span>
       ) : (

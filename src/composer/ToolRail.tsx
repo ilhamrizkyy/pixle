@@ -55,7 +55,7 @@ export function ToolColumn({ side }: { side: Side }) {
   const tools = side === "left" ? all.slice(0, 4) : all.slice(4);
 
   return (
-    <div className="flex shrink-0 flex-row justify-center gap-4 sm:flex-col sm:gap-6">
+    <div className="toy-rail flex shrink-0 flex-col justify-center gap-6">
       {tools.map((tool) => (
         <ToyButton
           key={tool.name}

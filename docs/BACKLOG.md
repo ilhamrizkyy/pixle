@@ -7,10 +7,16 @@
 
 1. **Bezel too thick** — the rim around the screen (especially the bottom) is
    too fat. Thin it to a slim recessed frame, even all around.
-2. **Snub-in still looks off** — the recessed screen reads slightly wrong.
-   Refine the inset-shadow geometry; the true 3D screen (Phase 3, R3F) should
-   resolve it fully.
-3. **Dock too thick** — reduce the bottom dock's height/padding.
+2. **Snub-in still looks off** — RESOLVED 2026-08-20, and by the route this
+   entry predicted: the screen's recess is now real geometry. Four sloped walls
+   around a floor, lit by one light, rendered in R3F under the DOM grid. The
+   shading is not authored — the top wall is dark and the bottom bright because
+   that is what those surfaces do under a light from above. Hand-tuning inset
+   shadows per edge was always going to keep looking "slightly wrong", because
+   four edges of one hole do not have four independent gradients.
+3. **Dock too thick** — RESOLVED. One row, floating and content-sized. It also
+   gained a phone layout: below `lg` the row would have wrapped into a 188x288
+   slab over the toy, so it becomes a bar plus a Details sheet instead.
 4. **Knobs not at the corners + too small** — move both knobs fully to the true
    bottom-left/right corners, overlapping the frame edge like the real toy, and
    enlarge them.

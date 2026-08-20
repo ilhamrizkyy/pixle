@@ -74,10 +74,34 @@
 
 - **Name / Category / Tags** fields and a live current-color chip. (No
   pixel/cell counter — removed.)
+- **Below `lg` the dock is one row and a sheet.** The bar keeps the colour
+  swatch, Name and Save; a chevron beside them opens a **Details** sheet
+  holding Category, Tags, the hex field, the help toggle, and Import / Export.
+  Nothing appears in both places.
+  - The sheet edits **live**, with no draft and no Apply — unlike the gallery's
+    filter sheet, which defers because it covers the grid it is changing. These
+    fields change metadata, which is not on screen either way.
+  - A **view toggle** (help) leaves the sheet open; its own pressed state is
+    the feedback. A **file action** (Import once a file is chosen, Export)
+    closes it, because each ends in a toast and a toast behind the backdrop is
+    a confirmation nobody sees.
+  - Dismiss with the backdrop, ✕, or Escape. Nothing is discarded — there is
+    no draft to discard.
 - **Import SVG** (owner action, lives in this dock): pick an SVG previously
   exported by the tool; it parses the rects back into cells and loads them for
   editing / adds to the set. Round-trips the tool's own export format.
 - **Export**: download the current drawing as SVG (baked colors).
+- **Copy entry** (owner action): puts the icon on the clipboard as the
+  `defineIcon({ ... })` source you paste into `src/registry/icons.ts` — art map
+  and palette, not a 121-element array, so the diff shows the drawing.
+  - This is what makes a drawn icon PUBLIC. Save keeps it in this browser;
+    nothing but the registry reaches the gallery everyone else sees.
+  - A string on the clipboard rather than a commit, deliberately: the registry
+    is reviewed in a diff, and an `id` is immutable once published, so a person
+    looks at it before it becomes permanent.
+  - Refused if the id already exists in the **published** registry. A collision
+    with a locally saved icon is fine and expected — that is usually the entry
+    for the icon you just saved.
 - **Save icon**: requires a **unique** name and a non-empty drawing. A name
   already used by the registry or by a locally saved icon is **refused** with an
   inline error rather than auto-suffixed — an id is immutable once published,
@@ -134,10 +158,22 @@
 
 ## 7. Feedback & states
 
-- Toasts for save / import / copy.
+- **Toasts, in two tones, and they do not share a corner.**
+  - A *confirmation* (save / import / copy / export) is ambient: it reports
+    something you already know you did, so it sits at the **bottom centre**
+    near the controls that caused it, leaves after ~2.2s, and is announced
+    politely.
+  - A *refusal* is not ambient — the thing you asked for did not happen. It
+    takes the **top centre**, clear of the dock it is about (which on a phone is
+    under your own thumb), stays ~4.5s, and interrupts (`role="alert"`).
+  - An identical repeated message is a NEW toast, not the old one still
+    standing: it restarts its clock and re-announces. Saving twice without
+    fixing the name otherwise looks like the first refusal never left.
 - Disabled states for Undo/Redo when stacks are empty.
 - Empty gallery state when a search/filter yields nothing.
-- Errors (e.g., unnamed save) show inline in `--danger`.
+- Errors (e.g., unnamed save, a rejected import) are **error-toned toasts**,
+  not inline text. Inline, they grew the floating dock upward into the toy at
+  the exact moment you were trying to read them.
 
 ## 8. Accessibility
 

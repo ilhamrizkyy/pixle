@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Composer } from "./Composer";
+import { clearViewport, setViewportWidth } from "@/test/viewport";
 
+// These suites are about the toy, which only lays out its tool columns and
+// its full dock row on a wide screen. Stating the width keeps them from
+// silently testing the phone layout instead.
+beforeEach(() => setViewportWidth(1280));
+afterEach(clearViewport);
 afterEach(cleanup);
 
 const knob = (name: "Hue" | "Lightness") => screen.getByRole("slider", { name });

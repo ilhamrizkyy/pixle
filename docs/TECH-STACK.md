@@ -34,6 +34,12 @@ later — a presentation swap, not a rewrite.
 
 ## Composer experience layer (Phase 3, stageable)
 
+- **three is PINNED to 0.182.0**, not on a caret range. `@react-three/fiber`
+  9.7 (the current release) still constructs `new THREE.Clock()`, and three
+  deprecated Clock in favour of Timer in r183 — so every newer three prints a
+  deprecation warning we cannot fix from our own code. Nothing we use changed
+  in r183–r185, so the pin costs nothing. **Unpin when R3F migrates to
+  THREE.Timer**, and delete this note with it.
 - **React Three Fiber (Three.js) + drei** — the real 3D "real-world" toy: actual
   depth, material/lighting on the blue frame, knobs that turn in 3D, a screen
   with a genuinely recessed material (this is what finally fixes the snub-in).
@@ -43,6 +49,11 @@ later — a presentation swap, not a rewrite.
     trap editing inside a canvas with no DOM fallback.
   - **Staging:** ship a polished **DOM + CSS-3D** toy first (Phases 2–3), then
     upgrade the shell to R3F. Because of the engine boundary, logic is untouched.
+  - **Where it stands (2026-08-20):** the knobs and the screen's well are R3F;
+    the frame, bezel and buttons are still CSS. Both meshes follow the same
+    rule — they render form, never state. The knob draws a dial and reads an
+    angle; the well draws a recess and reads nothing. Every control they sit
+    under is DOM, so `useWebGL` returning false costs appearance only.
 - **anime.js** (your pick) — timeline animation: knob inertia/settle, button
   press, the left→right erase sweep, view transitions. *(Framer Motion is the
   more React-idiomatic alternative — pick one, don't run both.)*
@@ -66,7 +77,17 @@ later — a presentation swap, not a rewrite.
 
 - **Fuse.js** — fuzzy gallery search once the set grows.
 - **Vitest** — unit-test the engine (transforms, import/export, color).
-- **Playwright** — a couple of composer/gallery smoke tests.
+- **Playwright** — the composer's POINTER paths, which Vitest cannot reach:
+  jsdom has no layout, so a synthetic pointerdown there proves a handler ran,
+  not that it ran with the cell under the pointer. Two projects: `desktop`
+  (mouse) and `touch` (iPhone 13, `hasTouch`), because a touch context sends
+  `pointerType: "touch"`, no hover events, and the compact layout — three ways
+  this breaks on a phone while every mouse test stays green. Runs against a
+  production build on port 3100, so a dev server can stay up beside it, and so
+  the dev overlay is not sitting over the toy's left knob.
+
+  It is also the only place the 3D is actually *seen*: WebGL is unavailable in
+  plain headless Chrome, which silently falls back to CSS.
 
 ## Layer → tool → phase
 

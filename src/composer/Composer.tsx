@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Toast } from "@/components/Toast";
-import { Board } from "./Board";
+import { useCallback, useState } from "react";
+import { Toast, type ToastTone } from "@/components/Toast";
+import { Screen } from "./Screen";
 import { ColorPanel } from "./ColorPanel";
 import { HueKnob, LightnessKnob } from "./ColorKnobs";
 import { ComposerProvider } from "./ComposerProvider";
@@ -36,8 +36,17 @@ export function Composer() {
   );
 }
 
+type Notice = { text: string; tone: ToastTone; nonce: number };
+
 function ComposerBody() {
-  const [toast, setToast] = useState("");
+  const [notice, setNotice] = useState<Notice | null>(null);
+  /* The nonce is what makes a REPEATED message behave like a new one. Saving
+     twice without fixing the name produces the identical string, and without a
+     changing key the toast neither restarts its clock nor re-announces itself —
+     so the second refusal would look like the first one that never left. */
+  const notify = useCallback((text: string, tone: ToastTone = "info") => {
+    setNotice((previous) => ({ text, tone, nonce: (previous?.nonce ?? 0) + 1 }));
+  }, []);
   /* Rendered, not just hidden: two copies of eight buttons would mean two
      controls answering to "Undo" in the accessibility tree. */
   const compact = useMediaQuery("(max-width: 639px)");
@@ -59,11 +68,16 @@ function ComposerBody() {
 
           <div className="toy-stack min-w-0 self-center">
             <div className="toy-bezel w-full">
+              {/* Moulded into the brow, the way the toy this is modelled on
+                  carries its own name. Decorative: the page's real wordmark is
+                  in the nav, and a screen reader meeting "Pixle" twice on one
+                  page learns nothing the second time. */}
+              <span className="toy-legend" aria-hidden="true">
+                Pixle
+              </span>
               {/* The SCREEN is the square, not the bezel — so the bezel can
                   carry a deeper brow without the board going oblong. */}
-              <div className="toy-screen aspect-square w-full">
-                <Board />
-              </div>
+              <Screen />
             </div>
             <SlideToClear />
           </div>
@@ -85,8 +99,15 @@ function ComposerBody() {
         </div>
       </div>
 
-      <Dock onNotify={setToast} />
-      {toast && <Toast message={toast} onDismiss={() => setToast("")} />}
+      <Dock onNotify={notify} />
+      {notice && (
+        <Toast
+          key={notice.nonce}
+          message={notice.text}
+          tone={notice.tone}
+          onDismiss={() => setNotice(null)}
+        />
+      )}
     </div>
   );
 }

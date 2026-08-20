@@ -31,6 +31,13 @@ Accent — Arcade Blue (the one shell accent)
 
 Semantic
     --danger:#DC2626   (errors stay red so they read against the blue toy)
+    --danger-surface:#FEE2E2  --danger-ink:#B91C1C   (dark: #450A0A / #FCA5A5)
+
+The three danger tokens are a SET, for tinted panels: a soft ground, the
+full-strength red as its border, and a darker red as its ink. A saturated block
+of red is the shape of a system failure, and most refusals are not one. Ink is a
+step darker than the border because the border red on its own tint is 4.0:1 —
+fine for a rule, short of AA for body text.
     --success:#16A34A  --warning:#D97706
 
 Composer toy (blue Etch A Sketch — scoped to the composer only)
@@ -39,7 +46,9 @@ Composer toy (blue Etch A Sketch — scoped to the composer only)
     --frame-3:#182662    bottom lip / deep shadow
     --bezel:#1A2A70      dark rim around the screen (must read RECESSED)
     --well:#20337F  --well-2:#182660   recessed button wells
-    --screen: silver-gray gradient (#cfd2cb -> #bfc3ba)
+    --screen: near-white gradient (#e5e7de -> #f6f7f2), a trace of green so it
+             still reads as a physical surface rather than a blank page
+    --toy-grain: tileable fractal-noise data URI; moulded-plastic texture
 
 Rule: `--frame*/--bezel/--well/--screen` are **composer-only**. Never use them
 in the shell.
@@ -124,8 +133,8 @@ One shared scale in `:root`, referenced by every component. Tailwind's
 inherits the house curve rather than the framework's.
 
     --duration-quick 150ms   close, hover-in, text swap
-    --duration-fast  250ms   modal open, card hover-in
-    --duration-medium 350ms  toast open, hover-out settle
+    --duration-fast  250ms   modal open, card hover-in, toast open
+    --duration-medium 350ms  hover-out settle
     --duration-slow  400ms   sheet open (full-screen travel)
 
 **Padding** reads out the resulting canvas (11×11 → 13×13 → 15×15 → 17×17),
@@ -149,7 +158,15 @@ the safe area is where art is *drawn* and is already baked into every icon.
   and return at 350ms, so they land rather than snap.
 - **Trim duration before adding delay**, and never delay a close.
 - Overlay entrances reach past transform and opacity — a 2px cross-blur reads
-  as depth of field rather than a slide.
+  as depth of field rather than a slide. **The toast is the exception**: it is
+  the one overlay that appears while you are doing something else, and `filter`
+  is the only property here that cannot run on the compositor — it rasterises
+  the element every frame. On a route already holding two WebGL canvases that
+  cost reads as lag rather than as softness. Toasts animate on transform and
+  opacity alone.
+- The toast opens on 250ms and closes on 150ms, and its **exit travels half as
+  far as its entrance**. It previously opened on 350ms with no exit at all — a
+  confirmation that took a beat to decide to appear and then simply vanished.
 
 Every animation sits behind the global `prefers-reduced-motion` rule.
 
@@ -239,31 +256,139 @@ padding.
 
 **Composer — toy anatomy**
 - *Frame*: blue gradient body, `--radius-toy`, top highlight + bottom lip.
-- *Screen*: silver-gray, must read **recessed / snub-in** — inner shadow falls
-  inward from the top edge; never convex ("hill"). **[FIX]** the current
-  snub-in still looks slightly off; refine the inset geometry (a true 3D screen
-  in Phase 3 should resolve it).
+- *Screen*: near-white, and **recessed as real geometry**. Four sloped walls
+  around a floor, rendered in R3F under the grid: the top wall falls to ~166 and
+  the bottom clips to white, not because either was authored that way but
+  because that is what those surfaces do under a light from above. This is what
+  finally settled the snub-in (BACKLOG.md §A2) — hand-tuned inset shadows were
+  always going to read slightly wrong, since four edges of one hole do not have
+  four independent gradients.
+
+  **The 3D is decoration and the grid is not.** The canvas renders the recess
+  and nothing else; the drawing grid stays DOM/SVG on top of it, owning every
+  pointer event, every key and the whole accessibility tree (CLAUDE.md §5). Lose
+  WebGL and CSS inset shadows approximate the walls — you lose their shading and
+  nothing you can do. The grid is inset by exactly the wall width either way, so
+  there is only ever one layout to keep in step.
+
+  The camera is **orthographic**. The floor has to line up with a DOM element
+  over it, and under perspective that alignment depends on a camera distance
+  agreeing with a CSS percentage — two numbers that will drift. Straight on, the
+  mapping is the identity.
+
+  A soft diagonal wash sits **behind** the art as the glass, with a much fainter
+  one over it. The over-layer is deliberately weak: this is a screen, and one
+  you cannot read through is a worse screen however convincing its glass.
 - *Bezel*: dark rim (`--bezel`), even on the sides and bottom, with a deeper
   **brow above the screen** as the real toy has. (The old [FIX] was a fat chin,
-  which is a different thing from a header.)
+  which is a different thing from a header.) Shaded as a **wall standing proud
+  of the frame** — lit along its top face, dark at its foot — so the screen's
+  own shadow has something to fall against.
+- *Frame*: four background layers, not one ramp. A single top-to-bottom
+  gradient is the giveaway of a rectangle with a gradient on it; real plastic
+  gathers light along its crown and turns away at the sides, so the sides
+  darken independently of the top-to-bottom fall. Over all of it sits a
+  **moulded grain** — a tiled fractal-noise texture. Surface is the thing no
+  amount of shadow work substitutes for: without it the shell reads as drawn,
+  with it as injection-moulded. It lives in the BACKGROUND stack, never as a
+  blend-mode overlay, since an overlay over a demand-rendered WebGL canvas is
+  how the knobs vanished once already.
+- *Legend*: the product name moulded into the bezel's brow, where the toy this
+  is modelled on carries its own — embossed (dark line below, light above),
+  never printed. It costs no layout: the brow is padding the bezel already
+  reserves. Decorative and `aria-hidden`; the page's real wordmark is in the
+  nav.
+- *Tool pads*: each column of four sits on a raised boss. Hardware does not drop
+  buttons into a flat shell, and here the pad does the grouping work — it says
+  these four are one set, which is what the four-a-side symmetry is for.
 - *Buttons*: 8 total, 4 flanking each side — Game Boy A/B style (soft light
   domed cap seated in a recessed well). Left: Mirror, Grid, Eyedropper, Undo.
   Right: Flip-H, Flip-V, Rotate, Redo. Press sinks ~1px only.
-- *Knobs*: two large ridged knobs at the **true bottom corners**, overlapping
-  the frame edge like the real toy. **[FIX]** currently they sit inboard and
-  are too small — move them fully to the corners and enlarge. Only the ridged
-  dial turns; the shadow/ring stay still. Left knob wears a rainbow (hue) ring,
-  right knob a black→color→white (lightness) ring.
+- *Knobs*: two knobs at the ends of the colour lane. **Smooth moulded control
+  knobs**, not the Etch A Sketch's ridged dials — a wide rounded shoulder
+  falling to the rim with a shallow dished face recessed inside it, and a small
+  dark chip in the lip for the pointer. The milled flutes were dropped on
+  2026-08-19 against a supplied reference.
+
+  The form carries itself: the shoulder catches a bright crescent while the
+  dish, being concave, gathers its highlight on the LOWER interior wall. Those
+  two opposed gradients are what read as "raised rim, sunken face", and getting
+  the dish's gradient the way round of a dome is what makes a recess look like a
+  button.
+
+  **A smooth white knob has no detail to hide behind**, so depth and lighting
+  are load-bearing rather than taste. A dish 0.075 deep tilts its normal by only
+  11°, which renders as a featureless disc; the dish had to get about three
+  times deeper before the surface described itself at all. The key sits
+  **overhead rather than head-on**, because a head-on key lights every normal on
+  a shallow surface almost identically.
+
+  Level and modelling are then set separately. The knob must read **white, not
+  grey**, so ambient carries the level — it lifts every normal equally, raising
+  the floor without touching the spread — and the key is left free to model
+  rather than illuminate. The range is 184 to 253: white, with 68 levels left
+  for the form. Ambient one notch higher whitens the floor to 197 but spends the
+  modelling down to 55, and the knob flattens back toward the disc it began as.
+
+  **Two things sit between an intensity and a pixel, and both are worth knowing
+  before touching these numbers.** `meshStandardMaterial` is physically based,
+  so `BRDF_Lambert` divides by π — for the ambient term as much as the direct
+  ones — which means an intensity of 0.5 arrives on screen at about 0.16. And
+  React Three Fiber defaults the renderer to **ACESFilmicToneMapping**, built to
+  roll off the highlights of an HDR photographic scene: it caps white near
+  205/255 and mutes everything under it. Neither belongs on a flat-shaded UI
+  object, so the canvas passes `flat` and the intensities carry the π.
+
+  This is not theory. Tuned against a model missing both, the knob measured
+  184–253 in preview and rendered **81–130** in the browser — a dead mid grey
+  that no material colour could have fixed, because it was already `#ffffff`.
+
+  The dial is seated in a **dark socket**. The gap between ring and dial was
+  transparent at first, and on a blue toy transparent means BLUE — the knob wore
+  a bright blue outline that read as a stray border rather than as air. A recess
+  is what is actually there: the dial is mounted through the panel, so the gap
+  is the hole it turns in.
+
+  Only the dial turns; the shadow and ring stay still. Left knob wears a rainbow
+  (hue) ring, right knob a black→color→white (lightness) ring. Each ring is a
+  true **annulus with air between it and the dial**, so it reads as a scale the
+  knob turns against rather than a painted edge of the knob.
+
+  There are two builds — WebGL and CSS — and they must describe ONE object.
+  They have drifted before (the CSS knob was a raised cap for several passes
+  while the mesh was a dish), so proportions are shared by name: the CSS dish
+  is 76% of the dial because `FACE_RADIUS / BODY_RADIUS` is 0.76.
 - *Color panel* (between the knobs): current-color swatch, editable hex, a
   readout (hue name · L% · S%), and a saturation slider. **No preset swatches** —
   they duplicated controls the knobs already cover.
 - *Slide-to-clear*: a groove the width of the board, just under the screen;
   dragging wipes the drawing left→right progressively.
 
-**Composer bottom dock** — labelled fields (Name / Category / Tags), a current-
-color chip, and Export / Save (no filled-cell count). **[FIX]** the dock is too
-thick — reduce its height/padding. **[MOVE]** the SVG **Import** control belongs
-here (a composer/owner action), not in the global nav.
+**Composer bottom dock** — a floating toolbar, Figma-style: out of flow, pinned
+to the bottom of the viewport and centred, sized to its own content rather than
+to the toy's width. Labelled fields (Name / Category / Tags), a current-color
+chip, the help toggle, and Import / Export / Save (no filled-cell count). The
+SVG **Import** control lives here (a composer/owner action), not in the global
+nav.
+
+Below `lg` it becomes a **phone bar**: the colour swatch, Name, a chevron, and
+Save — everything else in a **Details** bottom sheet, the same surface the
+gallery uses for the same reason. `lg` is measured, not chosen: the full row is
+973px, so it fits at 1024 with room and nowhere below it.
+
+**It never wraps.** Wrapping is what the row does when it is too wide for the
+window, and the result was a 188×288 slab parked over the middle of the toy —
+covering the tool strip, the saturation slider and the bottom of the frame. A
+floating toolbar that hides what it floats over has stopped being one. Two
+layouts, one rendered at a time, is the fix; a single layout that degrades is
+what created the defect.
+
+The split between bar and sheet is **exact, never mirrored**. Name stays on the
+bar because it is what Save refuses without, so the field and the error naming
+it are on one surface; the swatch stays because the paint colour is the one
+dock value that changes while you draw. Anything set once is behind the
+chevron. Repeating a control in both would put two answers to the same name in
+one accessibility tree.
 
 ## 7. Do / Don't
 

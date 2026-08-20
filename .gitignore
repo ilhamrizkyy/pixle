@@ -49,3 +49,9 @@ next-env.d.ts
 # put megabytes of other people's code in an icon-set repo.
 .agents/
 .claude/skills/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

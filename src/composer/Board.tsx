@@ -164,6 +164,12 @@ export function Board() {
     rects.push(
       <rect
         key={i}
+        /* The drawing, addressable. Every other rect in this SVG is chrome —
+           hover preview, carets, the safe area — and they are all the same
+           element with the same attributes. Without a name, anything asking
+           "what is drawn?" has to guess from styling, which is how a test ends
+           up passing because it matched the safe-area outline. */
+        data-cell={i}
         x={col * CELL_UNITS}
         y={row * CELL_UNITS}
         width={CELL_UNITS}

@@ -12,6 +12,7 @@ import { ToolStrip } from "./ToolStrip";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useComposerShortcuts } from "./useComposerShortcuts";
 import { useDraft } from "./useDraft";
+import "./composer.css";
 
 /**
  * The composer, as the blue Etch A Sketch (DESIGN.md §6).

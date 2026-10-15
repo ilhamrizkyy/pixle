@@ -1,0 +1,2583 @@
+/*  The composer's styles. Imported by Composer.tsx, so only /create loads them.
+   Tokens it reads (--frame, --knob-*, --lcd-*) stay in globals.css with the
+   rest of the palette.  */
+
+
+/* ============================================================================
+   Composer toy tokens (DESIGN.md §2).
+
+   SCOPED ON PURPOSE. These live under .composer-scope, not :root, so they are
+   physically unavailable to the shell -- DESIGN.md §7 forbids using them
+   outside the composer, and scoping enforces that instead of trusting review.
+   ========================================================================= */
+
+.composer-scope {
+  /* Clears the floating dock, which the gallery does not have. */
+  --toast-bottom: 6.5rem;
+  /* Everything horizontal that is NOT the board: page padding, the frame's
+     padding, both tool columns, and their gaps. */
+  --toy-side: 30rem;
+  /* Everything vertical that is NOT the board: page padding, the frame's
+     padding, the bezel's brow and chin, the groove, the knob row, and the
+     clearance the floating dock needs.
+
+     THIS BASE DECLARATION IS LOAD-BEARING. It was once only set inside the
+     narrow-screen media query, which left it undefined above 640px — and an
+     undefined var makes the calc invalid, which makes the min() invalid, which
+     makes --board-size invalid, which silently drops the board back to `auto`.
+     The failure is invisible: the layout still looks plausible, so the sizing
+     rule can be dead for weeks while every calculation about it reads fine. */
+  --toy-chrome: 19.5rem;
+  /* The board's edge length, computed ONCE. Deliberately no percentages: the
+     frame shrinks to fit its contents, so a percentage here would be circular.
+     Sizing off the viewport breaks the cycle and lets the whole toy scale
+     down together instead of the frame standing wide around a small board. */
+  --board-size: min(
+    /* The board's ceiling. It only started biting once the sizing rule was
+       actually live — before that flex was quietly picking a smaller number,
+       so 46rem had never been reached and read as safe. An 11x11 grid at 30rem
+       is ~44px a cell, which is a comfortable target without the toy taking
+       over the screen. */
+    24rem,
+    calc(100dvh - var(--nav-h) - var(--toy-chrome)),
+    calc(100vw - var(--toy-side))
+  );
+  /* Gridlines on the panel. The shell's `--color-border` would vanish on it,
+     so the composer redefines the same role — and points it at the LCD's own
+     line, which inverts with the panel: a black hairline is invisible on the
+     unlit one. */
+  --board-line: var(--lcd-line);
+  /* The drawing surface. Lifted close to white on 2026-08-20 — the old
+     #cfd2cb read as a dusty grey slab and made every colour drawn on it look
+     muddier than the hex actually was. A trace of green is kept so it still
+     reads as a physical screen rather than a blank page. */
+  /* Moulded plastic grain. A flat gradient is the single clearest tell that a
+     shape was drawn in CSS rather than injection-moulded, and no amount of
+     shadow work substitutes for surface. Sits in the frame's BACKGROUND stack,
+     never as an overlay: an overlay with a blend mode over a demand-rendered
+     WebGL canvas is how the knobs disappeared once already.
+
+     Two things about the data URI are load-bearing. The `#` in `url(#g)` MUST
+     be percent-encoded — inside a data: URI a literal `#` opens the fragment,
+     so the SVG is truncated mid-attribute and simply never paints, with no
+     error anywhere. And `color-interpolation-filters` is pinned to sRGB,
+     because the default is linearRGB and the alpha the colour matrix derives
+     then lands nowhere near the number written here. Strength was swept against
+     the frame's own blue: 0.05 is invisible, 0.16 starts muddying the colour. */
+}
+
+@media (max-width: 639px) {
+  .composer-scope {
+    --toy-side: 4rem;
+    --toy-chrome: 21rem;
+  }
+}
+
+/* One tint per category, bound by data attribute rather than by inline style:
+   DESIGN.md keeps raw colour out of components, and a chip's colour is a token
+   like any other. These moved from the key rack to the chips when the rack took
+   over Shape — the tints are an INDEX of the taxonomy, so they follow the
+   taxonomy. */
+
+.pixl-cat[data-category="all"] {
+  --cat: var(--cat-all);
+  --cat-ink: var(--cat-all-ink);
+}
+
+.pixl-cat[data-category="interface"] {
+  --cat: var(--cat-interface);
+  --cat-ink: var(--cat-interface-ink);
+}
+
+.pixl-cat[data-category="media"] {
+  --cat: var(--cat-media);
+  --cat-ink: var(--cat-media-ink);
+}
+
+.pixl-cat[data-category="arcade"] {
+  --cat: var(--cat-arcade);
+  --cat-ink: var(--cat-arcade-ink);
+}
+
+.pixl-cat[data-category="system"] {
+  --cat: var(--cat-system);
+  --cat-ink: var(--cat-system-ink);
+}
+
+.pixl-cat[data-category="communication"] {
+  --cat: var(--cat-communication);
+  --cat-ink: var(--cat-communication-ink);
+}
+
+.pixl-cat[data-category="nature"] {
+  --cat: var(--cat-nature);
+  --cat-ink: var(--cat-nature-ink);
+}
+
+
+/* A tool panel SET INTO the body — and the surface that CARRIES THE TOY'S INK.
+   Everything standing on plastic needs the chassis's own text, border and
+   accent rather than the shell's; those tokens are repointed here rather than
+   on an ancestor, because the same pad is mounted in two places (the board's
+   left column and the mobile filter sheet) and only one of them has a chassis
+   ancestor. Repointing at the board is not an option either — the screens are
+   descendants of it, and that would paint the icon grid's own text white on
+   near-white, in the one place the product is actually read. */
+/* THE CONTROL PANEL, flat. It was a region of the case with controls dropped
+   INTO it, and the whole construction went with the case.
+
+   IT NO LONGER REPOINTS THE PALETTE EITHER, and that is the half worth naming.
+   `.pixl-pad` used to set `--color-text`, `--color-border` and `--color-accent`
+   to the chassis's own ink, because the shell's blue was unreadable on plastic
+   and §6 banned it from the body. There is no body, so the ban is void and the
+   controls take the page's own tokens. The shell's `--accent` is the one accent
+   again — see the note on the rail's marker. */
+.pixl-pad {
+  border-radius: var(--radius-md);
+}
+
+.pixl-sheet {
+  animation: pixl-sheet-in var(--duration-slow) var(--ease-smooth-out);
+}
+
+.pixl-sheet-backdrop,
+.pixl-modal-backdrop {
+  animation: pixl-fade-in var(--duration-quick) var(--ease-smooth-out);
+}
+
+.pixl-modal {
+  animation: pixl-modal-in var(--duration-fast) var(--ease-smooth-out);
+}
+
+.pixl-sheet-backdrop.is-closing,
+.pixl-modal-backdrop.is-closing {
+  animation: pixl-fade-out var(--duration-quick) var(--ease-smooth-out) forwards;
+}
+
+.pixl-sheet.is-closing {
+  animation: pixl-sheet-out var(--duration-medium) var(--ease-smooth-out)
+    forwards;
+}
+
+.pixl-modal.is-closing {
+  animation: pixl-modal-out var(--duration-quick) var(--ease-smooth-out)
+    forwards;
+}
+
+/* THE KEYFRAMES MUST NOT TOUCH X. The toast is centred by `-translate-x-1/2`,
+   which Tailwind v4 compiles to the standalone `translate` PROPERTY — not to
+   `transform`. Those are two different properties and the browser composes
+   them, so a keyframe that also carried `translate(-50%, ...)` shifted the
+   toast a full width to the left for as long as it ran and snapped it back the
+   moment the animation ended and `transform` returned to `none`. Measured at
+   193px off centre on a 1280px viewport, on every frame. The entrance owns Y
+   only; X belongs to the utility. */
+.pixl-toast {
+  animation: pixl-toast-in var(--duration-fast) var(--ease-smooth-out);
+}
+.pixl-toast.is-leaving {
+  animation: pixl-toast-out var(--duration-quick) var(--ease-smooth-out) both;
+}
+.pixl-toast-top {
+  animation: pixl-toast-in-top var(--duration-fast) var(--ease-smooth-out);
+}
+.pixl-toast-top.is-leaving {
+  animation: pixl-toast-out-top var(--duration-quick) var(--ease-smooth-out) both;
+}
+
+.pixl-caret {
+  animation: pixl-caret-blink 1.15s steps(1, end) infinite;
+  transition: opacity var(--duration-medium) var(--ease-smooth-out);
+}
+
+/* Idle, or the board is not focused: fade out and stop. */
+.pixl-caret.is-idle {
+  animation: none;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixl-caret {
+    animation: none;
+    opacity: 1;
+  }
+  .pixl-caret.is-idle {
+    opacity: 0;
+  }
+}
+
+.toy-frame {
+  position: relative;
+  animation: toy-in var(--duration-slow) var(--ease-smooth-out) both;
+  /* THREE LAYERS, so the body reads as a moulded shell rather than a flat card.
+     A single top-to-bottom ramp is the giveaway of a rectangle with a gradient
+     on it: real plastic gathers light along its crown and turns away at the
+     sides, so the sides need to darken independently of the top-to-bottom fall.
+     Order matters — the crown sits over the side shading, over the base ramp. */
+  background:
+    /* Grain first, so it sits over the shading — a texture under a gradient is
+       a texture nobody sees. */
+    var(--grain),
+    radial-gradient(130% 96% at 50% -12%, rgb(255 255 255 / 0.19) 0%, transparent 56%),
+    linear-gradient(
+      100deg,
+      rgb(0 0 0 / 0.2) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgb(0 0 0 / 0.24) 100%
+    ),
+    linear-gradient(180deg, var(--frame) 0%, var(--frame-2) 100%);
+  border-radius: var(--radius-toy);
+  /* Three separate jobs: light catching the top edge, the body's own thickness
+     as a bottom lip, and the shadow the whole object casts on what it sits on. */
+  box-shadow:
+    /* The crown: a bright hairline where the top face turns over, and a wider
+       soft glow just under it so the turn has thickness rather than being a
+       drawn line. */
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 0 4px 8px -4px rgb(255 255 255 / 0.22),
+    /* The body's own thickness, read as a lip along the bottom. */
+    inset 0 -9px 0 var(--frame-3),
+    inset 0 -14px 12px -10px rgb(0 0 0 / 0.45),
+    /* Sides turning away from the light. */
+    inset 6px 0 14px -12px rgb(0 0 0 / 0.5),
+    inset -6px 0 14px -12px rgb(0 0 0 / 0.5),
+    /* What the whole object casts on what it sits on. */
+    0 14px 32px -10px rgb(0 0 0 / 0.55),
+    0 3px 8px -4px rgb(0 0 0 / 0.4);
+}
+
+/* The product legend, moulded into the brow above the screen — where the toy
+   this is modelled on carries its own. It is the detail that turns a shaded
+   rectangle into a manufactured thing, and it costs no layout: the brow is
+   padding the bezel already reserves, so the legend is positioned into it.
+   Embossed, not printed — a dark line below and a light one above, which is
+   what raised lettering in dark plastic actually does under a light from
+   above. */
+.toy-legend {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em; /* letter-spacing pads the right; recentre for it */
+  color: rgb(255 255 255 / 0.34);
+  text-shadow:
+    0 1px 0 rgb(0 0 0 / 0.55),
+    0 -1px 0 rgb(255 255 255 / 0.1);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* BACKLOG.md §A1 — the rim is EVEN on all four sides. The v9 bottom bezel was
+   fat because the padding was not symmetric, which read as a chin rather than
+   a rim. */
+.toy-bezel {
+  position: relative; /* the legend is positioned into the brow */
+  /* Deeper top and bottom than the sides — a brow above the screen and a
+     little chin under it, as the real toy has. Still nothing like the fat,
+     lopsided bottom BACKLOG.md §A1 was about: that one was uneven by accident,
+     this is deliberate and the two horizontals stay equal. */
+  padding: 22px 15px 20px;
+  /* A WALL around the recess, not a flat mat. Lit along its top face, turning
+     dark at the bottom — which is what a rim standing proud of the frame does,
+     and it gives the screen's own shadow something to fall against. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bezel) 84%, white) 0%,
+    var(--bezel) 30%,
+    color-mix(in srgb, var(--bezel) 86%, black) 100%
+  );
+  border-radius: 14px;
+  box-shadow:
+    inset 0 3px 7px rgb(0 0 0 / 0.55),
+    inset 0 -2px 3px rgb(255 255 255 / 0.08),
+    /* Dropped INTO the body, not laid on it: a hairline of the frame's own
+       shadow all the way round, plus the light catching the far edge of the
+       step below. */
+    0 0 0 1px rgb(0 0 0 / 0.28),
+    0 3px 6px -1px rgb(0 0 0 / 0.4),
+    0 1px 0 1px rgb(255 255 255 / 0.1);
+}
+
+/* BACKLOG.md §A2 — the snub-in.
+   A recess is DARKEST AT THE TOP, where the wall above it occludes the light,
+   and catches a highlight along its bottom inner edge. The prototype ran the
+   screen gradient the other way (light at top), which is the signature of a
+   dome — that is why it kept reading as a hill however much blur was added. */
+/* THE SCREEN, as a recess with glass over it (DESIGN.md §6 — it must read
+   SNUB-IN, never as a hill).
+
+   The recess is built from four walls, not one. Only the top had a shadow
+   before, which describes an overhang rather than a well: a hole casts shadow
+   inward from every edge, deepest from the brow because the light is above, and
+   catches a bright line along its BOTTOM lip where light bounces off the far
+   wall. That bright-bottom/dark-top pairing is the same cue the knob's dish
+   uses, and it is the whole difference between sunken and flat. */
+.toy-screen {
+  position: relative;
+  overflow: hidden; /* the well's canvas is square; the screen's corners are not */
+  background:
+    /* Glass, behind the art: a soft diagonal wash off the upper left. */
+    linear-gradient(
+      146deg,
+      rgb(255 255 255 / 0.32) 0%,
+      rgb(255 255 255 / 0.07) 32%,
+      transparent 52%
+    ),
+    /* The well's own falloff — the ground is slightly further away at the
+       edges than in the middle. Kept faint: any stronger and it reads as a
+       dirty screen rather than a deep one. */
+      radial-gradient(120% 108% at 50% 6%, transparent 44%, rgb(0 0 0 / 0.12) 100%),
+    /* THE SAME LCD AS THE GALLERY'S MINI SCREEN (2026-08-29). It was
+       `--screen`, which is the icon grid's LIT display and therefore flips from
+       near-white to near-black with the theme — a violent change for the one
+       surface you are drawing on. The mini screen is a segment panel: sage when
+       the room is lit, the same panel unlit when it is not, and the drawing is
+       legible on both. One part, one material, on both boards. */
+    linear-gradient(180deg, var(--lcd-2) 0%, var(--lcd) 100%);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 10px 14px -8px rgb(0 0 0 / 0.6),
+    inset 0 3px 4px -2px rgb(0 0 0 / 0.45),
+    inset 7px 0 11px -9px rgb(0 0 0 / 0.45),
+    inset -7px 0 11px -9px rgb(0 0 0 / 0.45),
+    inset 0 -7px 9px -7px rgb(0 0 0 / 0.2),
+    inset 0 -1px 0 rgb(255 255 255 / 0.6);
+}
+
+/* The 3D well, under the grid. Wrapped in a positioned span rather than
+   styled directly: R3F writes `position: relative` onto its own canvas inline,
+   and a wrapper is a cleaner way to place it than fighting that. Inert — the
+   grid above owns every event. */
+.toy-well-canvas {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* The grid sits on the well's FLOOR, inset by exactly the wall width — 4% of
+   the box, which is (1 - FLOOR) / 2 from ScreenMesh. Applied whether or not the
+   canvas renders, so there is only ever one layout to keep in step. */
+.toy-well-floor {
+  position: absolute;
+  inset: 4%;
+}
+
+/* The reflection ON the glass rather than under it. Deliberately faint — this
+   layer sits over the drawing, and a screen you cannot read through is a
+   worse screen however convincing its glass. */
+.toy-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    146deg,
+    rgb(255 255 255 / 0.1) 0%,
+    rgb(255 255 255 / 0.03) 26%,
+    transparent 46%
+  );
+}
+
+/* Game Boy A/B: a soft light dome seated in a dark recessed well. */
+.toy-well {
+  padding: 3px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 35%, var(--well-2), var(--well));
+  box-shadow:
+    inset 0 2px 4px rgb(0 0 0 / 0.55),
+    0 1px 0 rgb(255 255 255 / 0.12);
+}
+
+.toy-button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  /* A FIXED DARK INK, not `--frame-3` — the same correction `.pixl-key` needed
+     and this class was missed by. The cap's face is a light dome in BOTH
+     themes, but `--frame-3` is the chassis's deepest tone, which INVERTS: it
+     is a pale silver in light mode, so every glyph on the toy was painted
+     white-on-white there and read correctly only in dark. A constant face
+     takes a constant ink. */
+  color: #1b1d22;
+  background: radial-gradient(circle at 38% 28%, #fdfdff 0%, #dfe3f0 58%, #bcc2d8 100%);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    inset 0 -2px 3px rgb(0 0 0 / 0.18),
+    0 2px 3px rgb(0 0 0 / 0.4);
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* "Press sinks ~1px only" — a deeper travel reads as a key, not a game button. */
+.toy-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.6),
+    inset 0 -1px 2px rgb(0 0 0 / 0.2),
+    0 1px 1px rgb(0 0 0 / 0.35);
+}
+
+/* A latched toggle rests in the same shallow click a momentary press makes,
+   and simply sits a shade darker. It is the same cap, held down — not a
+   different, blue button. Depth here is the state; colour would be a second
+   signal saying the same thing louder. */
+.toy-button[aria-pressed="true"] {
+  transform: translateY(1px);
+  /* Distinctly darker than the resting cap, not a shade off it. Depth alone
+     was carrying the whole on/off signal, and a 1px sink is easy to miss at a
+     glance — value difference is what reads across the frame.
+
+     WHITE INK ON A DARK FACE, which is `.pixl-key`'s latched rule arriving
+     here. The old ramp bottomed out at #7b849f — a mid tone, which fails BOTH
+     ways: the dark ink measures 4.6:1 on it with no margin, white 3.7:1. So the
+     face moves rather than the ink, and every stop below clears AA against
+     white. */
+  color: #ffffff;
+  background: radial-gradient(circle at 40% 76%, #656e88 0%, #565e78 58%, #454c62 100%);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.6),
+    inset 0 -1px 2px rgb(0 0 0 / 0.2),
+    0 1px 1px rgb(0 0 0 / 0.35);
+}
+
+.toy-button:disabled {
+  opacity: 0.42;
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.4);
+}
+
+/* The groove, and the handle that rides in it. */
+.toy-groove {
+  position: relative;
+  /* THE TRACK IS A CONTAINER, so the handle can be positioned by a transform.
+     A `translateX` percentage resolves against the ELEMENT's own width (34px),
+     not its track, which is the one thing `left: %` gave for free — so moving
+     off `left` needs a length that still refers to the groove. `cqw` is that
+     length. */
+  container-type: inline-size;
+  /* A drag across the groove must wipe, never select. Without this the label
+     and everything past it highlights as the pointer travels. */
+  user-select: none;
+  -webkit-user-select: none;
+  height: 26px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--well-2), var(--well));
+  box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.55);
+}
+
+.toy-groove-handle {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 34px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 40% 25%, #fdfdff, #dfe3f0 60%, #bcc2d8);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    0 2px 3px rgb(0 0 0 / 0.45);
+  /* A TRANSFORM, NOT `left` (2026-09-04). `left` is a layout property, and this
+     is the most drag-heavy gesture in the product — the handle is dragged the
+     full width of the board while the drawing erases column by column under it.
+     The gallery's size rail derived this rule and wrote it down ("the
+     alternative is `bottom: X%`, which relayouts the element on every frame of
+     every drag"); it was never back-ported here. Same shape as the format
+     rule's width tween: a lesson learned on one consumer and not applied to the
+     second. */
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* Knobs (DESIGN.md §6). The real toy's are cream plastic cylinders with a
+   milled rim and a smooth domed cap — not metal discs. Only the DIAL turns;
+   the coloured ring and the housing shadow stay put, which is what reads as a
+   dial seated in a body rather than a spinning sticker. */
+/* The knob's HOUSING — a dark socket the dial is seated in.
+   The coloured ring is a child rather than this element's own background,
+   because the ring is an annulus and a mask would clip the seating shadow along
+   with the fill.
+
+   THE SOCKET IS WHY THIS HAS A FILL AT ALL. The gap between ring and dial was
+   left transparent at first, and on a blue toy transparent means BLUE — so the
+   knob wore a bright blue outline that read as a stray border rather than as
+   air. A recess is what is actually there: the dial is mounted through the
+   panel, so the gap is the hole it turns in. */
+.toy-knob {
+  position: relative;
+  /* DARK, so the gap between dial and ring reads as the hole the dial turns in.
+     At the plain `--well-2` tone the 12% gap came back as a light grey COLLAR
+     around the knob — a band of panel, not a recess — which is the opposite of
+     what the reference shows there. A groove is dark. */
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--well) 62%, black) 0 88%,
+    transparent 88%
+  );
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  /* Seated on the frame, thrown down-right like everything else on the toy.
+     BOX-shadow, never `filter: drop-shadow()`: a filter has to rasterise the
+     element to derive its alpha mask, and rasterising a WebGL canvas whose
+     drawing buffer was already composited away yields nothing — so the whole
+     knob disappears. Never put a filter on an ancestor of a demand-rendered
+     canvas. */
+  box-shadow:
+    0 8px 16px -6px rgb(0 0 0 / 0.6),
+    1px 3px 5px rgb(0 0 0 / 0.4),
+    /* The socket's own lip: light along the bottom, shadow along the top, which
+       is the signature of a hole rather than a disc. */
+    inset 0 2px 3px rgb(0 0 0 / 0.55),
+    inset 0 -1px 2px rgb(255 255 255 / 0.18),
+    inset 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+
+/* Held. IT DOES NOT GROW — a knob mounted through a panel cannot get bigger
+   because you took hold of it, and the scale read as the control zooming rather
+   than as a grip. What is left is the seating shadow deepening, which is what a
+   part pressed into its socket actually does. */
+.toy-knob[data-grabbed="true"] {
+  box-shadow:
+    0 12px 22px -6px rgb(0 0 0 / 0.65),
+    0 3px 6px rgb(0 0 0 / 0.4),
+    inset 0 2px 4px rgb(0 0 0 / 0.6),
+    inset 0 0 0 1px rgb(0 0 0 / 0.35);
+}
+
+/* The value ring: hue on the left knob, black -> colour -> white on the right.
+   A true annulus with clear air between it and the dial, so it reads as a scale
+   the knob turns against rather than a coloured edge of the knob itself. */
+.toy-knob-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  /* THE RING STANDS OFF THE DIAL, mirroring the reference: a thin arc with
+     clear air between it and the knob, not a collar around it. Inner edge at
+     90% of the housing radius against a dial reaching 78% — a 12% gap and a
+     10% band.
+
+     It was tightened to a 2% seam for one pass on a misread of the reference,
+     which welded the scale to the knob and made the coloured band look like a
+     painted edge of the dial rather than something the dial turns against. */
+  -webkit-mask: radial-gradient(closest-side, transparent 0 90%, #000 90%);
+  mask: radial-gradient(closest-side, transparent 0 90%, #000 90%);
+}
+
+/* THE DIAL, in CSS, for when WebGL is unavailable.
+   It models the same solid the mesh does — a smooth shoulder with a shallow
+   DOMED face inside it — because the two have drifted apart before and a
+   fallback that looks like a different object is worse than no fallback. No
+   milling: the reference knob is moulded, not serrated.
+
+   IT IS A DOME NOW, NOT A DISH (2026-08-29, against the reference). The dished
+   face was the Etch A Sketch's; the device this board became is a control
+   surface whose knobs are plain domed caps with a crisp moulding seam and a
+   pip. The dish is not gone by accident — the whole opposed-gradient argument
+   below inverted with it, and the note stays because getting a dome's gradient
+   the way round of a dish is the same mistake in the other direction. */
+.toy-knob-dial {
+  position: absolute;
+  /* 11%, so the dial reaches 78% of the housing against a ring starting at 90%.
+     `inset: X%` leaves a dial of radius (50 - X)/50 of the housing's, which is
+     the arithmetic to redo if either number moves — and the mesh canvas in
+     Knob.tsx carries the SAME inset, or the two builds draw the knob at two
+     sizes (they did). */
+  inset: 11%;
+  border-radius: 999px;
+  /* Tokens, because the knob FOLLOWS the chassis: it is moulded in the case's
+     own plastic, so it is silver on the silver body and charcoal on the
+     charcoal one (§2). Kept in the same tonal band as the mesh — the two builds
+     have drifted before, and tone is part of that. */
+  background: linear-gradient(
+    176deg,
+    var(--knob-hi) 0%,
+    color-mix(in srgb, var(--knob-hi) 55%, var(--knob-mid)) 34%,
+    var(--knob-mid) 68%,
+    var(--knob-lo) 100%
+  );
+  box-shadow:
+    /* the moulding seam where the dial meets its socket */
+    inset 0 0 0 1px rgb(0 0 0 / 0.45),
+    /* a dome: lit along the crown, turning away at the foot */
+    inset 0 2px 2px rgb(255 255 255 / 0.3),
+    inset 0 -4px 6px -2px rgb(0 0 0 / 0.32),
+    0 2px 4px rgb(0 0 0 / 0.45);
+}
+
+/* THE ONLY THING THAT TURNS IS THE PIP.
+   The rotation used to sit on `.toy-knob-dial`, which took the dome's whole
+   lighting round with it — the crown highlight and the shadow under the foot
+   swung to the side and then underneath, so the light appeared to orbit the
+   room while the knob stood still. A surface of revolution turning about its
+   own axis does not change how it is lit, which is why the MESH build never had
+   this: it is a real lathe, and rotating it is a no-op on the shading. The CSS
+   build faked the solid with a baked gradient, so it had to be told.
+
+   Same inset as the dial, so the pip's own percentages land in the same
+   place they always did. */
+.toy-knob-spin {
+  position: absolute;
+  inset: 11%;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* THE FACE inside the shoulder — a shallow DOME, so its gradient runs bright at
+   the top to dark at the bottom. That is the exact inverse of the dish this
+   replaced, and the inversion is the point: a bowl shadows its NEAR wall and
+   catches the light on its far one, a dome does the opposite, and getting
+   either one backwards is what makes a raised face read as a hole. The rule sat
+   inverted for several passes when it WAS a dish; it is worth knowing that the
+   same mistake is available in this direction.
+
+   What the face buys at all is the concentric seam the reference knob shows
+   just inside its rim — without it the dial is one undifferentiated disc. Sized
+   at 76% of the dial, matching FACE_RADIUS / BODY_RADIUS in KnobMesh, so the
+   two builds describe one object. */
+.toy-knob-cap {
+  position: absolute;
+  inset: 12%;
+  border-radius: 999px;
+  background: linear-gradient(
+    178deg,
+    var(--knob-face-hi) 0%,
+    color-mix(in srgb, var(--knob-face-hi) 55%, var(--knob-face-lo)) 55%,
+    var(--knob-face-lo) 100%
+  );
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.35),
+    inset 0 -2px 4px -1px rgb(0 0 0 / 0.28),
+    0 0 0 1px rgb(0 0 0 / 0.16);
+}
+
+/* THE POINTER — A DOT, moulded into the shoulder (2026-08-29). It was a
+   rectangular notch straddling the dish's edge; the reference knob carries a
+   small round pip up on the shoulder instead, and a dot has no orientation of
+   its own to disagree with the angle it is reporting. It sits ON the shoulder
+   rather than across the lip, which is also where you can actually see it once
+   the dial goes dark.
+
+   Its ink is a token because it inverts with the knob: a pale pip on the dark
+   dial, a dark one on the pale dial. */
+.toy-knob-mark {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  width: 13%;
+  height: 13%;
+  border-radius: 999px;
+  background: var(--knob-mark);
+  box-shadow:
+    inset 0 1px 1px rgb(0 0 0 / 0.3),
+    0 1px 1px rgb(255 255 255 / 0.12);
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* The screen and the groove under it, sized as ONE column, so the groove is
+   always exactly the width of the board (DESIGN.md §6).
+   
+   Width is driven by whichever runs out first — the column, or the height the
+   viewport has left. Doing it the other way (height-driven, clamped by width)
+   silently breaks the square when the clamp bites, which is what left the board
+   tall with dead space beside it. `--toy-chrome` is everything vertical that is
+   NOT the board: page padding, the dock, the frame's own padding, the knob row,
+   and the groove. */
+/* The board column: exactly the board's width, so the groove under the screen
+   matches it. */
+.toy-stack {
+  inline-size: var(--board-size);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-block-size: 0;
+}
+
+/* The colour lane spans the whole screen ROW — outer edge of the left tool
+   column to outer edge of the right one.
+
+   100%, NOT board + a computed gutter. The frame is width:fit-content, so its
+   content box is already exactly the widest child, and that child is the screen
+   row. Asking for all of it is therefore correct BY CONSTRUCTION at every
+   breakpoint, including the one where the tool columns move above and below the
+   board and the row narrows to the board alone. Adding up button widths and
+   gaps gave the same answer only while nobody touched those numbers — and a
+   stale addend is invisible, because the arithmetic still looks right. */
+.toy-lane {
+  inline-size: 100%;
+}
+
+/* THE MOUNTING PAD each tool column sits on. Real hardware does not drop
+   buttons straight into a flat shell — it raises a boss around them, both to
+   give the moulding somewhere to thicken and to group the controls by touch.
+   Here it does the second job: it says the four buttons on this side are one
+   set, which is what the four-a-side symmetry is for. */
+.toy-rail {
+  border-radius: 999px;
+  padding: 12px 7px;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.09) 0%,
+    rgb(255 255 255 / 0.02) 45%,
+    rgb(0 0 0 / 0.09) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3),
+    0 2px 4px -1px rgb(0 0 0 / 0.28);
+}
+
+/* The tool strip scrolls; its scrollbar would sit on the blue frame and read as
+   a defect. The arrows and the drag are the affordance. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* THE CATEGORY, WEARING ITS OWN TINT — the same index the chip row is, so the
+   bar says which shelf the icon came off in the colour that already means it.
+   Filled rather than outlined, because this states a fact; an outline is what
+   the chips use for "not chosen", and there is nothing to choose here.
+
+   IT REPLACED THE TAGS. BACKLOG §D called them the weakest thing on the bar:
+   search already matches on them, so they are shown to someone who has by
+   definition already found the icon, and they were the variable-width element
+   forcing the whole bar to scroll. §D's rule for this bar is that anything
+   added REPLACES rather than appends, and this is that rule being used. */
+.pixl-cat {
+  display: inline-block;
+  flex: none;
+  max-width: 100%;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0;
+  /* NOTCHED, NOT ROUNDED (2026-09-12). A capsule is a vector shape; this row
+     is printed on the same grid the icons are. One cell out of each corner. */
+  clip-path: var(--px-notch);
+  /* ITS OWN TYPE, since it is a direct child of the identity column rather
+     than a span inside a sized paragraph. A label that took the column's
+     inherited size would be set in the NAME's 20px. */
+  font-family: var(--font-data), monospace;
+  font-size: var(--text-caption);
+  line-height: 1.4;
+  color: var(--cat-ink);
+  background: var(--cat);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Moulded surface for anything that is not already carrying the frame's own
+   background stack. */
+/* ============================================================================
+   Overlay motion — sheet, modal, toast.
+
+   All entry-only: these surfaces unmount on close, so there is nothing left to
+   animate out. Where an exit matters most (the sheet, which the thumb is
+   still resting on) the backdrop fade covers the gap.
+
+   Durations follow the shared scale by USAGE, not by nearest number: a panel
+   travelling the full height of the screen opens slower (400ms) than a modal
+   scaling in place (250ms), because it covers more distance.
+
+   The global reduced-motion rule collapses every one of these to ~0s.
+   ========================================================================= */
+
+@keyframes pixl-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pixl-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pixl-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--scale-modal));
+    filter: blur(var(--blur-small));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* TOAST MOTION — transform and opacity ONLY.
+   The entrance used to carry a 2px blur, and `filter` is the one property here
+   that cannot run on the compositor: it forces the element to be rasterised
+   again on every frame. On a route already holding two WebGL canvases that is
+   exactly the cost you feel, and it is why this read as laggy rather than slow.
+   Blur belongs on a swap or a slide, not on a small surface arriving.
+
+   Timing follows the house rule that closes are faster than opens: in on
+   --duration-fast (250ms), out on --duration-quick (150ms). The old 350ms
+   entrance was the toast-CLOSE beat spent on the open, which is why a
+   confirmation felt like it took a moment to decide to appear. */
+@keyframes pixl-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-toast));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The exit travels HALF as far as the entrance. Arriving is worth watching;
+   leaving should get out of the way rather than fling itself off-screen. */
+@keyframes pixl-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--distance-toast) * 0.5));
+  }
+}
+
+/* --- Exits ---------------------------------------------------------------
+   Mirrors of the entrances, on the faster close clock. `forwards` holds the
+   final frame so the surface does not flash back to its resting state in the
+   moment before React unmounts it. */
+
+@keyframes pixl-sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes pixl-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pixl-modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(var(--scale-modal));
+  }
+}
+
+/* The error tone enters from ABOVE, because it lives at the top. A toast that
+   rises into place at the top of the screen has travelled the wrong way and
+   reads as the bottom one misplaced. */
+@keyframes pixl-toast-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--distance-toast) * -1));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pixl-toast-out-top {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--distance-toast) * -0.5));
+  }
+}
+
+/* ============================================================================
+   Composer toy (DESIGN.md §6). Everything here is scoped to .composer-scope —
+   The frame, bezel, well and screen tokens must never appear in the shell (§7).
+   ========================================================================= */
+
+/* The keyboard caret behaves like a text cursor: it blinks while you are using
+   it and gets out of the way when you are not.
+   
+   Blinking is what tells you it is a CURSOR and not a mark you have drawn —
+   without it, a static blue outline on a pixel grid reads as part of the art.
+   And it retires after a few idle seconds because a cursor that blinks forever
+   is a permanent distraction on a surface whose whole job is showing you an
+   icon (WCAG 2.2.2 exempts a text cursor from the blink limit; retiring it
+   sidesteps the argument entirely). */
+@keyframes pixl-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE COMPOSER — the instrument (2026-09-19)
+
+   Everything below this line styles `/create` and nothing else. It is appended
+   after the shell so that where a selector exists in both — `.toy-frame`,
+   `.toy-bezel`, `.toy-stack` — this definition wins on source order, which is
+   what makes the reskin an overlay rather than a rewrite.
+
+   RESTORED FROM A BACKUP after a scripted edit deleted roughly two thirds of
+   this stylesheet. The lesson is recorded because it cost most of a session:
+   `str.replace` on a 6,000-line file is not an edit, it is a gamble. A needle
+   like ".scope-rail" matches ".composer-scope .scope-rail" first; a slice
+   between two markers silently reverses when the end marker appears earlier;
+   and `str.replace("", x)` inserts x between every character. Each of those
+   happened here, and none of them raises an error — the file just gets quietly
+   smaller, and the failure shows up as "nothing is clickable" an hour later.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.composer-scope {
+  /* Clears the floating dock, which the gallery does not have. */
+  --toast-bottom: 6.5rem;
+  /* Everything horizontal that is NOT the board: page padding, the frame's
+     padding, both tool columns, and their gaps. */
+  --toy-side: 30rem;
+  /* Everything vertical that is NOT the board: page padding, the frame's
+     padding, the bezel's brow and chin, the groove, the knob row, and the
+     clearance the floating dock needs.
+
+     THIS BASE DECLARATION IS LOAD-BEARING. It was once only set inside the
+     narrow-screen media query, which left it undefined above 640px — and an
+     undefined var makes the calc invalid, which makes the min() invalid, which
+     makes --board-size invalid, which silently drops the board back to `auto`.
+     The failure is invisible: the layout still looks plausible, so the sizing
+     rule can be dead for weeks while every calculation about it reads fine. */
+  /* ONE RAIL WIDTH, read by both rails AND by the history pills, so the four
+     columns of this case line up: pill / slider / pill under rail / screen /
+     rail. Declared up here rather than on `.scope-rail` for exactly that — the
+     pills are not in a rail. */
+  /* 13rem, up from 7.5 (2026-09-20). A 120px rail was what made every fitting
+     on it small: the readout came down to 9px digits to seat seven characters,
+     and a 40px key sat beside a 76px dial. The pads now carry controls at the
+     size they were designed at, and `--toy-side` grew with it — the two are one
+     measurement, exactly as `--knob-size` and `--toy-chrome` are. */
+  --rail-w: 13rem;
+  --toy-chrome: 12rem;
+  /* THE DIAL'S DIAMETER, DECLARED BESIDE THE CHROME IT COSTS, and never apart
+     from it (2026-09-19). The colour instrument is the tallest thing in that
+     `--toy-chrome` budget — a readout, a row of three knobs and their legends —
+     so the two numbers are one decision written twice, and every tier below
+     restates BOTH. Change one alone and the board either overflows the window
+     or leaves a band of empty frame under itself, and neither failure says
+     which value was wrong. */
+  /* 6rem, up from 5.5 (2026-09-20, by request). It costs the board NOTHING at
+     this tier and that was measured rather than assumed: the rail only holds
+     the bay open once it is taller than the board, and at 1440x900, 1024x768
+     and 768x600 the board reads 445 / 437 / 202 unchanged from 5.5rem all the
+     way to 6.5. The two short tiers below are left alone, because those are the
+     windows where the rail IS the binding constraint.
+
+     THE KEYS COME WITH IT, and that is the rule working rather than a side
+     effect: `.scope-switch-well` is `--knob-size * 0.86`, the dial's own field,
+     so a key and a dial are one object across every tier and neither can be
+     retuned without the other. */
+  --knob-size: 6rem;
+  /* The board's edge length, computed ONCE. Deliberately no percentages: the
+     frame shrinks to fit its contents, so a percentage here would be circular.
+     Sizing off the viewport breaks the cycle and lets the whole toy scale
+     down together instead of the frame standing wide around a small board. */
+  --board-size: min(
+    /* THE BOARD'S CEILING, RAISED FROM 24rem TO 32rem (2026-09-19, by
+       request: "make the room filled, not only pitch black"). The cap was the
+       binding constraint on every desktop window — the toy sat at 488px in a
+       900px viewport with the rest of the page empty around it, because the
+       ceiling bit long before the height budget did.
+
+       32rem is 512px, ~46px a cell, and it is where `--toy-chrome` takes over
+       again: at 12rem of chrome plus the scope's own padding the frame needs
+       about 700px of window, so a 768-tall laptop still draws the toy at full
+       size and anything shorter shrinks it the way it always did. */
+    32rem,
+    calc(100dvh - var(--nav-h) - var(--toy-chrome)),
+    calc(100vw - var(--toy-side))
+  );
+  /* Gridlines on the panel. The shell's `--color-border` would vanish on it,
+     so the composer redefines the same role — and points it at the LCD's own
+     line, which inverts with the panel: a black hairline is invisible on the
+     unlit one. */
+  /* The fine mesh: the etched rule, not the emitted light. */
+  --board-line: var(--crt-graticule);
+  /* THE CARET, IN THE ACCENT. It drew in `--color-accent` — the shell's blue,
+     which used to be repointed to the chassis ink by `.pixl-pad` and lost that
+     when the pad came off. On the tube it rendered as a near-black box around
+     the cell under the cursor: a cursor you cannot see on the one surface it
+     exists to point at.
+
+     A TOKEN OF ITS OWN rather than repointing `--color-accent` on the scope,
+     because the dock is inside this scope too and is deliberately out of the
+     reskin's way — repointing the accent here would have reached it. */
+  --crt-caret: var(--scope-neon);
+  /* The drawing surface. Lifted close to white on 2026-08-20 — the old
+     #cfd2cb read as a dusty grey slab and made every colour drawn on it look
+     muddier than the hex actually was. A trace of green is kept so it still
+     reads as a physical screen rather than a blank page. */
+  /* Moulded plastic grain. A flat gradient is the single clearest tell that a
+     shape was drawn in CSS rather than injection-moulded, and no amount of
+     shadow work substitutes for surface. Sits in the frame's BACKGROUND stack,
+     never as an overlay: an overlay with a blend mode over a demand-rendered
+     WebGL canvas is how the knobs disappeared once already.
+
+     Two things about the data URI are load-bearing. The `#` in `url(#g)` MUST
+     be percent-encoded — inside a data: URI a literal `#` opens the fragment,
+     so the SVG is truncated mid-attribute and simply never paints, with no
+     error anywhere. And `color-interpolation-filters` is pinned to sRGB,
+     because the default is linearRGB and the alpha the colour matrix derives
+     then lands nowhere near the number written here. Strength was swept against
+     the frame's own blue: 0.05 is invisible, 0.16 starts muddying the colour. */
+
+  /* ═══ THE INSTRUMENT PALETTE (2026-09-19) ═══════════════════════════════════
+
+     THE COMPOSER IS A BENCHTOP OSCILLOSCOPE NOW, and this is the whole of its
+     colour. Every value the reskin introduced is here, so the two things most
+     likely to be swapped — the phosphor and the accent — are one line each.
+
+     IT DOES NOT INVERT WITH THE THEME, AND THAT IS THE ONE RULE §2 THIS BREAKS.
+     §2's chassis is silver in light and charcoal in dark, on the argument that
+     they are one device in two finishes. An instrument is not: a 465B is a dark
+     instrument in a lit room, and the brief pins that. So the toy joins the hero
+     as a surface that paints its own world rather than taking the page's —
+     §1 already carries that precedent, and this is the second case of it.
+
+     The consequence is stated rather than discovered: on this route
+     `data-theme` changes the DOCK and nothing above it, and the contrast suite
+     therefore measures the same numbers in both themes here. That is correct,
+     not a gap in the test. */
+
+  /* THE CASE — Game Boy off-white (2026-09-19, by reference).
+     It was charcoal, borrowed from the scope. The reference now is the DMG:
+     a warm light-grey shell, a mid-grey bezel around an olive screen, and
+     magenta caps. The control LANGUAGE stays the oscilloscope's — routed
+     panels, knurled knobs, printed scales — and only the colour changes,
+     which is the split the brief drew in the first place.
+
+     IT STILL DOES NOT INVERT WITH THE THEME, and that is the one rule §2 this
+     breaks. §2's chassis is silver in light and charcoal in dark on the
+     argument that they are one device in two finishes; a DMG is one device in
+     one finish. The toy joins the hero as a surface that paints its own world,
+     which §1 already carries a precedent for. */
+  /* Moulded plastic grain, shared by the toy and the shell. A flat gradient is
+     the clearest tell that a shape was drawn in CSS rather than injection
+     moulded, and no amount of shadow work substitutes for surface.
+
+     Two things about the data URI are load-bearing. The `#` in `url(#g)` MUST
+     be percent-encoded — inside a data: URI a literal `#` opens the fragment,
+     so the SVG truncates mid-attribute and simply never paints, silently. And
+     `color-interpolation-filters` is pinned to sRGB, because the default is
+     linearRGB and the alpha the colour matrix derives then lands nowhere near
+     the number written here. */
+  --grain: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20color-interpolation-filters='sRGB'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.65'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%200.12%200.12%200.12%200%20-0.1'/%3E%3C/filter%3E%3Crect%20width='180'%20height='180'%20filter='url%28%23g%29'/%3E%3C/svg%3E");
+
+  /* GRAPHITE (2026-09-20, by request). The shell was the console's off-white,
+     and on a light body the screen is not the brightest thing you are looking
+     at — which on the one route whose whole job is drawing is the wrong way
+     round. It does NOT invert with the theme: an object has one finish. */
+  --scope-case: #3a3d44;
+  --scope-case-hi: #4c505a;
+  --scope-case-lo: #282b31;
+  /* A region routed into the shell, one step down from it. */
+  --scope-panel: #303338;
+  --scope-panel-lo: #24262b;
+  /* THE BACK SHELL. The case is two halves with a seam, and this is the half
+     you see as a rim around the front one — the construction that makes a
+     moulded object read as moulded rather than as a rounded rectangle. */
+  --scope-back: #16181c;
+  /* Silkscreen. THE INK INVERTS WITH THE CASE (DESIGN.md §2) — a deep indigo
+     was right on the off-white shell and is unreadable on graphite. Measured on
+     the pad's own floor, which is the darkest thing a legend ever sits on. */
+  --scope-print: #dfe2ea;
+  /* Solved against the panel, not picked. On the charcoal case this was a
+     light grey; inverted to a light shell it measured 2.46:1 on the panel's
+     darkest stop — the exact defect §2 records for `--toy-ink`, in the other
+     direction. Clears 5.1:1 now and stays a step off `--scope-print`. */
+  --scope-print-dim: #aab0bc;
+
+  /* THE SCREEN. DMG glass, and CALMER than the reference's own: a saturated
+     olive is what the console shipped with, and it is the one surface here that
+     art gets drawn on. Pulled toward grey so a red cell reads as red rather
+     than as a colour fighting its ground.
+
+     `--crt-phosphor` used to sit here as "the trace colour" and had no reader
+     at all — the face, its falloff and the etched rule are the whole screen.
+     Swapping the phosphor is these three values and nothing downstream.
+
+     `--crt-graticule-axis` went with the centre cross (2026-09-19). It was the
+     brighter ink the two centre axes and their calibration ticks were drawn in,
+     and it had no second reader — a token kept for a part that does not exist
+     is worse than a deleted one (§2). */
+  --crt-glass: #a9b291;
+  --crt-glass-lo: #919a78;
+  --crt-graticule: rgb(38 44 22 / 0.24);
+
+  /* ONE ACCENT — the DMG's magenta, taken off the pink side. §7's
+     single-accent rule bounds it: the button caps, the armed lamp and a focus
+     ring. Never a surface, never icon art. */
+  --scope-neon: #9a2257;
+
+  /* Knob metal. Darker than the case, because a control has to read as a
+     separate part standing off the panel it is mounted through (§2's third
+     shelf) — and knurling is cut INTO that metal, so the knurl's own light and
+     dark are mixes of these rather than literals. */
+  --knob-metal-hi: #5b5770;
+  --knob-metal: #413d55;
+  --knob-metal-lo: #2b283a;
+  --knob-knurl-hi: rgb(255 255 255 / 0.18);
+  --knob-knurl-lo: rgb(0 0 0 / 0.4);
+}
+
+/* Narrow screens: no tool columns beside the board, one strip under it. */
+@media (max-width: 639px) {
+  .composer-scope {
+    --toy-side: 4rem;
+    /* NO SHOULDERS BELOW `sm` — every tool is in the strip there — so the case
+       reserves nothing for them. Left at its desktop value this was a 22px band
+       of empty shell above the frame on the one layout with the least height to
+       spare. */
+    --toy-chrome: 21.25rem;
+    --knob-size: 3.5rem;
+  }
+
+  /* THE DESKTOP SCALE-UP DOES NOT COME DOWN HERE (2026-09-20). Growing the rail
+     to 13rem let every fitting on it be drawn at its real size, and on a phone
+     the colour rail is a ROW under the screen rather than a column beside it —
+     so each of those bumps is height taken straight off the board, and together
+     they pushed the case 67px past the window. The case does not scroll by
+     rule, so that is not a smaller board, it is a clipped one.
+
+     Measured, not guessed: 390x844, `.toy-frame` at 911 against 844 of room. */
+  .composer-scope .scope-panel {
+    padding: 0.5rem;
+  }
+
+  .composer-scope .scope-legend {
+    font-size: 6px;
+  }
+
+  .composer-scope .scope-readout-digits,
+  .composer-scope .scope-readout-input {
+    font-size: 11px;
+  }
+
+  /* The key and the colour window keep matching widths down every tier — that
+     pairing is what makes them read as one fitting rather than two. */
+  .composer-scope .scope-pick,
+  .composer-scope .scope-swatch-window {
+    width: 2rem;
+  }
+
+  .composer-scope .scope-pick {
+    height: 1.25rem;
+  }
+
+  .composer-scope .scope-readout-housing {
+    gap: 0.25rem;
+    padding: 0.375rem;
+  }
+}
+
+/* THE NARROW END, where the colour rail runs out of room to be a ROW.
+
+   Below `sm` the rail lies down under the screen — readout, then three dials,
+   across the width. At 320px there are 280px to put them in, and a readout wide
+   enough for seven characters plus three 48px dials does not fit, so the row
+   WRAPS and the case grows by a whole band. Measured at 320x568: the frame came
+   out 96px past a window the toy is forbidden to scroll, which is not a smaller
+   board, it is a clipped one.
+
+   So the readout goes back to the size it was before the rail grew. It is the
+   one fitting here whose width is set by its CONTENT rather than by a token,
+   which makes it the one that decides whether the row wraps. */
+@media (max-width: 400px) {
+  .composer-scope .scope-readout-digits,
+  .composer-scope .scope-readout-input {
+    font-size: 9px;
+  }
+
+  .composer-scope .scope-readout-window {
+    padding: 0.25rem 0.3125rem;
+  }
+
+  .composer-scope .scope-readout-input {
+    padding: 0.25rem 0.3125rem;
+  }
+
+  .composer-scope .scope-pick,
+  .composer-scope .scope-swatch-window {
+    width: 1.5rem;
+  }
+
+  .composer-scope .scope-pick {
+    height: 1.125rem;
+  }
+}
+
+/* SHORT WINDOWS SHRINK THE INSTRUMENT, NOT ONLY THE BOARD (2026-09-19).
+   `--board-size` has always given height back on a short window, and on its own
+   that is the wrong half: the frame stands full height around a board that has
+   shrunk to nothing, because every other part of the toy is a constant. So the
+   dials come down with it.
+
+   THE THRESHOLD MOVED FROM 40rem TO 34rem, AND THE BUDGET WITH IT, because the
+   colour instrument left the bottom of the case and became a RAIL beside the
+   screen. A deck is height the board has to give up; a rail stands in the
+   board's own row and costs nothing until it is taller than the board is. So
+   full-size dials now reach down to about 545px of window where they used to
+   stop at 640.
+
+   34rem IS WHERE THE RAIL BECOMES THE BINDING CONSTRAINT, not a taste. At
+   `--knob-size: 5.5rem` the colour rail's contents are about 341px — a readout
+   and three dials — and the bay's height is `max(board, rail)`. Once the board
+   falls under that the rail holds the row open and shrinking the board further
+   buys nothing, which is the same failure this file recorded when the old tool
+   columns were a fixed 288px.
+
+   BOTH NUMBERS, TOGETHER. A tier that moved `--knob-size` and left
+   `--toy-chrome` behind would be reserving height for a knob that is no longer
+   that size, which is invisible: the layout still looks plausible and the board
+   is simply smaller than it needed to be. Every value here is MEASURED, not
+   derived on paper — `CASE height - board size + the scope's own padding`, per
+   tier, with the board pinned at its cap so the reading is the real overhead.
+   The last set was calibrated against a full-width control deck that
+   no longer exists and over-reserved by 180px at base, which is exactly the bug
+   the paragraph above warns about, found by re-measuring rather than by
+   looking. */
+@media (min-width: 640px) and (max-height: 34rem) {
+  .composer-scope {
+    --toy-chrome: 12rem;
+    --knob-size: 4rem;
+  }
+
+  /* AND BOTH RAILS COME DOWN WITH THE DIALS. They are one part now — same
+     width, same gap, same construction — so one rule brings them together and
+     they cannot drift out of symmetry on a short window, which is the exact
+     thing the previous layout got wrong. */
+  .composer-scope .scope-rail {
+    gap: 0.375rem;
+  }
+
+  /* The mode lamp comes down with them. At the desktop offset it lands exactly
+     on the pad's top edge here, measured: 0px of margin, which reads as a lamp
+     sitting on the seam rather than set into the panel. */
+  .composer-scope .scope-lamp {
+    top: -0.5rem;
+  }
+}
+
+/* ── The bottom row ─────────────────────────────────────────────────────── */
+
+/* UNDO, THE CLEAR SLIDER, REDO — the console's Start and Select either side of
+   a long channel. The slider keeps `--board-size`, so it still lines up under
+   the screen, and each pill takes a rail's width so the bottom row is the same
+   three columns as the bay above it. */
+.scope-sill {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* A START/SELECT PILL — the one shape on this case that is neither a round key
+   nor a square window, which is what the console uses it for: the two controls
+   that are about the session rather than the picture. */
+.scope-pill {
+  display: grid;
+  place-items: center;
+  width: var(--rail-w);
+  height: 1.75rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  font-family: var(--font-pixel), monospace;
+  font-size: 8px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--scope-print);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.45);
+  background: linear-gradient(180deg, var(--scope-case-hi) 0%, var(--scope-case) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    inset 0 -1px 0 rgb(0 0 0 / 0.4),
+    0 1px 0 rgb(0 0 0 / 0.5),
+    0 2px 4px -1px rgb(0 0 0 / 0.5);
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* Instant down, eased back up — the fix every pressable part here needed: a
+   150ms transition on the way IN means a normal click reverses before it
+   arrives. */
+.scope-pill:active:not(:disabled) {
+  transition-duration: 0s;
+  transform: translateY(1px);
+  background: linear-gradient(180deg, var(--scope-panel-lo) 0%, var(--scope-panel) 100%);
+  box-shadow:
+    inset 0 2px 4px -2px rgb(0 0 0 / 0.4),
+    inset 0 -1px 0 rgb(255 255 255 / 0.2);
+}
+
+.scope-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.scope-pill:focus-visible {
+  outline: 2px solid var(--scope-neon);
+  outline-offset: 3px;
+}
+
+/* ── The rails ──────────────────────────────────────────────────────────── */
+
+/* A PAD ROUTED INTO THE CASE, and it is back (2026-09-20) after three passes
+   of being taken away.
+
+   THE EARLIER REMOVALS WERE RIGHT ABOUT THE WRONG THING. On the off-white shell
+   a recess here read as a sunken box drawn around controls that were already
+   grouped by standing in a column, so each pass made it quieter until nothing
+   was left. What was actually wrong was that the controls had no ground: eight
+   parts adrift on bare case, which is what made the two sides read as unrelated
+   however precisely their rows lined up.
+
+   On graphite a pad is a shallow routing rather than a drawn container, and it
+   does the one job the column could not do on its own — it says these belong
+   together, and it gives both sides the same visible extent. */
+.scope-panel {
+  position: relative;
+  padding: 0.75rem 0.625rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--scope-panel-lo) 0%, var(--scope-panel) 100%);
+  box-shadow:
+    inset 0 2px 5px -2px rgb(0 0 0 / 0.55),
+    inset 0 -1px 0 rgb(255 255 255 / 0.07);
+}
+
+/* THE TWO RAILS — one either side of the screen, IDENTICAL IN WIDTH, HEIGHT AND
+   ROW GRID. Four fittings each: the colour instrument on the left, the four
+   tool keys on the right.
+
+   A FOUR-ROW GRID, NOT A FLEX SPREAD. `space-between` aligns only the first top
+   and the last bottom, and the two middles then drift apart because a knob is
+   76px and a key is 59px. Worse, one rail was given `justify-content: center`
+   to tighten the keys, which broke symmetry outright — measured at 1440x900 the
+   left rail's items sat at y=159/289/434/578 and the right's at 255/336/418/499,
+   so not one of the four pairs lined up.
+
+   Equal rows fix it at the source: every row is the same height in both rails
+   and every fitting is centred in its row, so the four pairs line up exactly
+   whatever is put in them. */
+.scope-rail {
+  display: grid;
+  width: var(--rail-w);
+  flex: none;
+  grid-template-rows: repeat(4, 1fr);
+  align-items: center;
+  justify-items: center;
+  align-self: stretch;
+}
+
+/* BELOW `sm` THE BAY IS A COLUMN, so the colour rail lies down and becomes a
+   row under the screen — the shape the old deck had, for the reason the old
+   deck had it. The tool rail is not restacked: it has a scrolling strip as its
+   compact form, which is swapped in rather than reflowed. */
+/* THE COLOUR SIDE IS TWO SECTIONS (2026-09-20, by request) — the display
+   module, then a pad of dials under it.
+
+   They were four fittings on one pad, which made the value you are AIMING AT
+   look like a fourth axis. They are different kinds of thing: one reports the
+   colour you have, three set the colour you want. The column keeps the tool
+   rail's width and full height, so the two sides still read as a pair; what
+   changed is that this one is visibly two things rather than four rows of one.
+
+   The module is a section in its own right rather than a pad wrapped around
+   one, which is what keeps a recess from sitting inside a recess. */
+.scope-color-column {
+  display: flex;
+  width: var(--rail-w);
+  flex: none;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 0.625rem;
+}
+
+/* The module takes its own height; the dials take everything left, evenly. */
+.scope-dial-rail {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: repeat(3, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+
+@media (max-width: 639px) {
+  .scope-color-column {
+    width: 100%;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0.375rem;
+    /* IT WRAPS DOWN HERE, and only down here. At 320px the row cannot hold a
+       seven-character readout and three dials at any legible size: the numbers
+       are 141px and ~160px against 272px of room. Now that the window refuses
+       to be squeezed, the honest outcome is the readout taking its own line and
+       the case getting taller, which the phone tier can afford because it
+       scrolls (see `Composer.tsx`). Above 390 it still fits on one row. */
+    flex-wrap: wrap;
+  }
+
+  .composer-scope .scope-dial-rail {
+    flex: 1 1 12rem;
+  }
+
+  /* The dials lie down BESIDE the display rather than under it, so the two
+     sections cost one band of the board's height between them, not two. */
+  .composer-scope .scope-dial-rail {
+    grid-template-rows: 1fr;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .composer-scope .scope-readout {
+    width: auto;
+    flex: none;
+  }
+}
+
+/* NO FOOTER ON THIS ROUTE (2026-09-19, by request). The composer does not
+   scroll by rule, so the site's footer sat below a device you cannot reach it
+   from — a page of links under an object, which is furniture. The way back to
+   the gallery is one control in the corner of the case instead.
+
+   `:has()` RATHER THAN A ROUTE GROUP, deliberately: the footer is rendered by
+   the ROOT layout for every page, and a nested layout renders INSIDE that one,
+   so `/create` cannot opt out structurally without moving the footer into every
+   other page. One selector, scoped to the one element that only exists here. */
+body:has(.composer-scope) .pixl-footer {
+  display: none;
+}
+
+/* THE CASE — the front shell. Charcoal in the first reskin, then the Game Boy's
+   off-white by reference (2026-09-19), so every value here reads a `--scope-*`
+   token rather than `--frame-*`: one set that does not invert with the theme.
+
+   FOUR LAYERS, so the case reads as a formed shell rather than a card with a
+   gradient on it. Real plastic gathers light along its crown and turns away at
+   the sides, so the sides darken independently of the top-to-bottom fall.
+   Order matters — grain over the crown, over the side shading, over the ramp. */
+.toy-frame {
+  position: relative;
+  animation: toy-in var(--duration-slow) var(--ease-smooth-out) both;
+  background:
+    /* Grain first, so it sits OVER the shading — a texture under a gradient is
+       a texture nobody sees. */
+    var(--grain),
+    /* The crown, kept LOW — and lower again on graphite (2026-09-20), where a
+       white radial reads as a wash lying ON the plastic rather than as light
+       gathering along it. The SIDE shading carries more instead: a dark case
+       has room to fall away at its edges where a near-white one had none. */
+    radial-gradient(130% 96% at 50% -14%, rgb(255 255 255 / 0.085) 0%, transparent 58%),
+    linear-gradient(
+      100deg,
+      rgb(0 0 0 / 0.2) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgb(0 0 0 / 0.26) 100%
+    ),
+    linear-gradient(180deg, var(--scope-case) 0%, var(--scope-case) 46%, var(--scope-case-lo) 100%);
+  /* SQUARER THAN THE TOY WAS. `--radius-toy` is 32px, which is a handheld's
+     corner; this shell is a smaller, harder object. */
+  border-radius: 18px;
+  /* Three separate jobs: light catching the top edge, the body's own thickness
+     as a bottom lip, and the shadow the whole object casts on what it sits on. */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.15),
+    inset 0 4px 8px -4px rgb(255 255 255 / 0.06),
+    inset 0 -7px 0 var(--scope-case-lo),
+    inset 0 -12px 12px -10px rgb(0 0 0 / 0.45),
+    inset 6px 0 14px -12px rgb(0 0 0 / 0.4),
+    inset -6px 0 14px -12px rgb(0 0 0 / 0.4),
+    /* THE SEAM: the back shell, showing as a rim around the front one. A spread
+       ring rather than a border, so it takes no layout and its own radius
+       follows the shell's — a border would move every child by 9px. */
+    0 0 0 9px var(--scope-back),
+    0 18px 40px -12px rgb(0 0 0 / 0.55),
+    0 4px 10px -4px rgb(0 0 0 / 0.35);
+}
+
+/* The instrument's own layout: a column of head, bay and sill. `fit-content`,
+   because the case is an object with its own size — it does not stretch to the
+   window. */
+.scope-frame {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .scope-frame {
+    gap: 0.75rem;
+    padding: 0.75rem 1rem 1.125rem;
+  }
+}
+
+/* The screen with a rail either side. A column on a phone, where the rails lie
+   down under it instead. */
+.scope-bay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .scope-bay {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+}
+
+/* The board column: exactly the board's width, so the slider under the screen
+   matches it. */
+.toy-stack {
+  display: flex;
+  inline-size: var(--board-size);
+  flex-direction: column;
+  margin-inline: auto;
+  gap: 0.5rem;
+  min-block-size: 0;
+}
+
+/* The 3D well, under the grid. Wrapped in a positioned span rather than styled
+   directly: R3F writes `position: relative` onto its own canvas inline, and a
+   wrapper is a cleaner way to place it than fighting that. Inert — the grid
+   above owns every event. */
+.toy-well-canvas {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* THE WORDMARK, CUT INTO THE CASE by reference to the console, which moulds its
+   maker's name into the shell: the letters are the SAME PLASTIC as the case and
+   the only thing you read is the pair of walls the cut leaves — shaded above,
+   lit below, under a light from up and to the left like everything else here.
+   DESIGN.md §2's fourth shelf: a mark cut into a case has no colour to place at
+   all, so the floor takes the case's own tone one step down.
+
+   It was printed dark navy with a token drop shadow, which is a LABEL on a
+   piece of hardware rather than part of it. `aria-hidden` and decorative, which
+   is what lets it go this quiet. */
+.scope-plate-name {
+  font-family: var(--font-pixel), monospace;
+  /* 12px, on the face's own 8px design grid at its smallest comfortable step.
+     Never bold: it ships one weight, so a synthesised one smears the very edges
+     the face exists for. */
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--scope-case-lo);
+  /* The two walls of the cut, retuned for graphite: a white lit lip at 0.85 was
+     solved against an off-white shell and reads as printing on this one. */
+  text-shadow:
+    0 -1px 0 rgb(0 0 0 / 0.55),
+    0 1px 0 rgb(255 255 255 / 0.13);
+}
+
+/* ── The head ────────────────────────────────────────────────────────────── */
+
+/* THE NAMEPLATE IS CENTRED ON THE CASE (2026-09-19, by request), which is what
+   a handheld does — a benchtop instrument badges its top-left corner, and this
+   stopped being one. */
+.scope-head {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ── Pushbuttons ─────────────────────────────────────────────────────────── */
+
+.scope-switch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Help mode's callout is absolutely positioned against this, so the control has
+   to be a containing block — without it the leader line anchors to the rail and
+   every caption in the column stacks at the same height. */
+.scope-switch--anchored {
+  position: relative;
+}
+
+/* THE WELL IS A SEPARATE ELEMENT FROM THE CAP, so the cap sinks on press
+   without the hole moving with it.
+
+   SIZED OFF THE KNOB, NOT PICKED. `--knob-d` is `--knob-size * 0.56` — the dark
+   dial you actually grip — and the well takes the same multiplier, so a key and
+   a dial are the same object across every tier and neither can be retuned
+   without the other. */
+.scope-switch-well {
+  position: relative;
+  display: grid;
+  place-items: center;
+  /* AS BIG AS THE KNOB, by request — and the knob's real footprint is its
+     SCALE FIELD (`--knob-size * 0.86`), not the dial you grip. Matched against
+     `--knob-d` the key came out 49px beside a 76px dial, which is what made the
+     two rails read as different weights however precisely their rows lined up. */
+  width: calc(var(--knob-size) * 0.86);
+  height: calc(var(--knob-size) * 0.86);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #202329 0%, #2b2f36 70%, #33373e 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.75),
+    inset 0 3px 4px -2px rgb(0 0 0 / 0.8),
+    inset 4px 0 6px -5px rgb(0 0 0 / 0.5),
+    inset -4px 0 6px -5px rgb(0 0 0 / 0.6),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1),
+    0 1px 0 rgb(255 255 255 / 0.07);
+}
+
+/* A ROUND CAP SEATED IN THE WELL, the console's own face-button proportion.
+
+   WHITE ON A DEEP MAGENTA, and the depth is solved rather than picked. The
+   reference's caps are a bright magenta and a glyph has to sit on them: at its
+   own value a white glyph measured 3.1:1 on the cap's lightest stop. Taken
+   three steps down, the lightest stop clears 5.9:1 and the cap still reads
+   magenta. §2's rule for a CONSTANT face taking a constant ink. */
+.scope-switch-cap {
+  display: grid;
+  place-items: center;
+  width: calc(var(--knob-size) * 0.72);
+  height: calc(var(--knob-size) * 0.72);
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(180deg, #ad2762 0%, #9a2257 58%, #811c49 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -2px 3px -1px rgb(0 0 0 / 0.28),
+    0 1px 0 rgb(0 0 0 / 0.55),
+    0 2px 3px -1px rgb(0 0 0 / 0.55);
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* A press sinks about 1px and no further (§5c).
+
+   IT LANDS ON THE FIRST FRAME, AND THAT IS THE WHOLE FIX. The cap carries a
+   150ms transition, and it was applying to the press as well as the release —
+   so mousedown started EASING toward the pressed look, a normal click holds for
+   well under 150ms, and the cap reversed before it ever arrived. Every press
+   was a fraction of itself. Down is instant; the release keeps the clock and
+   settles back up, which is §5b's hover rule on a button. It also means a 60ms
+   click still reads, because the travel BACK is the part you see.
+
+   The depth is spent on SHADING rather than travel: a sunk cap catches less
+   light along its top edge, takes a real shadow from the well's lip, and casts
+   nothing of its own. */
+.scope-switch-cap:active:not(:disabled) {
+  transition-duration: 0s;
+  transform: translateY(1px);
+  background: linear-gradient(180deg, #8d1f50 0%, #7b1a45 58%, #661637 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 4px 6px -2px rgb(0 0 0 / 0.65),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3);
+}
+
+/* ~~LATCHED: the cap rests in the shallow click a press makes and drops several
+   steps of VALUE~~ — REMOVED 2026-09-20, by request, and replaced by the lamp
+   above the key.
+
+   The construction was right and the CONTEXT was wrong. A latched key that
+   rests in its own press is how a panel of keys reports which one is held
+   down; here exactly one of the four is a toggle, so the other three can never
+   do it, and a single permanently sunk dark cap among three bright ones reads
+   as a button that has jammed rather than as a mode that is on.
+
+   DESIGN.md §5c's rule still stands wherever a SET of keys latches. What this
+   is, is the case that rule does not cover: one mode among several actions,
+   which is what hardware puts a lamp beside. `.scope-lamp` carries it now and
+   the cap is a plain key again in both states. */
+
+/* THE MODE LAMP, above the key it belongs to. Absolutely positioned against
+   `.scope-switch--anchored`, so it costs the column no layout at all and the
+   four rows stay exactly the height they were. */
+.scope-lamp {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  translate: -50% 0;
+  border-radius: 999px;
+  /* OFF is not "absent": it is a dark lens set into the panel, catching a
+     little of the room, so the lamp is a visible PART whether or not it is
+     lit. A lamp you cannot see when it is off reads as damage when it is on. */
+  background: radial-gradient(circle at 50% 35%, #3b3f47 0%, #1a1d21 72%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.7),
+    inset 0 1px 1px rgb(255 255 255 / 0.14),
+    0 1px 0 rgb(255 255 255 / 0.05);
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* ON takes the board's one accent, and it GLOWS onto the panel around it —
+   which is the half that makes it read as emitting rather than as a magenta
+   dot printed on the case. */
+.scope-lamp[data-on="true"] {
+  background: radial-gradient(circle at 50% 32%, #ff89b8 0%, #e0356f 45%, var(--scope-neon) 78%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.45),
+    inset 0 1px 1px rgb(255 255 255 / 0.5),
+    0 0 5px 0 color-mix(in srgb, var(--scope-neon) 85%, transparent),
+    0 0 12px 2px color-mix(in srgb, var(--scope-neon) 40%, transparent);
+}
+
+.scope-switch-cap:disabled {
+  cursor: not-allowed;
+  opacity: 0.32;
+}
+
+.scope-switch-cap:focus-visible {
+  outline: 2px solid var(--scope-neon);
+  outline-offset: 3px;
+}
+
+/* ── The eyedropper, in the colour rail ──────────────────────────────────── */
+
+/* QUIET BY DEFAULT. It was a magenta cap in the tool column, shouting at the
+   volume of Undo and the transforms — and it is not one of those: every other
+   tool acts on the DRAWING and this one produces a COLOUR. So it is a small key
+   routed flush into the rail beside the readout, not a domed cap in a well, and
+   it is the smallest control on the board.
+
+   LOUD WHEN ARMED, which is the one time it matters. An eyedropper waiting for
+   your next tap and not saying so is a mode you have forgotten you are in, so
+   the armed state is the one place this control takes the accent. */
+.scope-pick {
+  display: grid;
+  place-items: center;
+  /* A KEY, NOT A TILE. It matches the colour window above it in width so the
+     two stack as one fitting, and it STANDS PROUD of the module's bezel rather
+     than being routed into it — a control you press is the one thing on a
+     display housing that is not a recess. */
+  width: 2rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  color: var(--scope-print);
+  background: linear-gradient(180deg, #4a4e57 0%, #3f434b 60%, #33373d 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    inset 0 -1px 0 rgb(0 0 0 / 0.4),
+    0 1px 0 rgb(0 0 0 / 0.55),
+    0 2px 3px -1px rgb(0 0 0 / 0.45);
+  transition:
+    color var(--duration-quick) var(--ease-smooth-out),
+    transform var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out);
+}
+
+/* Instant down, eased back up — the same fix every pressable part here needed. */
+.scope-pick:active {
+  transition-duration: 0s;
+  transform: translateY(1px);
+  background: linear-gradient(180deg, #2f333a 0%, #3a3e46 100%);
+  box-shadow:
+    inset 0 2px 4px -1px rgb(0 0 0 / 0.7),
+    inset 0 -1px 0 rgb(255 255 255 / 0.08);
+}
+
+.scope-pick[aria-pressed="true"] {
+  color: #ffffff;
+  background: linear-gradient(180deg, #ad2762 0%, #9a2257 58%, #811c49 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 -2px 3px -1px rgb(0 0 0 / 0.3),
+    0 0 6px -1px color-mix(in srgb, var(--scope-neon) 80%, transparent);
+}
+
+.scope-pick:focus-visible {
+  outline: 2px solid var(--scope-neon);
+  outline-offset: 3px;
+}
+
+/* ── Printed scales ──────────────────────────────────────────────────────── */
+
+/* THE SILKSCREEN UNDER A CONTROL. 6px, and it is the size that lets `FLIP H`
+   sit under a 36px well without the column growing to fit the word — the pixel
+   face has very wide advance widths, and a legend that sets the width of the
+   control it names has stopped being a legend. */
+.scope-legend {
+  max-width: 100%;
+  font-family: var(--font-pixel), monospace;
+  /* 8px, on the face's own design grid. It was 6 to keep `FLIP H` from setting
+     the width of a 120px rail; the rail is 208 now, so the legend can be the
+     size a silkscreen actually prints at. */
+  font-size: 8px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--scope-print-dim);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.45);
+}
+
+.scope-scale {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* AN ARM PIVOTING ABOUT THE KNOB'S CENTRE, with the mark painted at its far
+   end. Built this way rather than as a dashed ring or a conic gradient because
+   those antialias every tick into a smear at the diagonals, and a printed scale
+   whose marks are soft is the one thing it must not be. */
+.scope-scale-tick {
+  position: absolute;
+  left: calc(50% - 1px);
+  top: calc(50% - var(--scale-r));
+  width: 2px;
+  height: var(--scale-r);
+  transform-origin: 50% 100%;
+}
+
+.scope-scale-tick::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 4px;
+  background: var(--scope-print-dim);
+}
+
+/* Majors at both ends and the middle. A scale whose every mark is the same
+   weight reads as a texture rather than as something you take a reading off. */
+.scope-scale-tick[data-major="true"]::after {
+  height: 7px;
+  background: var(--scope-print);
+}
+
+.scope-scale-label {
+  position: absolute;
+  bottom: 0;
+  font-family: var(--font-data), monospace;
+  font-size: 7px;
+  line-height: 1;
+  color: var(--scope-print-dim);
+}
+
+.scope-scale-label[data-end="min"] { left: 0; }
+.scope-scale-label[data-end="max"] { right: 0; }
+
+/* Printed in the arc's 90-degree opening, at the foot of the field the scale is
+   ruled on. Absolute, so it cannot add a row to the deck — which is the whole
+   reason it moved here from under the knob. */
+.scope-knob-legend {
+  position: absolute;
+  bottom: -0.125rem;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* ── Knobs ───────────────────────────────────────────────────────────────── */
+
+.scope-knob-mount {
+  display: flex;
+}
+
+/* The field the scale is printed on and the knob stands in the middle of. */
+.scope-knob-field {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--scale-d);
+  height: var(--scale-d);
+}
+
+/* ONE SIZE FOR ALL THREE. `--knob-size` is the tier token declared beside
+   `--toy-chrome`, so the height a knob costs the board and the size it is drawn
+   at stay one decision. The field is the knob plus the gutter the printed scale
+   lives in. */
+.scope-knob-mount {
+  /* SMALLER AGAIN (2026-09-19). The reference's bottom row is a strip of trim
+     knobs, not three dials taking a third of the instrument — and every pixel
+     a knob spends here is a pixel off the drawing surface, because
+     `--toy-chrome` subtracts this row from `--board-size`. */
+  --knob-d: calc(var(--knob-size) * 0.56);
+  --scale-d: calc(var(--knob-size) * 0.86);
+  --scale-r: calc(var(--scale-d) / 2);
+}
+
+/* THE INFORMATION RING — the value previewed, between the knob and the printed
+   scale. A true annulus with air either side, so it reads as something the
+   knob turns AGAINST rather than a painted edge of the part.
+
+   It is not the scale and it is not decoration: the ticks tell you where the
+   pointer is, this tells you what that position will give you. Losing it in the
+   first reskin pass was the regression worth naming. */
+.scope-knob-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--knob-d) + 26%);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 999px;
+  -webkit-mask: radial-gradient(closest-side, transparent 0 78%, #000 84%, #000 100%);
+  mask: radial-gradient(closest-side, transparent 0 78%, #000 84%, #000 100%);
+  opacity: 0.92;
+}
+
+.scope-knob {
+  position: relative;
+  width: var(--knob-d);
+  height: var(--knob-d);
+  border-radius: 999px;
+  /* The socket the knob turns in: a shadow ring on the panel, plus what the
+     part itself casts. A knob mounted through a panel cannot get bigger because
+     you took hold of it, so grabbing deepens the seat rather than scaling. */
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06),
+    0 4px 10px -4px rgb(0 0 0 / 0.8),
+    0 1px 3px rgb(0 0 0 / 0.6);
+  transition: box-shadow var(--duration-quick) var(--ease-smooth-out);
+}
+
+.scope-knob[data-grabbed="true"] {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06),
+    0 2px 6px -3px rgb(0 0 0 / 0.85),
+    0 1px 2px rgb(0 0 0 / 0.7);
+}
+
+.scope-knob:focus-visible {
+  outline: 2px solid var(--scope-neon);
+  outline-offset: 4px;
+}
+
+/* The body. It turns, and the knurl turns with it — which is what tells you the
+   control has moved at all. */
+.scope-knob-skirt {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 26%, rgb(255 255 255 / 0.13) 0%, transparent 58%),
+    linear-gradient(168deg, var(--knob-metal-hi) 0%, var(--knob-metal) 52%, var(--knob-metal-lo) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.55),
+    inset 0 1px 1px rgb(255 255 255 / 0.14),
+    inset 0 -3px 5px -2px rgb(0 0 0 / 0.5);
+}
+
+/* THE KNURL, IN POLAR COORDINATES. A `repeating-conic-gradient` gives every
+   flute a true RADIAL edge, so the cut stays sharp at the rim where you read it
+   and converges toward the centre the way real knurling does. A tiled bitmap or
+   a linear gradient bent round a circle does neither.
+
+   Masked to an annulus, because knurling is cut into the OUTER band of a knob —
+   run to the centre it turns into a starburst. */
+.scope-knob-knurl {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  /* A FINE PITCH AND A NARROW BAND. At a 10deg period over most of the disc it
+     rendered as a STARBURST rather than knurling — the flutes were wide enough
+     to read as rays and they ran far enough in to converge at the centre.
+     Real knurling is a band cut into the rim at a pitch you read as texture:
+     3deg here, and masked to the outer quarter of the knob. */
+  background: repeating-conic-gradient(
+    from 0deg,
+    var(--knob-knurl-lo) 0deg 0.75deg,
+    transparent 0.75deg 1.5deg,
+    var(--knob-knurl-hi) 1.5deg 2.25deg,
+    transparent 2.25deg 3deg
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 0 74%, #000 80%, #000 100%);
+  mask: radial-gradient(closest-side, transparent 0 74%, #000 80%, #000 100%);
+}
+
+/* The fine-knurled centre, carrying the live colour — the reference's red
+   centre becomes the swatch, which makes the board's most important readout
+   also its largest control. */
+.scope-knob-cap {
+  position: absolute;
+  inset: 25%;
+  border-radius: 999px;
+  /* Plain metal by default — three caps all showing the live colour would be
+     one fact printed three times. Only hue's carries it. */
+  background: linear-gradient(170deg, var(--knob-metal-hi) 0%, var(--knob-metal) 60%, var(--knob-metal-lo) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.5),
+    inset 0 -2px 4px -1px rgb(0 0 0 / 0.35);
+}
+
+/* THE LIVE COLOUR'S CAP gets the neon hairline — the one place the accent is
+   spent on this part, marking which of three identical knobs is the one
+   carrying the colour. */
+.scope-knob-cap[data-live="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.5),
+    inset 0 -2px 4px -1px rgb(0 0 0 / 0.35),
+    0 0 0 1.5px color-mix(in srgb, var(--scope-neon) 60%, transparent),
+    0 0 7px -1px color-mix(in srgb, var(--scope-neon) 40%, transparent);
+}
+
+.scope-knob-cap-knurl {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgb(0 0 0 / 0.2) 0deg 0.5deg,
+    transparent 0.5deg 1deg,
+    rgb(255 255 255 / 0.14) 1deg 1.5deg,
+    transparent 1.5deg 2deg
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 0 68%, #000 76%, #000 100%);
+  mask: radial-gradient(closest-side, transparent 0 68%, #000 76%, #000 100%);
+}
+
+/* A dome over the colour, so the cap reads as a moulded part rather than a flat
+   disc of paint. */
+.scope-knob-cap-gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle at 36% 28%, rgb(255 255 255 / 0.38) 0%, rgb(255 255 255 / 0.08) 38%, transparent 62%);
+}
+
+/* The pointer tab, moulded into the skirt and reading against the printed
+   scale outside it. A TAB rather than a dot: this knob is large and the tab is
+   what a real one carries, where the small trims get a dimple. */
+.scope-knob-pointer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scope-knob-pointer-tab {
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  width: 3px;
+  height: 20%;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #f2f4f7 0%, #c2c7ce 100%);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
+  transform: translateX(-50%);
+}
+
+/* A HOLE IN THE CAP, not a painted dot: shaded at the top wall and catching the
+   room at the bottom, which is how a real trim knob marks its pointer and is
+   what survives being small. */
+.scope-knob-dimple {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: 16%;
+  height: 16%;
+  border-radius: 999px;
+  background: #15181c;
+  box-shadow:
+    inset 0 1px 1px rgb(0 0 0 / 0.8),
+    inset 0 -1px 0 rgb(255 255 255 / 0.22),
+    0 1px 0 rgb(255 255 255 / 0.1);
+  transform: translateX(-50%);
+}
+
+/* ── The calibrator readout ──────────────────────────────────────────────── */
+
+/* THE WINDOW AND ITS INDICATOR ARE ONE FITTING, so they sit tight together —
+   the chip reports the colour the window prints the number of, and a gap wide
+   enough to read as separation made them two unrelated parts. */
+.scope-readout {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* THE WINDOW AND THE CHIP, SIDE BY SIDE — a number and the colour it names,
+   read together. The frame carries no box of its own: it was a padded, hairlined
+   panel inside a panel, and every pixel of that padding came out of the window,
+   which is the one thing here that cannot shrink below seven characters. */
+/* TWO SCREENS, STACKED — the colour over its number, cut from the same glass as
+   the board above (2026-09-19, by request). It was a round chip beside the
+   window, which put an indicator LAMP next to a DISPLAY: two vocabularies for
+   one value. As a second window the colour is the same kind of thing as the
+   number, a reading.
+
+   Stacking also gives the hex its width back. Beside the chip it had come down
+   to 9px to fit seven characters into what was left of a 120px rail. */
+/* TWO SCREENS SIDE BY SIDE — the number, and the colour it names beside it.
+   Same cut, same glass edge, same inner shadow; only the fill differs, which is
+   the whole argument for making the colour a window rather than a lens. */
+/* THE DISPLAY MODULE — one housing routed into the pad, holding the glass and
+   the key that loads a value into it (2026-09-20).
+
+   The eyedropper was outside it, alone on the pad between the readout and the
+   dials: a rounded square on bare plastic with a legend of its own, and the one
+   fitting on the board that matched nothing else. A module is what makes it a
+   function key on a bezel rather than a stray button. */
+.scope-readout-housing {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.375rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #16181c 0%, #1e2126 100%);
+  box-shadow:
+    inset 0 3px 6px -2px rgb(0 0 0 / 0.7),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1);
+}
+
+.scope-readout-frame {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+/* The bezel below the glass: the silkscreen on the left, the key on the right,
+   the key sitting directly under the colour window and the same width as it. */
+.scope-readout-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scope-readout-foot .scope-legend {
+  flex: 1;
+  text-align: left;
+  text-shadow: none;
+}
+
+
+/* THE WINDOW IS LIT GLASS, in the phosphor — the same tube material as the
+   screen, at readout size, which is what makes the two read as one instrument.
+
+   IT DOES NOT PRINT IN THE PAINT COLOUR, and that is deliberate: a readout
+   showing its value IN that value is unreadable at black, at white, and at
+   every low-saturation colour between — which is most of what you draw with.
+   The chip beside it reports the colour; this reports the NUMBER. */
+.scope-swatch-window {
+  display: block;
+  flex: none;
+  /* Matched to the key below it, so the two stack as one column on the bezel.
+     2rem, AND SIZED FOR THE FALLBACK. Every pixel here comes straight off the
+     hex window, which is the one thing in this housing that cannot shrink
+     below seven characters — and the worst case is not the real face at 112px
+     but `next/font`'s poorly-matched substitute at 143.7, which shows while the
+     webfont is in flight. Widening the rail instead was tried and cost the
+     board 14px at 1024; the swatch is the cheaper 8px to give up. */
+  width: 2rem;
+  border-radius: 4px;
+  background: var(--chip);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.7),
+    inset 0 2px 4px -2px rgb(0 0 0 / 0.55),
+    inset 0 -1px 0 rgb(255 255 255 / 0.14),
+    0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.scope-readout-window {
+  position: relative;
+  flex: 1;
+  /* NEVER NARROWER THAN THE NUMBER IT PRINTS. This was `min-width: 0`, which
+     is what let the window be squeezed under its own content — the readout
+     then clipped rather than the layout admitting it had run out of room.
+     `min-content` here is the seven glyphs, because the digits are `pre` and
+     their spans no longer shrink, so the window now pushes back and whatever
+     is around it has to give instead. */
+  min-width: min-content;
+  padding: 0.375rem;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--crt-glass) 0%, color-mix(in srgb, var(--crt-glass) 88%, white) 70%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.7),
+    inset 0 2px 4px -2px rgb(0 0 0 / 0.8),
+    inset 0 -1px 0 rgb(255 255 255 / 0.08),
+    0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.scope-readout-digits {
+  display: flex;
+  font-family: var(--font-pixel), monospace;
+  /* 9px. Press Start 2P advances a full em per glyph, so seven characters ARE
+     the width — and the colour window beside them takes 20px of the rail's 100.
+     It sat at 11 for one pass, when the swatch was stacked underneath. */
+  /* 16px, per DESIGN.md §4: the readout is the one place the pixel face runs
+     at 16 rather than 12, because it is a display and 16 is on the face's own
+     8px grid.
+
+     IT WAS CUT TO 14 FOR HALF AN HOUR ON 2026-09-20 AND THAT WAS A FIX FOR THE
+     WRONG THING. The hex was clipping, and the cause was not the size: the dev
+     server had failed to reach fonts.googleapis.com when it compiled, so
+     `next/font` fell back for all four faces with no metric adjustment
+     available, and the substitute advanced 1.28em against the real face's 1.0.
+     Seven glyphs at 16px are 112px, and the window has 132. */
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
+  white-space: pre;
+  text-transform: uppercase;
+  /* DARK ON THE LIT FACE, like the screen above it. It was phosphor-on-black,
+     which was the right call for a black tube and became a second, contrary
+     display the moment the tube was lit. One material, two sizes. */
+  color: #12302f;
+}
+
+/* NEVER COMPRESS (2026-09-20). These are flex items, so at a width the glyphs
+   do not fit they SHRANK rather than overflowing — which is why the readout
+   clipping read as the last character jammed under the swatch instead of as
+   text running past its box. `flex: none` makes a future mis-sizing visible
+   the moment it happens, and `e2e/board.spec.ts` measures it besides. */
+.scope-readout-digit {
+  display: inline-block;
+  flex: none;
+}
+
+/* THE FIELD YOU TYPE INTO, invisible over the glyphs. It paints nothing but the
+   caret: an `<input>` has no per-character boxes, and per-character is the only
+   honest way to draw a lit readout — so the digits above are an overlay and
+   this carries the value, the caret and the whole accessibility contract.
+
+   Every metric here MUST match `.scope-readout-digits`, or the caret sits
+   somewhere the characters are not. */
+.scope-readout-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-width: 0;
+  /* Matches `.scope-readout-window` exactly, or the caret sits where the
+     characters are not. */
+  padding: 0.375rem;
+  border-radius: 4px;
+  font-family: var(--font-pixel), monospace;
+  font-size: 16px;
+  line-height: 1.3;
+  text-transform: uppercase;
+  background: transparent;
+  color: transparent;
+  caret-color: #12302f;
+}
+
+/* A value that does not parse says so in the frame, not by hiding itself: the
+   digits stay exactly where they are and the window's edge goes red. */
+.scope-readout-window[data-invalid="true"] {
+  box-shadow:
+    inset 0 0 0 1px var(--color-danger),
+    inset 0 2px 4px -2px rgb(0 0 0 / 0.8),
+    0 0 6px -1px color-mix(in srgb, var(--color-danger) 55%, transparent);
+}
+
+
+/* THE CHIP: the live colour as a lit lens, so it is unmistakable without
+   reading six characters. It glows in its OWN colour — an indicator that
+   reported every colour in the accent would be reporting nothing. */
+.scope-chip {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2e333a 0%, #16191d 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.6),
+    inset 0 1px 1px rgb(255 255 255 / 0.1),
+    0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+.scope-chip-lens {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  border-radius: 999px;
+  background: var(--chip);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.45),
+    inset 0 1px 2px rgb(255 255 255 / 0.3),
+    0 0 6px -1px var(--chip);
+}
+
+/* ── The clear fader ─────────────────────────────────────────────────────── */
+
+/* A CHANNEL MILLED ACROSS THE DECK, with the part riding in it. It was a groove
+   under the screen with its instruction printed on the floor; the words are on
+   the panel now, because a caption lying on the track a part travels along is
+   printing in the one place the part will cover. */
+/* THE FADER IS THE SCREEN'S WIDTH and sits directly under it, above the knob
+   deck. It ran the full case and below the knobs, which put the widest thing on
+   the instrument at the bottom and left the control it clears two bands away
+   from the screen it clears. Matching `--board-size` also says what it acts on
+   without printing a word. */
+.toy-groove {
+  position: relative;
+  inline-size: var(--board-size);
+  max-inline-size: 100%;
+  margin-inline: auto;
+  container-type: inline-size;
+  height: 1.375rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1c1e23 0%, #25282e 55%, #2b2e34 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.75),
+    inset 0 3px 5px -2px rgb(0 0 0 / 0.85),
+    inset 5px 0 7px -6px rgb(0 0 0 / 0.5),
+    inset -5px 0 7px -6px rgb(0 0 0 / 0.6),
+    inset 0 -1px 0 rgb(255 255 255 / 0.09),
+    0 1px 0 rgb(255 255 255 / 0.06);
+  cursor: grab;
+}
+
+.toy-groove:active { cursor: grabbing; }
+
+/* THE INSTRUCTION, printed on the channel's floor. It is the least guessable
+   gesture on the board, so it stays — and it is the reason this control is not
+   on a sub-panel marked CLEAR, which would print the same three words twice. */
+.scope-groove-print {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-family: var(--font-pixel), monospace;
+  font-size: 7px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--scope-print-dim);
+}
+
+.toy-groove:focus-visible {
+  outline: 2px solid var(--scope-neon);
+  outline-offset: 3px;
+}
+
+/* The fader cap, knurled across its travel axis the way a real one is. */
+.toy-groove-handle {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: 1.75rem;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.28) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(180deg, #565b65 0%, #464b54 58%, #32363c 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.26),
+    inset 0 -2px 3px -1px rgb(0 0 0 / 0.3),
+    0 1px 3px rgb(0 0 0 / 0.65);
+}
+
+/* ── The CRT ─────────────────────────────────────────────────────────────── */
+
+/* THE BEZEL: a wall standing proud of the case, with the tube recessed behind
+   it. Deeper at the top, as a real one is — the brow is what the screen's own
+   shadow falls against. */
+.toy-bezel {
+  position: relative;
+  padding: 14px;
+  border-radius: 8px;
+  /* NEAR-BLACK, the same call the gallery's mini screen makes and for the same
+     reason (DESIGN.md §6): a bezel in the CASE'S tone reads as more case, where
+     a black one reads as the frame of a display. It was a light mauve solved
+     against the off-white shell, and on graphite it was the one bright object
+     on the board. */
+  background: linear-gradient(180deg, #14161a 0%, #1b1e23 40%, #101216 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -1px 0 rgb(0 0 0 / 0.5),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 2px 6px -2px rgb(0 0 0 / 0.6),
+    0 1px 0 1px rgb(255 255 255 / 0.07);
+}
+
+/* THE TUBE, LIT. The phosphor illuminates the whole face to a pale blue-green
+   and falls off toward the corners, which is what a real one does and what
+   sells the curvature — a flat panel does not dim at its edges. */
+.scope-crt {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: radial-gradient(
+    118% 118% at 50% 42%,
+    color-mix(in srgb, var(--crt-glass) 88%, white) 0%,
+    var(--crt-glass) 46%,
+    var(--crt-glass-lo) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.55),
+    inset 0 3px 8px -3px rgb(0 0 0 / 0.55),
+    inset 5px 0 9px -7px rgb(0 0 0 / 0.35),
+    inset -5px 0 9px -7px rgb(0 0 0 / 0.45);
+}
+
+/* THE GLASS: a soft bloom off the phosphor, scanlines, and one reflection —
+   over everything and deaf to the pointer. `pointer-events: none` is
+   load-bearing rather than tidy: this covers the whole drawing surface, and
+   without it the board would stop taking a single click. */
+.scope-crt-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 6px;
+  background:
+    /* The reflection, off the top-left, which is where the key is on every
+       other part of this object. */
+    linear-gradient(
+      142deg,
+      rgb(255 255 255 / 0.34) 0%,
+      rgb(255 255 255 / 0.1) 24%,
+      transparent 48%
+    ),
+    /* Scanlines. 3px pitch: at 2px they moiré against an 11-cell grid at most
+       sizes, and at 4px they read as blinds rather than as a raster. Much
+       fainter than on a dark tube — on a lit face they are a texture in the
+       light, not bars across it. */
+    repeating-linear-gradient(
+      180deg,
+      rgb(20 50 54 / 0.07) 0 1px,
+      transparent 1px 3px
+    ),
+    /* The vignette. Gentle: the face is lit, so its edges fall off rather than
+       going dark, and a heavy corner shadow reads as dirt on the glass. */
+    radial-gradient(
+      120% 120% at 50% 44%,
+      transparent 0%,
+      transparent 58%,
+      rgb(14 40 44 / 0.16) 84%,
+      rgb(14 40 44 / 0.3) 100%
+    );
+}
+
+/* THE BULGE. A tube's face is a section of a sphere, so its corners sit further
+   from the eye and its edge is not a hard rectangle — a slightly larger radius
+   on the glass than on the tube leaves a sliver of shadow in each corner, which
+   reads as curvature without warping the drawing underneath.
+
+   The grid itself is NEVER distorted: it is the icon's canvas, and bending it
+   would put the art at a different geometry from the thing that exports. */
+.scope-crt::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 2px rgb(0 0 0 / 0.4),
+    inset 0 0 12px 3px rgb(14 40 44 / 0.22);
+}
+
+/* THE BOARD'S FOCUS RING, in the accent rather than the browser's default.
+   A 2px sky-blue rectangle round the whole tube is the one thing on this panel
+   that could not be part of the instrument, and it appeared on every CLICK —
+   Chrome gives a tabindex'd non-form element `:focus` but not `:focus-visible`
+   for a pointer, so the UA ring showed while a `:focus-visible` rule sat there
+   never matching. Both halves are needed: kill the pointer ring, draw a real
+   one for the keyboard, which is who a focus ring is for.
+
+   (It was written once, then deleted as collateral when the tube was rewritten
+   — the replacement span reached past it. Re-added, and the lesson is that a
+   rule tucked just before a section marker is a rule that travels with the
+   next edit to that section.) */
+/* The grid sits on the well's FLOOR, inset by exactly the wall width — 4% of
+   the box, which is (1 - FLOOR) / 2 from ScreenMesh. Applied whether or not the
+   canvas renders, so there is only ever one layout to keep in step.
+
+   POSITIONED, AND THAT IS LOAD-BEARING. The R3F canvas beside it is absolutely
+   positioned, and a positioned element paints above a static sibling whatever
+   the DOM order — so without this the canvas covers the grid and the board
+   stops taking a single click. The keyboard path still worked, which is exactly
+   how a bug like this hides. */
+.toy-well-floor {
+  position: absolute;
+  inset: 4%;
+}
+
+.toy-well-floor svg:focus {
+  outline: none;
+}
+
+.toy-well-floor svg:focus-visible {
+  outline: 2px solid var(--scope-neon);
+  outline-offset: -3px;
+  border-radius: 2px;
+}
+
+/* ── The compact tool strip ──────────────────────────────────────────────── */
+
+.scope-strip {
+  border-radius: 5px;
+  padding: 1.25rem 0.5rem 0.5rem;
+  background: linear-gradient(180deg, var(--scope-panel-lo) 0%, var(--scope-panel) 34%, var(--scope-panel) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.5),
+    inset 0 4px 6px -3px rgb(0 0 0 / 0.75),
+    inset 0 -1px 0 rgb(255 255 255 / 0.07),
+    0 1px 0 rgb(255 255 255 / 0.06);
+}

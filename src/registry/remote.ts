@@ -206,7 +206,7 @@ export async function fetchPublishedIcons(): Promise<readonly IconDef[]> {
        a line in the build log. A signal you have to remember to look for is not
        a signal, so success reports too: a missing line is as legible as an
        error. */
-    console.log(`Pixit: baked ${icons.length} published icon(s) from Supabase.`);
+    console.log(`Pixle: baked ${icons.length} published icon(s) from Supabase.`);
     return icons;
   } catch (cause) {
     console.error("Supabase unreachable:", cause);

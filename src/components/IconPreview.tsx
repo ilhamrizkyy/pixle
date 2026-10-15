@@ -14,6 +14,12 @@ import {
   type CellStyle,
 } from "@/engine/render";
 import type { Cells } from "@/engine/types";
+import { getIcon } from "@/registry";
+
+/** One of the set's own icons as a UI glyph, drawn in currentColor. */
+export function glyph(id: string): Cells | undefined {
+  return getIcon(id)?.cells.map((cell) => (cell === null ? null : "currentColor"));
+}
 
 type IconPreviewProps = {
   cells: Cells;

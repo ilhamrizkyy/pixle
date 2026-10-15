@@ -20,7 +20,7 @@ const intro = (page: Page) =>
 test("an automated visit gets the finished hero with no boot at all", async ({ page }) => {
   await page.goto("/");
   expect(await intro(page)).toBeNull();
-  await expect(page.getByRole("heading", { level: 1, name: "Pixit" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pixle" })).toBeVisible();
 });
 
 /* EVERY LOAD, NOT ONCE A TAB. It was remembered in sessionStorage for a pass
@@ -69,9 +69,9 @@ test("the content is in the document from the first byte, boot or no boot", asyn
 }) => {
   await page.goto("/?intro");
   expect(await intro(page)).toBe("play");
-  await expect(page.getByRole("heading", { level: 1, name: "Pixit" })).toBeAttached();
+  await expect(page.getByRole("heading", { level: 1, name: "Pixle" })).toBeAttached();
   await expect(page.getByRole("link", { name: "Explore icons" })).toBeAttached();
-  await expect(page.getByRole("link", { name: "Read the guide" })).toBeAttached();
+  await expect(page.locator(".pixl-hero").getByRole("link", { name: "GitHub" })).toBeAttached();
 });
 
 test("any key skips straight to the finished hero", async ({ page }) => {
@@ -117,7 +117,7 @@ test("Explore icons scrolls to the gallery rather than jumping", async ({ page }
   await expect(page.locator("#icon-panel")).toBeFocused();
 });
 
-/* THE X-RAY is Phosphor's inspect move, carrying Pixit's own mechanism: hover a
+/* THE X-RAY is Phosphor's inspect move, carrying Pixle's own mechanism: hover a
    sprite and its drawing gives way to the 11 by 11 lattice and its name. */
 test("hovering a sprite x-rays it to its lattice and names it", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

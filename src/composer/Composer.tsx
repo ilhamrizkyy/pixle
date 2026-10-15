@@ -85,7 +85,7 @@ function ComposerBody() {
             route's only in-page exit. See `Dock.tsx`. */}
         <div className="scope-head">
           <span aria-hidden="true" className="scope-plate-name">
-            Pixit
+            Pixle
           </span>
         </div>
 

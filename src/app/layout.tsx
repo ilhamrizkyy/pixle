@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
+import { JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { INTRO_INIT_SCRIPT } from "@/components/gallery/introTimeline";
 import "./globals.css";
@@ -10,12 +10,6 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-// Long-form prose in Guide / Resources.
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
 // Wordmark + h1/h2 only. Single weight; that is all it has.
 const pressStart2P = Press_Start_2P({
   variable: "--font-press-start-2p",
@@ -23,16 +17,7 @@ const pressStart2P = Press_Start_2P({
   weight: "400",
 });
 
-// The machine's own type: the hero's sentence and links, and every masthead's
-// rail and strapline.
-//
-// PRELOADED AS OF 2026-09-18, and the reason it was not is what changed. It was
-// the home page's face alone, so preloading it charged four other routes for
-// something they never drew. The masthead put it on Guide, Resources and
-// Contribute, where it is in the RAIL — the first thing at the top of the page,
-// not a sentence three seconds into a boot — so a late-discovered face is a
-// visible swap in the navigation on every load. Four of five routes draw it
-// now; the fifth is the owner-only composer.
+// The hero's terminal face: its sentence and keys.
 const terminal = VT323({
   variable: "--font-terminal",
   subsets: ["latin"],
@@ -40,9 +25,9 @@ const terminal = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Pixit: pixel icons and composer",
+  title: "Pixle: open-source pixel icons",
   description:
-    "An open-source pixel, 32-bit, and arcade icon set with an in-browser composer. MIT licensed.",
+    "An open-source pixel icon set, drawn cell by cell on an 11 by 11 grid. Copy SVG, React, or PNG. MIT licensed.",
 };
 
 export default function RootLayout({
@@ -58,7 +43,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${jetbrainsMono.variable} ${inter.variable} ${pressStart2P.variable} ${terminal.variable}`}
+      className={`${jetbrainsMono.variable} ${pressStart2P.variable} ${terminal.variable}`}
     >
       <body>
         {/* NO PRE-PAINT THEME SCRIPT (2026-09-13). There was one, and it
@@ -80,17 +65,7 @@ export default function RootLayout({
             there is swapped for a <div> on the client. Here the server HTML
             and the React tree agree. */}
         <script dangerouslySetInnerHTML={{ __html: INTRO_INIT_SCRIPT }} />
-        {/* NO NAV BAR, ON ANY ROUTE (2026-09-18). The home page dropped it on
-            2026-09-13 under the rule "a page with a hero does not need a bar",
-            which left Guide, Resources and Contribute carrying one — so a
-            visitor crossed from a full-screen CRT to a white document with a
-            hairline bar over it. Each of those three now opens on its own
-            masthead, which prints every destination in the same place the
-            hero's links sit, so there is nothing left for a bar to carry.
-            See PageMasthead.tsx. */}
         {children}
-        {/* EVERY PAGE. It is the second place each destination is printed, and
-            below the fold it is the only one. */}
         <SiteFooter />
       </body>
     </html>

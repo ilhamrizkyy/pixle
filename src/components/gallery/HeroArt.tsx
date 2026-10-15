@@ -18,8 +18,8 @@ import { INTRO } from "./introTimeline";
  * X-RAY: a line drawing with callouts naming the icons it is built from, under
  * `cursor: cell`.
  *
- * PIXIT'S X-RAY SHOWS ITS OWN MECHANISM. Phosphor's names the glyphs inside an
- * illustration. Ours reveals the thing every Pixit icon is: an 11 by 11 lattice
+ * PIXLE'S X-RAY SHOWS ITS OWN MECHANISM. Phosphor's names the glyphs inside an
+ * illustration. Ours reveals the thing every Pixle icon is: an 11 by 11 lattice
  * with some cells lit. The neon drawing goes out, the grid it was drawn on
  * comes up, and a tag names the icon, the same id you would search for below.
  *

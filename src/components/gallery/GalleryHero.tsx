@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
 import { IconPreview } from "@/components/IconPreview";
 import { getIcon } from "@/registry";
-import { ICON_PANEL_ID } from "./GalleryToolbar";
+import { REPO_URL } from "@/lib/site";
+import { ICON_PANEL_ID } from "./Gallery";
 import { HeroArt } from "./HeroArt";
 import { IntroSlot } from "./IntroSlot";
 import { FRAME, INTRO, at } from "./introTimeline";
@@ -18,9 +18,9 @@ import { FRAME, INTRO, at } from "./introTimeline";
   the system colour; the name is arcade yellow; orange and green are accents.
   No cyan-and-magenta split: that pairing read as a social app, not a cabinet.
   Press Start 2P for the name, VT323 for the sentence.
-  STORY: A visitor watches the level load, reads PIXIT, hovers a sprite to see
+  STORY: A visitor watches the level load, reads PIXLE, hovers a sprite to see
   the 11 by 11 lattice it is drawn on, and scrolls down into the set.
-  FIRST VIEWPORT: Left column: PIXIT at 96px with a block cursor,
+  FIRST VIEWPORT: Left column: PIXLE at 96px with a block cursor,
   the sentence, two keys, two links. Right: two big icons bleeding off the
   screen and four small ones, each inspectable.
   FORM: brief-pinned (arcade intro spec, plus the owner's revisions).
@@ -29,40 +29,9 @@ import { FRAME, INTRO, at } from "./introTimeline";
   provenance.
 */
 
-/* The destinations the nav bar used to carry. `/create` is deliberately absent
-   and stays absent until contribution ships: CLAUDE.md rule 1 keeps the
-   composer owner-only, and a visible entry to a route the public cannot reach
-   is the exact failure that rule names. */
-const LINKS = [
-  { href: "/resources", label: "Resources" },
-  { href: "/contribute", label: "Contribute" },
-] as const;
-
-const NAME = "Pixit";
+const NAME = "Pixle";
 
 const PLAY = getIcon("play")?.cells.map((cell) => (cell === null ? null : "currentColor"));
-
-/**
- * The corner mark beside each utility link: down two cells, right two, and a
- * head built from stepped cells rather than a diagonal. `aria-hidden`: the link
- * beside it says where it goes.
- */
-function Corner() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="pixl-corner"
-      viewBox="0 0 12 12"
-      width="12"
-      height="12"
-    >
-      <rect x="1" y="1" width="2" height="7" fill="currentColor" />
-      <rect x="1" y="6" width="9" height="2" fill="currentColor" />
-      <rect x="7" y="4" width="2" height="2" fill="currentColor" />
-      <rect x="7" y="8" width="2" height="2" fill="currentColor" />
-    </svg>
-  );
-}
 
 /** A target reticle at the screen's edge: a cross with its centre left out. */
 function Reticle({ side }: { side: "l" | "r" }) {
@@ -171,7 +140,7 @@ export function GalleryHero() {
     const done = window.setTimeout(finish, INTRO.end - now());
 
     /* ANY key or press skips to the finished hero. It plays on every load now,
-       so somebody who already knows what Pixit is must never wait for it,
+       so somebody who already knows what Pixle is must never wait for it,
        including a keyboard user whose first Tab lands on a key that has not
        wiped in yet. */
     const skip = (event: Event) => {
@@ -315,24 +284,10 @@ export function GalleryHero() {
                 Explore icons
               </span>
             </a>
-            <Link className="pixl-hero-key" href="/guide">
-              <span className="pixl-hero-key-face">Read the guide</span>
-            </Link>
+            <a className="pixl-hero-key" href={REPO_URL}>
+              <span className="pixl-hero-key-face">GitHub</span>
+            </a>
           </div>
-        </IntroSlot>
-
-        <IntroSlot
-          resolve={settle(2)}
-          className="pixl-hero-linkslot"
-        >
-          <ul className="pixl-hero-links">
-            {LINKS.map((link) => (
-              <li key={link.href}>
-                <Corner />
-                <Link href={link.href}>{link.label}</Link>
-              </li>
-            ))}
-          </ul>
         </IntroSlot>
       </div>
     </header>

@@ -1,4 +1,5 @@
 import { Gallery } from "@/components/gallery/Gallery";
+import { GalleryHero } from "@/components/gallery/GalleryHero";
 import { icons as seeded } from "@/registry";
 import { mergeIcons } from "@/registry/merge";
 import { fetchPublishedIcons } from "@/registry/remote";
@@ -10,7 +11,7 @@ import { fetchPublishedIcons } from "@/registry/remote";
  * TWO SOURCES, AND THE REPO IS STILL ONE OF THEM. The seeds live in
  * `src/registry/icons.ts` and everything published since lives in Postgres.
  * Keeping the seeds in code is what keeps the MIT licence meaningful: someone
- * who clones Pixit gets a working icon set, not an empty shell that needs
+ * who clones Pixle gets a working icon set, not an empty shell that needs
  * somebody else's database to show anything. The registry also wins any id
  * collision, since it is the source of truth and an id is never recycled.
  *
@@ -20,5 +21,10 @@ import { fetchPublishedIcons } from "@/registry/remote";
  */
 export default async function IconsPage() {
   const published = await fetchPublishedIcons();
-  return <Gallery icons={mergeIcons(seeded, published)} />;
+  return (
+    <main>
+      <GalleryHero />
+      <Gallery icons={mergeIcons(seeded, published)} />
+    </main>
+  );
 }

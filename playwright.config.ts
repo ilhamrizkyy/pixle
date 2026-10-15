@@ -33,7 +33,7 @@ export default defineConfig({
     {
       name: "desktop",
       testMatch:
-        /(board|composer|a11y|contrast|reduced-motion|keys|reveal|toast|intro)\.spec\.ts/,
+        /(board|composer|gallery|a11y|contrast|reduced-motion|toast|intro)\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 900 },
@@ -44,7 +44,7 @@ export default defineConfig({
       // browser sends: pointerType "touch", and no hover events at all. A
       // desktop run cannot stand in for it.
       name: "touch",
-      testMatch: /touch\.spec\.ts/,
+      testMatch: /(touch|gallery)\.spec\.ts/,
       use: { ...devices["iPhone 13"], browserName: "chromium" },
     },
     /* WebKit and Firefox run the same desktop suite. The toy leans on several
@@ -54,12 +54,12 @@ export default defineConfig({
        Chromium alone would have told us nothing about any of it. */
     {
       name: "webkit",
-      testMatch: /composer\.spec\.ts/,
+      testMatch: /(composer|gallery)\.spec\.ts/,
       use: { ...devices["Desktop Safari"], viewport: { width: 1280, height: 900 } },
     },
     {
       name: "firefox",
-      testMatch: /composer\.spec\.ts/,
+      testMatch: /(composer|gallery)\.spec\.ts/,
       use: { ...devices["Desktop Firefox"], viewport: { width: 1280, height: 900 } },
     },
   ],

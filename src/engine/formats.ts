@@ -3,9 +3,9 @@
  *
  * BACKLOG §E asked for "JSX / React component / data URI"; this is that list,
  * and it is deliberately short. Lucide offers eight FRAMEWORK tabs because it
- * ships eight packages. Pixit ships none — Resources lists the npm package, the
+ * ships eight packages. Pixle ships none — Resources lists the npm package, the
  * icon font and the sprite sheet as planned — so a React tab reading
- * `import { FloppyDisk } from "pixit"` would be code that does not run.
+ * `import { FloppyDisk } from "pixle"` would be code that does not run.
  *
  * WHAT IS OFFERED IS THEREFORE FORMATS, NOT FRAMEWORKS: every one of these is
  * built from cells we already have, with no package behind it. When the package

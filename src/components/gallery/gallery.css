@@ -1,0 +1,639 @@
+/* The gallery: sticky bar, category chips, icon grid, detail panel.
+
+   Tokens only. `.pixl-gallery[data-ground]` (globals.css) repoints them when
+   the chosen icon color needs the other ground, so nothing here branches on
+   theme or ground.
+
+   Motion follows one rule: things used tens of times a minute (filtering,
+   hovering, switching tabs) do not animate; presses get 160ms of feedback; the
+   detail panel enters in 250ms and leaves in 150ms. */
+
+.pixl-gallery {
+  --ease-out: var(--ease-smooth-out);
+  --control-h: 40px;
+}
+
+/* ─── Bar ─────────────────────────────────────────────────────────────── */
+
+/* A fieldset defaults to min-inline-size: min-content, so a scrolling chip row
+   would widen the page instead of scrolling (and a phone zooms out to fit). */
+.pixl-gallery fieldset {
+  min-inline-size: 0;
+}
+
+.gal-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--grid-bg);
+  border-bottom: var(--px) solid var(--color-text);
+}
+
+.gal-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px var(--pad-inline);
+}
+
+.gal-bar-row > * {
+  flex: none;
+}
+
+/* Search takes what the row leaves. */
+.gal-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 280px;
+  min-width: 0;
+  color: var(--color-text-muted);
+}
+
+.gal-search > svg {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+}
+
+.gal-search input {
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 40px 0 38px;
+  font: inherit;
+  font-size: var(--text-ui);
+  color: var(--color-text);
+  background: var(--grid-card);
+  border: var(--px) solid var(--color-border);
+  border-radius: 0;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.gal-search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.gal-search input:focus-visible {
+  border-color: var(--color-text);
+}
+
+.gal-search kbd {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  font-family: var(--font-data);
+  font-size: var(--text-caption);
+  border: 1px solid var(--color-border);
+  pointer-events: none;
+}
+
+/* The set's own close glyph replaces the browser's blue one. */
+.gal-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.gal-search-clear {
+  position: absolute;
+  right: 4px;
+  height: 32px;
+}
+
+.gal-search input:focus ~ kbd,
+.gal-search input:not(:placeholder-shown) ~ kbd {
+  visibility: hidden;
+}
+
+/* Shape: three equal radios and one pill that slides between them. Equal
+   widths mean the pill moves by its own width, so nothing is measured. */
+.gal-seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 228px;
+  height: var(--control-h);
+  margin: 0;
+  padding: 0;
+  border: var(--px) solid var(--color-text);
+}
+
+.gal-seg::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(100% / 3);
+  background: var(--color-text);
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform 200ms var(--ease-out);
+}
+
+.gal-seg label,
+.gal-chip,
+.gal-formats label {
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-size: var(--text-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gal-seg label {
+  color: var(--color-text-muted);
+  transition: color 200ms ease;
+}
+
+.gal-seg label:has(:checked) {
+  color: var(--grid-bg);
+}
+
+/* The radios are visually hidden, so the ring goes on what you can see. */
+.gal-seg label:has(:focus-visible),
+.gal-chip:has(:focus-visible),
+.gal-formats label:has(:focus-visible),
+.gal-swatch:has(:focus-visible) {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* Size: a native range. The fill is painted on the track from --fill. */
+.gal-size {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--control-h);
+}
+
+.gal-size input {
+  width: 132px;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.gal-size input::-webkit-slider-runnable-track {
+  height: 4px;
+  background:
+    linear-gradient(var(--color-text), var(--color-text)) 0 / var(--fill) 100% no-repeat,
+    var(--color-border);
+}
+
+.gal-size input::-webkit-slider-thumb {
+  width: 12px;
+  height: 20px;
+  margin-top: -8px;
+  background: var(--color-text);
+  border: 0;
+  border-radius: 0;
+  appearance: none;
+}
+
+.gal-size input::-moz-range-track {
+  height: 4px;
+  background: var(--color-border);
+}
+
+.gal-size input::-moz-range-progress {
+  height: 4px;
+  background: var(--color-text);
+}
+
+.gal-size input::-moz-range-thumb {
+  width: 12px;
+  height: 20px;
+  background: var(--color-text);
+  border: 0;
+  border-radius: 0;
+}
+
+.gal-size output {
+  min-width: 5ch;
+  font-family: var(--font-data);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Color: a swatch over the native picker, a hex field, and a reset. */
+.gal-color {
+  display: flex;
+  align-items: stretch;
+  height: var(--control-h);
+  background: var(--grid-card);
+  border: var(--px) solid var(--color-border);
+  transition: border-color 150ms ease;
+}
+
+.gal-color:focus-within {
+  border-color: var(--color-text);
+}
+
+.gal-swatch {
+  position: relative;
+  width: 36px;
+  box-shadow: inset 0 0 0 3px var(--grid-card);
+  cursor: pointer;
+}
+
+.gal-swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.gal-hex {
+  width: 10ch;
+  padding: 0 8px;
+  font-family: var(--font-data);
+  font-size: var(--text-ui);
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.gal-hex::placeholder {
+  color: var(--color-text-muted);
+}
+
+.gal-reset {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+/* ─── Category chips ─────────────────────────────────────────────────── */
+
+.gal-chips {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0 var(--pad-inline) 12px;
+  border: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gal-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.gal-chip {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  color: var(--cat-ink);
+  transition: background-color 150ms ease;
+}
+
+.gal-chip:has(:checked) {
+  background: var(--cat);
+}
+
+/* ─── Grid ───────────────────────────────────────────────────────────── */
+
+.gal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 16px var(--pad-inline) 48px;
+  list-style: none;
+  outline: none;
+}
+
+.gal-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 12px 6px 10px;
+  color: var(--color-text);
+  background: var(--grid-card);
+  border: var(--px) solid transparent;
+  cursor: pointer;
+  transition:
+    transform 160ms var(--ease-out),
+    border-color 150ms ease;
+}
+
+.gal-tile:active {
+  transform: scale(0.97);
+}
+
+.gal-tile[aria-pressed="true"] {
+  border-color: var(--color-text);
+}
+
+.gal-tile[data-local] {
+  border-style: dashed;
+  border-color: var(--color-text-muted);
+}
+
+.gal-tile-art {
+  display: grid;
+  flex: 1;
+  place-items: center;
+}
+
+.gal-tile-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gal-empty {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  padding: 48px var(--pad-inline) 96px;
+  color: var(--color-text-muted);
+  outline: none;
+}
+
+/* ─── Detail ─────────────────────────────────────────────────────────── */
+
+.gal-detail {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--grid-bg);
+  border-top: var(--px) solid var(--color-text);
+  transition:
+    transform 250ms var(--ease-out),
+    opacity 250ms var(--ease-out);
+}
+
+@starting-style {
+  .gal-detail {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/* Leaves faster than it came, and half as far. */
+.gal-detail[data-closing] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition-duration: 150ms;
+}
+
+.gal-detail-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 24px;
+  padding: 16px var(--pad-inline) 20px;
+}
+
+/* 132px is 12 per cell, so the lattice lines land on cell edges exactly. */
+.gal-lattice {
+  width: 133px;
+  height: 133px;
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 12px 12px;
+  background-color: var(--grid-card);
+}
+
+.gal-lattice svg {
+  margin: 1px 0 0 1px;
+}
+
+.gal-detail-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.gal-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gal-detail-name {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: var(--text-h3);
+  font-weight: 400;
+  line-height: var(--leading-heading);
+}
+
+.gal-detail-meta {
+  margin: 4px 0 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.gal-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    transform 160ms var(--ease-out),
+    color 150ms ease;
+}
+
+.gal-close:active {
+  transform: scale(0.94);
+}
+
+.gal-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gal-formats label {
+  height: 28px;
+  color: var(--color-text-muted);
+  border-bottom: var(--px) solid transparent;
+}
+
+.gal-formats label:has(:checked) {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+.gal-code {
+  max-height: 8.5em;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-family: var(--font-data);
+  font-size: var(--text-caption);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--grid-card);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────── */
+
+.gal-btn {
+  display: inline-grid;
+  place-items: center;
+  height: 36px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: var(--text-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  background: transparent;
+  border: var(--px) solid var(--color-text);
+  cursor: pointer;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 150ms ease;
+}
+
+.gal-btn:active {
+  transform: scale(0.97);
+}
+
+.gal-btn.is-primary {
+  color: var(--grid-bg);
+  background: var(--color-text);
+}
+
+/* Copy -> Copied: both labels share one cell, so the button never changes
+   width, and a short blur turns the swap into one change instead of two
+   words overlapping. */
+.gal-swap > span {
+  grid-area: 1 / 1;
+  transition:
+    opacity 200ms ease,
+    filter 200ms ease;
+}
+
+.gal-swap > .gal-swap-done,
+.gal-swap[data-done] > .gal-swap-idle {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+.gal-swap[data-done] > .gal-swap-done {
+  opacity: 1;
+  filter: none;
+}
+
+/* ─── Hover, only where there is a real pointer ──────────────────────── */
+
+@media (hover: hover) and (pointer: fine) {
+  .gal-tile:hover {
+    border-color: var(--color-border);
+  }
+
+  .gal-tile[aria-pressed="true"]:hover {
+    border-color: var(--color-text);
+  }
+
+  .gal-chip:not(:has(:checked)):hover {
+    background: color-mix(in srgb, var(--cat) 45%, transparent);
+  }
+
+  .gal-seg label:not(:has(:checked)):hover,
+  .gal-formats label:hover,
+  .gal-reset:hover,
+  .gal-close:hover {
+    color: var(--color-text);
+  }
+
+  .gal-btn:not(.is-primary):hover {
+    background: var(--grid-card);
+  }
+}
+
+/* ─── Phone ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .gal-search {
+    flex-basis: 100%;
+  }
+
+  .gal-search kbd {
+    display: none;
+  }
+
+  .gal-seg {
+    width: auto;
+    flex: 1 1 auto;
+  }
+
+  .gal-size input {
+    width: 72px;
+  }
+
+  /* The swatch still opens the native picker; the typed hex is a desktop
+     nicety, and dropping it keeps the controls on one row. */
+  .gal-hex {
+    display: none;
+  }
+
+  /* The row scrolls; the fade says there is more. */
+  .gal-chips {
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+
+  .gal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .gal-actions .is-primary {
+    grid-column: 1 / -1;
+  }
+
+  .gal-grid {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  }
+
+  .gal-detail-body {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .gal-lattice {
+    display: none;
+  }
+
+  .gal-code {
+    max-height: 5em;
+  }
+}

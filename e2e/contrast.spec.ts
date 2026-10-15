@@ -1,5 +1,4 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openColor } from "./board";
 
 /**
  * Text contrast on surfaces axe structurally cannot check.
@@ -122,11 +121,7 @@ const SURFACES = [
      palette scoped to it, so every ink on it is measured against `--crt`
      rather than the page's background. The neon was picked for glow, not for
      text, and these entries are what hold the pairings that carry reading. */
-  { name: "hero link", ink: ".pixl-hero-links a", ground: ".pixl-hero" },
   { name: "hero tagline", ink: ".pixl-hero-line", ground: ".pixl-hero" },
-  /* `hero tag` was here and went with the eyebrow on 2026-09-18. Its pairing
-     — the pixel face in `--neon-cyan` on the glass — is still measured, on the
-     masthead's live rail link, at the bottom of this file. */
   { name: "hero secondary key", ink: ".pixl-hero-key:not(.is-primary)", ground: ".pixl-hero" },
   { name: "hero name", ink: ".pixl-hero-mark", ground: ".pixl-hero" },
   // An inverse block: the neon filled and the label knocked out of it. The
@@ -139,118 +134,19 @@ const SURFACES = [
   },
   { name: "footer link", ink: ".pixl-footer-links a", ground: ".pixl-footer" },
   { name: "footer note", ink: ".pixl-footer-note", ground: ".pixl-footer" },
-  /* THE COLOUR KEY, which is the SEGMENT PANEL itself — the sage `--lcd` ground
-     with its own `--lcd-ink`, not a generic pill. It was a plain outlined key
-     with a swatch for half a day on 2026-09-13 and went back to the panel by
-     request; the selectors moved with it.
-
-     `.pixl-lcd-value` on `.pixl-lcd-key` and not on `.pixl-lcd`: both carry the
-     panel, and the one in the bar is the one on screen at load. */
-  {
-    name: "colour key hex",
-    ink: ".pixl-lcd-key .pixl-lcd-value",
-    ground: ".pixl-lcd-key",
-  },
-  /* THE BAR'S OWN INK (rebuilt 2026-09-13, and this is its third home).
-
-     It was `.pixl-pad .text-text-muted` on a raised boss, then a pixel-face
-     EYEBROW and a muted VALUE in a 264px control column, and now neither: the
-     captions came off the bar by request, so `.pixl-eyebrow` is not on this
-     route at all and this entry was asserting against an element that had
-     stopped existing.
-
-     WHAT IS LEFT IN THE BAR IS THE SIZE VALUE, and it is the pairing worth
-     holding — the one piece of loose type on the sticky row, sitting on
-     `--grid-bg` rather than inside a bordered control, which is exactly the
-     case axe reads as transparent and skips.
-
-     NOT COVERED HERE, AND SAID PLAINLY: the eyebrows still exist in the mobile
-     filter sheet, and this suite runs at desktop width where that sheet is not
-     mounted. Their pairing is `--color-text` on `--color-bg`, which the hero's
-     own entries above already measure. */
-  {
-    name: "bar size value",
-    ink: ".pixl-size-value",
-    ground: ".pixl-bar",
-  },
-  /* THE SHAPE KEY'S VALUE. It was the stepper's inverted block until
-     2026-09-13 — page ink as the ground, page background as the ink — and the
-     stepper was replaced by a dropdown, whose key is an ordinary raised face.
-     So the pairing flipped back the right way up and the selector moved with
-     it. The MENU's own chosen row is the inverted one now, and it is not
-     measured here because the menu is not open on load; its two colours are the
-     same two tokens as the hero's primary key, which is. */
-  {
-    name: "shape key value",
-    ink: ".pixl-drop-value",
-    ground: ".pixl-drop-key",
-  },
-  // The category tints followed the taxonomy to the chips. A SELECTED chip's
-  // ground is the TRAVELLING FILL parked behind it (2026-09-04) rather than a
-  // background of its own — the chip paints none, or the tint would be drawn
-  // twice and the capsule would slide between two already-filled chips. An
-  // unselected chip is transparent, so its ground is the screen.
-  {
-    name: "selected category chip",
-    ink: '.pixl-chip[aria-selected="true"]',
-    ground: ".pixl-chip-fill",
-  },
-  {
-    name: "unselected category chip",
-    ink: '.pixl-chip:not([aria-selected="true"])',
-    ground: ".pixl-gallery",
-  },
-  // The hex readout, which is a segment panel rather than a field: its ink is
-  // inherited from `.pixl-lcd` and its ground is a gradient with a glass wash
-  // over it, so both halves are in axe's blind spot.
-  // `.pixl-lcd-digits`, NOT the input: the input paints nothing (its glyphs are
-  // drawn by the layer over it, which is what gives them per-character boxes to
-  // animate), so its own `color` is `transparent` and reading it would measure
-  // a colour nobody sees.
-  { name: "hex readout", ink: ".pixl-lcd-digits", ground: ".pixl-lcd" },
-  // The detail shelf sits on `--color-surface` inside the glass, and every
-  // label on it is in axe's blind spot the same way the sidebar's are.
-  //
-  // FOUR ENTRIES, because the shelf's ink runs the whole ramp: the tabs and the
-  // tags are muted, the name is full ink at readout scale, and the close is a
-  // muted glyph on the same ground. `--text-muted` was darkened specifically so
-  // it clears on this token (DESIGN.md §2), which is exactly the pairing worth
-  // holding — it is one `color-mix` away from being softened back.
-  {
-    name: "detail shelf format tab",
-    ink: ".pixl-format",
-    ground: ".pixl-detailbar",
-  },
-  { name: "detail bar name", ink: ".pixl-detailbar h2", ground: ".pixl-detailbar" },
-  {
-    name: "detail shelf tags",
-    ink: ".pixl-detail-tags",
-    ground: ".pixl-detailbar",
-  },
-  {
-    name: "detail shelf close",
-    ink: ".pixl-panel-close",
-    ground: ".pixl-detailbar",
-  },
-  // The PRIMARY is an inverse block — the ink filled, the label knocked out.
-  // Both halves come from the same two tokens, so this is really checking that
-  // nobody softens the fill into a tint.
-  {
-    name: "detail shelf primary",
-    ink: ".pixl-panel-primary",
-    ground: ".pixl-panel-primary",
-  },
-  // The category wears its own tint here, filled — so its ground is itself,
-  // the way a selected chip's is. Same six pairs the chip row uses, on a
-  // different surface, which is exactly the kind of reuse that goes unmeasured.
-  { name: "detail bar category", ink: ".pixl-cat", ground: ".pixl-cat" },
-  // The source itself, which is the most text on this board and sits on its
-  // own ground rather than the shelf's.
-  { name: "detail shelf source", ink: ".pixl-code-text", ground: ".pixl-code" },
-  // The block's own Copy, which lies OVER the source on its own opaque
-  // ground — a translucent chip with markup running under it is
-  // unreadable in both directions, so its ground is itself.
-  { name: "detail shelf code copy", ink: ".pixl-code-copy", ground: ".pixl-code-copy" },
+  // The gallery. Every ink is read on the surface it actually sits on.
+  { name: "hex field", ink: ".gal-hex", ground: ".gal-color" },
+  { name: "size value", ink: ".gal-size output", ground: ".gal-bar" },
+  { name: "shape option", ink: ".gal-seg label:not(:has(:checked))", ground: ".gal-bar" },
+  { name: "category chip", ink: ".gal-chip:not(:has(:checked))", ground: ".gal-bar" },
+  { name: "selected chip", ink: ".gal-chip:has(:checked)", ground: ".gal-chip:has(:checked)" },
+  { name: "icon name", ink: ".gal-tile-name", ground: ".gal-tile" },
+  { name: "detail name", ink: ".gal-detail-name", ground: ".gal-detail" },
+  { name: "detail meta", ink: ".gal-detail-meta", ground: ".gal-detail" },
+  { name: "format tab", ink: ".gal-formats label:not(:has(:checked))", ground: ".gal-detail" },
+  { name: "source", ink: ".gal-code", ground: ".gal-code" },
+  { name: "primary button", ink: ".gal-btn.is-primary", ground: ".gal-btn.is-primary" },
+  { name: "secondary button", ink: ".gal-btn:not(.is-primary)", ground: ".gal-detail" },
 ] as const;
 
 async function readSurface(page: Page, inkSel: string, groundSel: string) {
@@ -276,12 +172,8 @@ for (const theme of ["light", "dark"] as const) {
     page,
   }) => {
     await page.goto("/");
-    // The detail bar exists only while an icon is loaded, and half these
-    // surfaces are on it.
+    // The detail panel exists only while an icon is selected.
     await page.getByRole("button", { name: /arrow-right/ }).first().click();
-    // And the hex readout moved behind the colour key on 2026-09-13, when the
-    // control column became a row in the sticky bar.
-    await openColor(page);
     await page.evaluate(
       (t) => document.documentElement.setAttribute("data-theme", t),
       theme,
@@ -471,64 +363,3 @@ for (const theme of ["light", "dark"] as const) {
     }
   });
 }
-
-/**
- * THE MASTHEAD, on the three article routes (2026-09-18).
- *
- * It is the hero's glass moved above Guide, Resources and Contribute, so every
- * ink on it is a neon or a near-white on a near-black ground — the exact case
- * this suite exists for, and the exact case the `/` run above cannot reach,
- * since the masthead is not on `/`.
- *
- * ONE ROUTE IS ENOUGH AND IT IS SAID PLAINLY: the component is shared, the
- * palette is scoped to `.pixl-masthead`, and only the title's text differs
- * between the three. What is NOT shared is the live route's mark, so the rail's
- * two states are both measured here.
- *
- * NO THEME LOOP EITHER. The marquee paints its own CRT in both themes and never
- * inverts, which is the rule the hero already follows — so a second pass would
- * measure the same two colours twice.
- */
-const MASTHEAD_SURFACES = [
-  { name: "masthead wordmark", ink: ".pixl-masthead-mark", ground: ".pixl-masthead" },
-  { name: "masthead title", ink: ".pixl-masthead-title", ground: ".pixl-masthead" },
-  { name: "masthead strapline", ink: ".pixl-masthead-line", ground: ".pixl-masthead" },
-  {
-    name: "masthead rail link",
-    ink: ".pixl-masthead-links a:not([data-live])",
-    ground: ".pixl-masthead",
-  },
-  {
-    name: "masthead live link",
-    ink: ".pixl-masthead-links a[data-live]",
-    ground: ".pixl-masthead",
-  },
-] as const;
-
-test("every ink on the masthead clears AA on the glass", async ({ page }) => {
-  await page.goto("/guide");
-
-  for (const { name, ink: inkSel, ground: groundSel } of MASTHEAD_SURFACES) {
-    const surface = await readSurface(page, inkSel, groundSel);
-    expect(surface, `${name}: "${inkSel}" or "${groundSel}" is not on the page`)
-      .not.toBeNull();
-    const { color, image, fill } = surface!;
-
-    const inkRgba = colorsIn(color)[0];
-    expect(inkRgba, `${name}: unreadable colour "${color}"`).toBeDefined();
-    const ink: [number, number, number] = [inkRgba[0], inkRgba[1], inkRgba[2]];
-    const grounds = opaqueGrounds([...colorsIn(image), ...colorsIn(fill)]);
-    expect(
-      grounds.length,
-      `${name}: no background colour in "${image}" / "${fill}"`,
-    ).toBeGreaterThan(0);
-
-    for (const ground of grounds) {
-      const value = contrast(ink, ground);
-      expect(
-        value,
-        `${name}: ${color} on rgb(${ground.map(Math.round)}) is ${value.toFixed(2)}:1`,
-      ).toBeGreaterThanOrEqual(AA);
-    }
-  }
-});

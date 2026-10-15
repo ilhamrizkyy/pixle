@@ -42,9 +42,6 @@ async function settle(page: Page) {
 
 for (const [name, path] of [
   ["gallery", "/"],
-  ["guide", "/guide"],
-  ["resources", "/resources"],
-  ["contribute", "/contribute"],
   ["composer", "/create"],
 ] as const) {
   test(`${name} has no automatically detectable a11y violations`, async ({ page }) => {
@@ -70,45 +67,21 @@ test("the gallery has no a11y violations at phone width either", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByRole("button", { name: "Display settings" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Icons" })).toBeVisible();
 
   await settle(page);
   const results = await scan(page).analyze();
   expect(results.violations).toEqual([]);
 });
 
-test("the screen and the detail bar are reachable and announced", async ({
-  page,
-}) => {
+test("the detail panel is reachable, labelled and clean", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "arrow-right", exact: true }).click();
 
-  /* THE SCREEN ARRIVES WITH THE SHELF as of 2026-09-12. It was mounted at all
-     times and drew an idle lattice, because it was the head of the board's left
-     column and a device's screen does not come and go. It moved into the detail
-     shelf, so both regions now appear on selection and leave together. */
-  const screen = page.getByRole("region", { name: "Preview screen" });
-  await expect(screen).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "Selected icon" })).toHaveCount(0);
-
-  await page.getByRole("button", { name: /arrow-right/ }).first().click();
-  await expect(screen).toBeVisible();
-
-  const bar = page.getByRole("region", { name: "Selected icon" });
-  await expect(bar).toBeVisible();
-  // NEITHER is a dialog. Both are parts of the board; nothing opens, so
-  // nothing may claim to.
+  const details = page.getByRole("complementary", { name: "arrow-right details" });
+  await expect(details).toBeVisible();
+  // It is part of the page, not a dialog: nothing is trapped or dimmed.
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(bar).not.toHaveAttribute("aria-modal", "true");
-
-  /* THE STATUS IS ON THE ICON PANEL, and it moved there on 2026-09-12 for the
-     reason it was on the screen before: it has to announce CLEARING as well as
-     loading, and nothing that unmounts can report its own removal. The screen
-     used to be the permanent thing; it is in the shelf now, so the panel is.
-     Asserted as OUTSIDE the shelf, which is the property that matters — a
-     future move breaks that and not a selector. */
-  const status = page.locator(".pixl-gallery > [aria-live]");
-  await expect(status).toHaveText("arrow-right loaded");
-  expect(await bar.locator("[aria-live]").count()).toBe(0);
 
   await settle(page);
   const results = await scan(page).analyze();

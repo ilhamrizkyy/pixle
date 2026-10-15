@@ -6433,6 +6433,13 @@ a.pixl-row:focus-visible {
   .composer-scope .scope-rail {
     gap: 0.375rem;
   }
+
+  /* The mode lamp comes down with them. At the desktop offset it lands exactly
+     on the pad's top edge here, measured: 0px of margin, which reads as a lamp
+     sitting on the seam rather than set into the panel. */
+  .composer-scope .scope-lamp {
+    top: -0.5rem;
+  }
 }
 
 /* ── The bottom row ─────────────────────────────────────────────────────── */
@@ -6865,30 +6872,55 @@ body:has(.composer-scope) .pixl-footer {
     inset 0 -1px 0 rgb(0 0 0 / 0.3);
 }
 
-/* LATCHED: the cap rests in the shallow click a press makes and drops several
-   steps of VALUE, because a 1px sink alone is easy to miss across a panel.
-   Value, never an accent — the same cap held down, not a different button. */
-.scope-switch-cap[aria-pressed="true"] {
-  transform: translateY(1px);
-  color: #f2f4f7;
-  background: linear-gradient(180deg, #4b5159 0%, #3a3f46 58%, #2c3036 100%);
+/* ~~LATCHED: the cap rests in the shallow click a press makes and drops several
+   steps of VALUE~~ — REMOVED 2026-09-20, by request, and replaced by the lamp
+   above the key.
+
+   The construction was right and the CONTEXT was wrong. A latched key that
+   rests in its own press is how a panel of keys reports which one is held
+   down; here exactly one of the four is a toggle, so the other three can never
+   do it, and a single permanently sunk dark cap among three bright ones reads
+   as a button that has jammed rather than as a mode that is on.
+
+   DESIGN.md §5c's rule still stands wherever a SET of keys latches. What this
+   is, is the case that rule does not cover: one mode among several actions,
+   which is what hardware puts a lamp beside. `.scope-lamp` carries it now and
+   the cap is a plain key again in both states. */
+
+/* THE MODE LAMP, above the key it belongs to. Absolutely positioned against
+   `.scope-switch--anchored`, so it costs the column no layout at all and the
+   four rows stay exactly the height they were. */
+.scope-lamp {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  translate: -50% 0;
+  border-radius: 999px;
+  /* OFF is not "absent": it is a dark lens set into the panel, catching a
+     little of the room, so the lamp is a visible PART whether or not it is
+     lit. A lamp you cannot see when it is off reads as damage when it is on. */
+  background: radial-gradient(circle at 50% 35%, #3b3f47 0%, #1a1d21 72%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.18),
-    inset 0 3px 5px -2px rgb(0 0 0 / 0.55),
-    0 0 0 rgb(0 0 0 / 0.5);
+    inset 0 0 0 1px rgb(0 0 0 / 0.7),
+    inset 0 1px 1px rgb(255 255 255 / 0.14),
+    0 1px 0 rgb(255 255 255 / 0.05);
+  transition:
+    background var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out);
 }
 
-/* PRESSING A LATCHED CAP KEEPS IT DARK. `:active` outranked the latched rule on
-   specificity, so pressing a cap already held down flashed it back to magenta —
-   the one state change that must never happen here, since magenta IS the
-   unlatched look. It goes a step deeper instead. */
-.scope-switch-cap[aria-pressed="true"]:active:not(:disabled) {
-  transition-duration: 0s;
-  background: linear-gradient(180deg, #34383e 0%, #282c31 58%, #1d2025 100%);
+/* ON takes the board's one accent, and it GLOWS onto the panel around it —
+   which is the half that makes it read as emitting rather than as a magenta
+   dot printed on the case. */
+.scope-lamp[data-on="true"] {
+  background: radial-gradient(circle at 50% 32%, #ff89b8 0%, #e0356f 45%, var(--scope-neon) 78%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    inset 0 4px 6px -2px rgb(0 0 0 / 0.7),
-    inset 0 -1px 0 rgb(0 0 0 / 0.3);
+    inset 0 0 0 1px rgb(0 0 0 / 0.45),
+    inset 0 1px 1px rgb(255 255 255 / 0.5),
+    0 0 5px 0 color-mix(in srgb, var(--scope-neon) 85%, transparent),
+    0 0 12px 2px color-mix(in srgb, var(--scope-neon) 40%, transparent);
 }
 
 .scope-switch-cap:disabled {

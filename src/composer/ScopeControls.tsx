@@ -94,6 +94,24 @@ export function ScopeButton({
 }) {
   return (
     <span className="scope-switch scope-switch--anchored">
+      {/* THE MODE LAMP, for the one key that is a MODE rather than an action
+          (2026-09-20, by request). Mirror is the only latching tool here, and
+          it used to report itself by RESTING IN ITS OWN PRESS — sunk a pixel
+          and dropped several steps of value. That is the right construction for
+          a key among other keys, and it reads as a stuck button when only one
+          key on the panel ever does it.
+
+          A lamp is what hardware uses for a mode: the key stays a key, and a
+          separate part says whether the mode is on. It is rendered only when
+          `pressed` is a boolean, so the three one-shot transforms get no lamp
+          and no reserved gutter — an unlit lamp under Rotate would advertise a
+          toggle that does not exist.
+
+          `aria-hidden`, because `aria-pressed` on the button already carries
+          this to a screen reader and two readings of one fact is one too many. */}
+      {typeof pressed === "boolean" && (
+        <span aria-hidden="true" className="scope-lamp" data-on={pressed} />
+      )}
       <span className="scope-switch-well">
         <button
           type="button"

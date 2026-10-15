@@ -115,6 +115,71 @@ test.describe("slide to clear", () => {
   });
 });
 
+/**
+ * MIRROR IS A MODE, AND THE LAMP IS WHAT SAYS SO (2026-09-20).
+ *
+ * The key used to report itself by resting in its own press, sunk and dropped
+ * several steps of value. One permanently dark cap among three bright ones read
+ * as a jammed button rather than as a mode, so the state moved to a lamp above
+ * the key and the cap went back to being a plain key in both states.
+ *
+ * Which means the cap no longer carries this at all: if the lamp stops tracking
+ * the store, there is NOTHING left on screen that says mirroring is on, and
+ * every existing test still passes because `aria-pressed` is untouched. Hence
+ * this one.
+ */
+test.describe("the mirror lamp", () => {
+  test("lights with the mode and goes out with it", async ({ page }) => {
+    await openComposer(page);
+
+    const key = page.getByRole("button", { name: "Mirror" });
+    const lamp = page.locator(".scope-lamp");
+
+    /* THE PAINT, not only the attribute. A test that reads `data-on` alone
+       passes with the `[data-on="true"]` rule deleted — the binding would be
+       perfect and the lamp would never light. */
+    const paint = () =>
+      page.evaluate(() => {
+        /* SETTLE FIRST. The lamp crosses on the house 150ms clock, and a
+           computed style read mid-transition is a colour in neither state —
+           caught here as a background already back to dark while the glow was
+           still on its way out. Raced against a ceiling because the board
+           carries ambient animations that never finish. */
+        const settled = Promise.race([
+          Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))),
+          new Promise((resolve) => setTimeout(resolve, 600)),
+        ]);
+        return settled.then(() => {
+          const style = getComputedStyle(document.querySelector(".scope-lamp")!);
+          return `${style.backgroundImage}|${style.boxShadow}`;
+        });
+      });
+
+    await expect(lamp).toHaveAttribute("data-on", "false");
+    await expect(key).toHaveAttribute("aria-pressed", "false");
+    const dark = await paint();
+
+    await key.click();
+    await expect(lamp).toHaveAttribute("data-on", "true");
+    await expect(key).toHaveAttribute("aria-pressed", "true");
+    const lit = await paint();
+    expect(lit).not.toBe(dark);
+
+    await key.click();
+    await expect(lamp).toHaveAttribute("data-on", "false");
+    await expect(key).toHaveAttribute("aria-pressed", "false");
+    expect(await paint()).toBe(dark);
+  });
+
+  /* THE THREE ONE-SHOT TRANSFORMS GET NO LAMP, and that is the point of
+     rendering it off `pressed` being a boolean rather than off the tool list.
+     An unlit lamp under Rotate would advertise a toggle that does not exist. */
+  test("is the only lamp on the board", async ({ page }) => {
+    await openComposer(page);
+    await expect(page.locator(".scope-lamp")).toHaveCount(1);
+  });
+});
+
 test.describe("the knobs", () => {
   test("turn the colour on drag", async ({ page }) => {
     await openComposer(page);

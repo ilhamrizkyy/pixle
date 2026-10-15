@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SITE_URL } from "@/lib/site";
 import { INTRO_INIT_SCRIPT } from "@/components/gallery/introTimeline";
 import "./globals.css";
 
@@ -25,9 +26,12 @@ const terminal = VT323({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Pixle: open-source pixel icons",
   description:
     "An open-source pixel icon set, drawn cell by cell on an 11 by 11 grid. Copy SVG, React, or PNG. MIT licensed.",
+  // The image itself is app/opengraph-image.png; this makes it a large card.
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({
